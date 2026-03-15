@@ -93,7 +93,7 @@ buildBtn.addEventListener('click', function() {
 
 // --- Get backend URL (works in Dataiku) ---
 function getBackendUrl(path) {
-    return path;
+    return dataiku.getWebAppBackendUrl(path);
 }
 
 // --- Init vis.js ---
