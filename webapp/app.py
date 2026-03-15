@@ -364,7 +364,8 @@ if build_clicked and text_input.strip():
 
         # Update graph display progressively
         html = generate_building_html(G, i, total)
-        graph_placeholder.components.v1.html(html, height=660, scrolling=False)
+        with graph_placeholder.container():
+            st.components.v1.html(html, height=660, scrolling=False)
         time.sleep(0.3)
 
     st.session_state.graph = G
@@ -374,7 +375,8 @@ if build_clicked and text_input.strip():
 
     # Final render without building hint
     final_html = generate_graph_html(G)
-    graph_placeholder.components.v1.html(final_html, height=660, scrolling=False)
+    with graph_placeholder.container():
+        st.components.v1.html(final_html, height=660, scrolling=False)
 
 elif st.session_state.graph is not None:
     G = st.session_state.graph
