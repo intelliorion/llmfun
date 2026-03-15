@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiroFish POC - Knowledge Graph Builder</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <h1><span>Miro</span>Fish POC</h1>
+    <span style="color:#888;font-size:13px;">Knowledge Graph Builder</span>
+</div>
+
+<div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Input</h2>
+
+        <textarea id="text-input" placeholder="Paste your text here...">Morgan Stanley's wealth management division reported strong Q4 2025 results, driven by increased client assets and higher fee-based revenues. CEO Ted Pick highlighted the firm's strategic focus on integrating technology across its advisory platform. The division saw net new assets of $120 billion for the year.
+
+Meanwhile, the institutional securities group faced headwinds from lower trading volumes in fixed income markets. CFO Sharon Yeshaya noted that the firm is investing heavily in AI-driven risk analytics to improve trading desk performance.
+
+Competitor Goldman Sachs also reported mixed results, with its asset management division outperforming while investment banking revenues declined. JPMorgan Chase continued to lead in overall revenue, benefiting from its diversified business model.
+
+Industry analysts from Barclays and UBS forecast that wealth management will remain the key growth driver for large banks in 2026, as interest rate cuts are expected to boost asset valuations and client activity.</textarea>
+
+        <div class="file-upload" id="file-upload">
+            Drop file or click to upload (.txt, .md)
+            <input type="file" id="file-input" accept=".txt,.md,.csv">
+        </div>
+
+        <button class="btn-primary" id="btn-build">Build Knowledge Graph</button>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-target="panel-graph">Graph</div>
+            <div class="tab" data-target="panel-entities">Entities</div>
+            <div class="tab" data-target="panel-report">Report</div>
+            <div class="tab" data-target="panel-qa">Q&A</div>
+        </div>
+
+        <!-- Graph Panel -->
+        <div class="tab-panel active" id="panel-graph">
+            <div id="graph-container">
+                <div id="vis-graph" style="width:100%;height:100%;"></div>
+
+                <!-- Legend -->
+                <div class="graph-legend">
+                    <b>Entity Types</b>
+                    <div id="legend-items"></div>
+                </div>
+
+                <!-- Building hint -->
+                <div class="building-hint" id="building-hint">
+                    <div class="breathing-dot"></div>
+                    <span id="hint-text">Building graph...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entities Panel -->
+        <div class="tab-panel" id="panel-entities">
+            <div class="entities-panel">
+                <div class="table-section">
+                    <h3>Entities</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>Type</th><th>Description</th></tr>
+                        </thead>
+                        <tbody id="entities-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="table-section">
+                    <h3>Relationships</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Source</th><th>Relation</th><th>Target</th><th>Description</th></tr>
+                        </thead>
+                        <tbody id="relationships-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Panel -->
+        <div class="tab-panel" id="panel-report">
+            <div class="report-panel">
+                <button class="btn-generate" id="btn-report">Generate Report</button>
+                <div class="report-content" id="report-content">
+                    <p style="color:#aaa;">Click "Generate Report" after building a graph.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Q&A Panel -->
+        <div class="tab-panel" id="panel-qa">
+            <div class="chat-panel">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="empty-state" id="chat-empty">
+                        <div>
+                            <div style="font-size:32px;margin-bottom:8px;">💬</div>
+                            <p>Ask questions about your knowledge graph</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Ask a question...">
+                    <button id="chat-send">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
