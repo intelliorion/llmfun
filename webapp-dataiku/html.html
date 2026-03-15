@@ -35,18 +35,12 @@ Industry analysts from Barclays and UBS forecast that wealth management will rem
 
         <!-- Upload mode -->
         <div class="input-mode" id="mode-upload">
+            <div class="file-list" id="file-list"></div>
             <div class="file-upload" id="file-upload">
                 <div class="upload-icon">+</div>
-                <div class="upload-text">Drop file or click to upload</div>
+                <div class="upload-text">Drop files or click to upload</div>
                 <div class="file-types">.txt .md .csv .pdf .docx .pptx .xlsx .msg .eml</div>
-                <input type="file" id="file-input" accept=".txt,.md,.csv,.pdf,.docx,.pptx,.xlsx,.msg,.eml">
-            </div>
-            <div class="file-preview" id="file-preview" style="display:none;">
-                <div class="file-preview-header">
-                    <span class="file-preview-name" id="file-preview-name"></span>
-                    <button class="file-preview-clear" id="file-preview-clear">Remove</button>
-                </div>
-                <div class="file-preview-text" id="file-preview-text"></div>
+                <input type="file" id="file-input" accept=".txt,.md,.csv,.pdf,.docx,.pptx,.xlsx,.msg,.eml" multiple>
             </div>
         </div>
 

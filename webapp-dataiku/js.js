@@ -70,31 +70,85 @@ for (var t = 0; t < toggleBtns.length; t++) {
     })(toggleBtns[t]);
 }
 
-// --- File upload ---
+// --- File upload (multi-file) ---
 var fileUpload = document.getElementById('file-upload');
 var fileInput = document.getElementById('file-input');
+var fileListEl = document.getElementById('file-list');
 var textarea = document.getElementById('text-input');
-var filePreview = document.getElementById('file-preview');
-var filePreviewName = document.getElementById('file-preview-name');
-var filePreviewText = document.getElementById('file-preview-text');
-var filePreviewClear = document.getElementById('file-preview-clear');
+var uploadedFiles = []; // {name, text, id}
+var fileIdCounter = 0;
 
-function showFilePreview(name, text) {
-    uploadedText = text;
-    filePreviewName.textContent = name;
-    filePreviewText.textContent = text.substring(0, 2000) + (text.length > 2000 ? '\n\n... (' + text.length + ' chars total)' : '');
-    fileUpload.style.display = 'none';
-    filePreview.style.display = 'flex';
+var UPLOAD_AREA_HTML = '<div class="upload-icon">+</div><div class="upload-text">Drop files or click to upload</div><div class="file-types">.txt .md .csv .pdf .docx .pptx .xlsx .msg .eml</div>';
+
+function addFile(name, text) {
+    var id = ++fileIdCounter;
+    uploadedFiles.push({name: name, text: text, id: id});
+    uploadedText = uploadedFiles.map(function(f) { return '=== ' + f.name + ' ===\n' + f.text; }).join('\n\n');
+    renderFileList();
 }
 
-function clearFilePreview() {
-    uploadedText = '';
-    fileInput.value = '';
-    fileUpload.style.display = 'flex';
-    filePreview.style.display = 'none';
+function removeFile(id) {
+    uploadedFiles = uploadedFiles.filter(function(f) { return f.id !== id; });
+    uploadedText = uploadedFiles.map(function(f) { return '=== ' + f.name + ' ===\n' + f.text; }).join('\n\n');
+    renderFileList();
 }
 
-filePreviewClear.addEventListener('click', clearFilePreview);
+function renderFileList() {
+    fileListEl.innerHTML = '';
+    uploadedFiles.forEach(function(f) {
+        var ext = f.name.split('.').pop().toLowerCase();
+        var chars = f.text.length;
+        var meta = ext.toUpperCase() + ' \u00b7 ' + (chars > 1000 ? Math.round(chars / 1000) + 'k' : chars) + ' chars';
+        var item = document.createElement('div');
+        item.className = 'file-item';
+        item.innerHTML = '<div class="file-item-icon">' + ext + '</div>' +
+            '<div class="file-item-info"><div class="file-item-name">' + f.name + '</div><div class="file-item-meta">' + meta + '</div></div>' +
+            '<button class="file-item-remove" data-id="' + f.id + '">\u00d7</button>';
+        fileListEl.appendChild(item);
+    });
+    // Bind remove buttons
+    var removeBtns = fileListEl.querySelectorAll('.file-item-remove');
+    for (var i = 0; i < removeBtns.length; i++) {
+        (function(btn) {
+            btn.addEventListener('click', function() { removeFile(parseInt(btn.getAttribute('data-id'))); });
+        })(removeBtns[i]);
+    }
+}
+
+function processFiles(files) {
+    for (var i = 0; i < files.length; i++) {
+        (function(file) {
+            var textExts = ['txt', 'md'];
+            var ext = file.name.split('.').pop().toLowerCase();
+            if (textExts.indexOf(ext) !== -1) {
+                var reader = new FileReader();
+                reader.onload = function(ev) { addFile(file.name, ev.target.result); };
+                reader.readAsText(file);
+            } else {
+                // Show parsing state
+                fileUpload.innerHTML = '<span class="spinner"></span><div class="upload-text">Parsing ' + file.name + '...</div>';
+                var formData = new FormData();
+                formData.append('file', file);
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', getBackendUrl('upload'));
+                xhr.onload = function() {
+                    fileUpload.innerHTML = UPLOAD_AREA_HTML;
+                    if (xhr.status === 200) {
+                        var data = JSON.parse(xhr.responseText);
+                        addFile(file.name, data.text);
+                    } else {
+                        alert('Error parsing ' + file.name);
+                    }
+                };
+                xhr.onerror = function() {
+                    fileUpload.innerHTML = UPLOAD_AREA_HTML;
+                    alert('Upload failed for ' + file.name);
+                };
+                xhr.send(formData);
+            }
+        })(files[i]);
+    }
+}
 
 fileUpload.addEventListener('click', function() { fileInput.click(); });
 fileUpload.addEventListener('dragover', function(e) { e.preventDefault(); fileUpload.style.borderColor = 'var(--text-secondary)'; });
@@ -102,48 +156,12 @@ fileUpload.addEventListener('dragleave', function() { fileUpload.style.borderCol
 fileUpload.addEventListener('drop', function(e) {
     e.preventDefault();
     fileUpload.style.borderColor = '';
-    if (e.dataTransfer.files.length > 0) {
-        fileInput.files = e.dataTransfer.files;
-        fileInput.dispatchEvent(new Event('change'));
-    }
+    if (e.dataTransfer.files.length > 0) processFiles(e.dataTransfer.files);
 });
 
 fileInput.addEventListener('change', function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-
-    var textExts = ['txt', 'md'];
-    var ext = file.name.split('.').pop().toLowerCase();
-
-    if (textExts.indexOf(ext) !== -1) {
-        var reader = new FileReader();
-        reader.onload = function(ev) {
-            showFilePreview(file.name, ev.target.result);
-        };
-        reader.readAsText(file);
-    } else {
-        // All other files go to backend for structure-preserving parsing
-        fileUpload.innerHTML = '<span class="spinner"></span><div class="upload-text">Parsing ' + file.name + '...</div>';
-        var formData = new FormData();
-        formData.append('file', file);
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', getBackendUrl('upload'));
-        xhr.onload = function() {
-            // Reset upload area first
-            fileUpload.innerHTML = '<div class="upload-icon">+</div><div class="upload-text">Drop file or click to upload</div><div class="file-types">.txt .md .csv .pdf .docx .pptx .xlsx .msg .eml</div>';
-            if (xhr.status === 200) {
-                var data = JSON.parse(xhr.responseText);
-                showFilePreview(file.name, data.text);
-            } else {
-                alert('Error parsing file');
-            }
-        };
-        xhr.onerror = function() {
-            fileUpload.innerHTML = '<div class="upload-icon">+</div><div class="upload-text">Drop file or click to upload</div><div class="file-types">.txt .md .csv .pdf .docx .pptx .xlsx .msg .eml</div>';
-            alert('Upload failed');
-        };
-        xhr.send(formData);
-    }
+    if (e.target.files.length > 0) processFiles(e.target.files);
+    fileInput.value = '';
 });
 
 // --- Step indicator helpers ---
