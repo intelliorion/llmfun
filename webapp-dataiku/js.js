@@ -182,8 +182,6 @@ function startPolling() {
             if (data.status === 'building') {
                 var pct = Math.round((data.current_chunk / data.total_chunks) * 100);
                 hintText.textContent = 'Building graph... ' + data.current_chunk + '/' + data.total_chunks + ' (' + pct + '%)';
-            } else if (data.status === 'deduplicating') {
-                hintText.textContent = 'Agent 2: Resolving duplicate entities...';
             }
 
             updateGraph(data.graph_data);
@@ -194,6 +192,9 @@ function startPolling() {
                 hint.classList.remove('visible');
                 buildBtn.disabled = false;
                 buildBtn.textContent = 'Build Knowledge Graph';
+                // Full refresh after dedup — clear and rebuild
+                visNodes.clear();
+                visEdges.clear();
                 updateGraph(data.graph_data);
                 updateTables(data.graph_data);
             }
