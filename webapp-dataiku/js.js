@@ -51,12 +51,38 @@ fileUpload.addEventListener('click', function() { fileInput.click(); });
 fileInput.addEventListener('change', function(e) {
     var file = e.target.files[0];
     if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(ev) {
-        textarea.value = ev.target.result;
-        fileUpload.textContent = 'Loaded: ' + file.name;
-    };
-    reader.readAsText(file);
+
+    var textExts = ['txt', 'md', 'csv'];
+    var ext = file.name.split('.').pop().toLowerCase();
+
+    if (textExts.indexOf(ext) !== -1) {
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+            textarea.value = ev.target.result;
+            fileUpload.innerHTML = 'Loaded: ' + file.name + '<br><span style="font-size:11px;color:#999;">.txt .md .pdf .docx .pptx .xlsx .msg .eml</span>';
+        };
+        reader.readAsText(file);
+    } else {
+        // Send binary files to backend for parsing
+        fileUpload.innerHTML = '<span class="spinner"></span> Parsing ' + file.name + '...';
+        var formData = new FormData();
+        formData.append('file', file);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', getBackendUrl('upload'));
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var data = JSON.parse(xhr.responseText);
+                textarea.value = data.text;
+                fileUpload.innerHTML = 'Loaded: ' + file.name + '<br><span style="font-size:11px;color:#999;">.txt .md .pdf .docx .pptx .xlsx .msg .eml</span>';
+            } else {
+                fileUpload.innerHTML = 'Error parsing file<br><span style="font-size:11px;color:#999;">.txt .md .pdf .docx .pptx .xlsx .msg .eml</span>';
+            }
+        };
+        xhr.onerror = function() {
+            fileUpload.innerHTML = 'Upload failed<br><span style="font-size:11px;color:#999;">.txt .md .pdf .docx .pptx .xlsx .msg .eml</span>';
+        };
+        xhr.send(formData);
+    }
 });
 
 // --- Build graph ---
@@ -126,7 +152,7 @@ function initGraph() {
             shape: 'dot', size: 20, borderWidth: 2.5, borderWidthSelected: 4,
             color: { border: '#ffffff', highlight: {border: '#333333'}, hover: {border: '#333333'} },
             shadow: {enabled: true, color: 'rgba(0,0,0,0.15)', size: 6},
-            font: {size: 11, color: '#333333', face: 'Arial'}
+            font: {size: 11, color: '#333333', face: 'Arial', multi: 'html', vadjust: -4}
         },
         edges: {
             arrows: 'to',

@@ -96,7 +96,7 @@ def graph_to_json(G):
         color = type_color_map[node_type]
         nodes.append({
             'id': node,
-            'label': node if len(node) <= 12 else node[:11] + '...',
+            'label': node,
             'fullName': node,
             'type': node_type,
             'description': data.get('description', ''),
@@ -166,7 +166,116 @@ def build_graph_async(session_id, text):
     session['status'] = 'done'
 
 
+# --- File parsing ---
+def extract_text_from_file(file_obj, filename):
+    ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+
+    if ext in ('txt', 'md', 'csv'):
+        return file_obj.read().decode('utf-8', errors='ignore')
+
+    elif ext == 'pdf':
+        try:
+            import fitz
+            pdf = fitz.open(stream=file_obj.read(), filetype='pdf')
+            return '\n'.join([page.get_text() for page in pdf])
+        except ImportError:
+            return '[Error: PyMuPDF not installed for PDF support]'
+
+    elif ext == 'docx':
+        try:
+            from docx import Document
+            import io
+            doc = Document(io.BytesIO(file_obj.read()))
+            return '\n'.join([p.text for p in doc.paragraphs if p.text.strip()])
+        except ImportError:
+            return '[Error: python-docx not installed for DOCX support]'
+
+    elif ext == 'pptx':
+        try:
+            from pptx import Presentation
+            import io
+            prs = Presentation(io.BytesIO(file_obj.read()))
+            texts = []
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    if shape.has_text_frame:
+                        for para in shape.text_frame.paragraphs:
+                            t = para.text.strip()
+                            if t:
+                                texts.append(t)
+            return '\n'.join(texts)
+        except ImportError:
+            return '[Error: python-pptx not installed for PPTX support]'
+
+    elif ext == 'xlsx':
+        try:
+            import openpyxl
+            import io
+            wb = openpyxl.load_workbook(io.BytesIO(file_obj.read()), read_only=True)
+            texts = []
+            for ws in wb.worksheets:
+                for row in ws.iter_rows(values_only=True):
+                    vals = [str(c) for c in row if c is not None]
+                    if vals:
+                        texts.append(' | '.join(vals))
+            return '\n'.join(texts)
+        except ImportError:
+            return '[Error: openpyxl not installed for XLSX support]'
+
+    elif ext == 'eml':
+        try:
+            import email
+            from email import policy
+            msg = email.message_from_bytes(file_obj.read(), policy=policy.default)
+            parts = []
+            parts.append('From: ' + str(msg.get('From', '')))
+            parts.append('To: ' + str(msg.get('To', '')))
+            parts.append('Date: ' + str(msg.get('Date', '')))
+            parts.append('Subject: ' + str(msg.get('Subject', '')))
+            parts.append('')
+            body = msg.get_body(preferencelist=('plain', 'html'))
+            if body:
+                content = body.get_content()
+                if body.get_content_type() == 'text/html':
+                    import re as _re
+                    content = _re.sub(r'<[^>]+>', ' ', content)
+                parts.append(content)
+            return '\n'.join(parts)
+        except Exception as e:
+            return '[Error parsing EML: ' + str(e) + ']'
+
+    elif ext == 'msg':
+        try:
+            import extract_msg
+            import io
+            msg = extract_msg.Message(io.BytesIO(file_obj.read()))
+            parts = []
+            parts.append('From: ' + str(msg.sender or ''))
+            parts.append('To: ' + str(msg.to or ''))
+            parts.append('Date: ' + str(msg.date or ''))
+            parts.append('Subject: ' + str(msg.subject or ''))
+            parts.append('')
+            parts.append(str(msg.body or ''))
+            return '\n'.join(parts)
+        except ImportError:
+            return '[Error: extract-msg not installed for MSG support]'
+
+    else:
+        return file_obj.read().decode('utf-8', errors='ignore')
+
+
 # --- Flask Routes ---
+@app.route('/upload', methods=['POST'])
+def api_upload():
+    if 'file' not in request.files:
+        return json_response({'error': 'No file provided'}, 400)
+    f = request.files['file']
+    if not f.filename:
+        return json_response({'error': 'No file selected'}, 400)
+    text = extract_text_from_file(f, f.filename)
+    return json_response({'text': text, 'filename': f.filename})
+
+
 @app.route('/build', methods=['POST'])
 def api_build():
     data = request.get_json(force=True)
