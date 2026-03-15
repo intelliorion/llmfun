@@ -13,7 +13,7 @@ st.title("MiroFish POC - Knowledge Graph Builder")
 def get_llm():
     client = dataiku.api_client()
     project = client.get_default_project()
-    return project.get_llm("openaiLMSOpenAI:gpt-4o")
+    return project.get_llm("openai:MSOpenAI:gpt-4o")
 
 llm = get_llm()
 
