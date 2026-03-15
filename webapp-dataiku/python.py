@@ -17,9 +17,9 @@ def get_llm():
 
 llm = get_llm()
 
-# --- MiroFish Colors ---
-MIROFISH_COLORS = ['#FF6B35', '#004E89', '#7B2D8E', '#1A936F', '#C5283D',
-                   '#E9724C', '#3498db', '#9b59b6', '#27ae60', '#f39c12']
+# --- Orion / MS Color Palette ---
+ORION_COLORS = ['#216CA6', '#1A936F', '#7B2D8E', '#C5283D', '#2E86AB',
+                '#5ba3d9', '#e07a2f', '#6C757D', '#0d7377', '#8B5CF6']
 
 # --- Prompts ---
 EXTRACTION_PROMPT = """Analyze the following text and extract all entities and relationships.
@@ -91,8 +91,8 @@ def graph_to_json(G):
     for node, data in G.nodes(data=True):
         node_type = data.get('type', 'Unknown')
         if node_type not in type_color_map:
-            idx = len(type_color_map) % len(MIROFISH_COLORS)
-            type_color_map[node_type] = MIROFISH_COLORS[idx]
+            idx = len(type_color_map) % len(ORION_COLORS)
+            type_color_map[node_type] = ORION_COLORS[idx]
         color = type_color_map[node_type]
         nodes.append({
             'id': node,
