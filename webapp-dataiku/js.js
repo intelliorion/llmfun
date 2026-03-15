@@ -4,11 +4,20 @@ var visNodes = null;
 var visEdges = null;
 var pollingTimer = null;
 
+// --- Manus-style color palette for entities ---
+var ENTITY_COLORS = {
+    'Person': '#6366f1',
+    'Organization': '#0ea5e9',
+    'Division': '#8b5cf6',
+    'Metric': '#f59e0b',
+    'Event': '#ef4444',
+    'Technology': '#10b981',
+    'Market': '#ec4899',
+    'Unknown': '#94a3b8'
+};
+
 // --- Get backend URL (Dataiku standard webapp) ---
 function getBackendUrl(path) {
-    // Dataiku standard webapps: backend is at the same origin
-    // The webapp backend routes are relative to the webapp URL
-    // Try dataiku.getWebAppBackendUrl if available, fallback to relative path
     if (typeof dataiku !== 'undefined' && dataiku.getWebAppBackendUrl) {
         return dataiku.getWebAppBackendUrl(path);
     }
@@ -59,11 +68,10 @@ fileInput.addEventListener('change', function(e) {
         var reader = new FileReader();
         reader.onload = function(ev) {
             textarea.value = ev.target.result;
-            fileUpload.innerHTML = 'Loaded: ' + file.name + '<br><span style="font-size:11px;color:#999;">.txt .md .pdf .docx .pptx .xlsx .msg .eml</span>';
+            fileUpload.innerHTML = 'Loaded: ' + file.name + '<div class="file-types">.txt .md .pdf .docx .pptx .xlsx .msg .eml</div>';
         };
         reader.readAsText(file);
     } else {
-        // Send binary files to backend for parsing
         fileUpload.innerHTML = '<span class="spinner"></span> Parsing ' + file.name + '...';
         var formData = new FormData();
         formData.append('file', file);
@@ -73,17 +81,40 @@ fileInput.addEventListener('change', function(e) {
             if (xhr.status === 200) {
                 var data = JSON.parse(xhr.responseText);
                 textarea.value = data.text;
-                fileUpload.innerHTML = 'Loaded: ' + file.name + '<br><span style="font-size:11px;color:#999;">.txt .md .pdf .docx .pptx .xlsx .msg .eml</span>';
+                fileUpload.innerHTML = 'Loaded: ' + file.name + '<div class="file-types">.txt .md .pdf .docx .pptx .xlsx .msg .eml</div>';
             } else {
-                fileUpload.innerHTML = 'Error parsing file<br><span style="font-size:11px;color:#999;">.txt .md .pdf .docx .pptx .xlsx .msg .eml</span>';
+                fileUpload.innerHTML = 'Error parsing file<div class="file-types">.txt .md .pdf .docx .pptx .xlsx .msg .eml</div>';
             }
         };
         xhr.onerror = function() {
-            fileUpload.innerHTML = 'Upload failed<br><span style="font-size:11px;color:#999;">.txt .md .pdf .docx .pptx .xlsx .msg .eml</span>';
+            fileUpload.innerHTML = 'Upload failed<div class="file-types">.txt .md .pdf .docx .pptx .xlsx .msg .eml</div>';
         };
         xhr.send(formData);
     }
 });
+
+// --- Step indicator helpers ---
+function resetSteps() {
+    var steps = document.querySelectorAll('.step-indicator');
+    for (var i = 0; i < steps.length; i++) {
+        steps[i].classList.remove('active', 'done');
+    }
+    document.getElementById('step-indicators').style.display = 'none';
+    document.getElementById('progress-container').style.display = 'none';
+    document.getElementById('progress-bar').style.width = '0%';
+}
+
+function setStep(stepId, state) {
+    document.getElementById('step-indicators').style.display = 'flex';
+    var el = document.getElementById(stepId);
+    el.classList.remove('active', 'done');
+    if (state) el.classList.add(state);
+}
+
+function setProgress(pct) {
+    document.getElementById('progress-container').style.display = 'block';
+    document.getElementById('progress-bar').style.width = pct + '%';
+}
 
 // --- Build graph ---
 var buildBtn = document.getElementById('btn-build');
@@ -94,6 +125,7 @@ buildBtn.addEventListener('click', function() {
 
     buildBtn.disabled = true;
     buildBtn.textContent = 'Building...';
+    resetSteps();
 
     document.getElementById('entities-table-body').innerHTML = '';
     document.getElementById('relationships-table-body').innerHTML = '';
@@ -117,12 +149,14 @@ buildBtn.addEventListener('click', function() {
                 alert('Error starting build: ' + xhr.status + ' ' + xhr.responseText.substring(0, 200));
                 buildBtn.disabled = false;
                 buildBtn.textContent = 'Build Knowledge Graph';
+                resetSteps();
             }
         };
         xhr.onerror = function() {
             alert('Network error');
             buildBtn.disabled = false;
             buildBtn.textContent = 'Build Knowledge Graph';
+            resetSteps();
         };
         xhr.send(JSON.stringify({text: text}));
     });
@@ -137,28 +171,32 @@ function initGraph() {
     var options = {
         physics: {
             barnesHut: {
-                gravitationalConstant: -4000,
-                springLength: 150,
-                springConstant: 0.05,
+                gravitationalConstant: -3000,
+                springLength: 180,
+                springConstant: 0.04,
                 damping: 0.09
             },
-            stabilization: {iterations: 100}
+            stabilization: {iterations: 120}
         },
         interaction: {
             hover: true, dragNodes: true, dragView: true,
             zoomView: true, tooltipDelay: 200
         },
         nodes: {
-            shape: 'dot', size: 20, borderWidth: 2.5, borderWidthSelected: 4,
-            color: { border: '#ffffff', highlight: {border: '#333333'}, hover: {border: '#333333'} },
-            shadow: {enabled: true, color: 'rgba(0,0,0,0.15)', size: 6},
-            font: {size: 11, color: '#333333', face: 'Arial', multi: 'html', vadjust: -4}
+            shape: 'dot', size: 18, borderWidth: 2, borderWidthSelected: 3,
+            color: {
+                border: 'rgba(255,255,255,0.8)',
+                highlight: {border: '#1a1a1a'},
+                hover: {border: '#1a1a1a'}
+            },
+            shadow: {enabled: true, color: 'rgba(0,0,0,0.08)', size: 8, x: 0, y: 2},
+            font: {size: 11, color: '#1a1a1a', face: 'system-ui, sans-serif', multi: 'html', vadjust: -4}
         },
         edges: {
-            arrows: 'to',
-            color: {color: '#C0C0C0', highlight: '#3498db', hover: '#888'},
-            width: 1.5, selectionWidth: 3,
-            font: {size: 9, align: 'middle', color: '#666', background: 'rgba(255,255,255,0.9)', strokeWidth: 0},
+            arrows: {to: {enabled: true, scaleFactor: 0.6}},
+            color: {color: '#d4d4d4', highlight: '#6366f1', hover: '#a3a3a3'},
+            width: 1.2, selectionWidth: 2,
+            font: {size: 9, align: 'middle', color: '#999', background: 'rgba(248,248,247,0.95)', strokeWidth: 0},
             smooth: {type: 'continuous'}
         }
     };
@@ -181,7 +219,14 @@ function startPolling() {
 
             if (data.status === 'building') {
                 var pct = Math.round((data.current_chunk / data.total_chunks) * 100);
-                hintText.textContent = 'Building graph... ' + data.current_chunk + '/' + data.total_chunks + ' (' + pct + '%)';
+                hintText.textContent = 'Extracting entities... ' + data.current_chunk + '/' + data.total_chunks;
+                setProgress(pct * 0.8); // 80% for extraction
+                setStep('step-extract', 'active');
+            } else if (data.status === 'deduplicating') {
+                hintText.textContent = 'Resolving duplicate entities...';
+                setProgress(90);
+                setStep('step-extract', 'done');
+                setStep('step-dedup', 'active');
             }
 
             updateGraph(data.graph_data);
@@ -192,11 +237,19 @@ function startPolling() {
                 hint.classList.remove('visible');
                 buildBtn.disabled = false;
                 buildBtn.textContent = 'Build Knowledge Graph';
-                // Full refresh after dedup — clear and rebuild
+                setProgress(100);
+                setStep('step-extract', 'done');
+                setStep('step-dedup', 'done');
+                setStep('step-done', 'done');
+                // Full refresh after dedup
                 visNodes.clear();
                 visEdges.clear();
                 updateGraph(data.graph_data);
                 updateTables(data.graph_data);
+                // Fade out progress after a moment
+                setTimeout(function() {
+                    document.getElementById('progress-container').style.display = 'none';
+                }, 2000);
             }
         };
         xhr.send();
@@ -215,13 +268,15 @@ function updateGraph(graphData) {
 
     graphData.nodes.forEach(function(n) {
         if (!existingNodeIds[n.id]) {
+            var nodeColor = ENTITY_COLORS[n.type] || ENTITY_COLORS['Unknown'];
             visNodes.add({
                 id: n.id, label: n.label,
                 title: '<b>' + n.fullName + '</b><br>Type: ' + n.type + '<br>' + n.description,
                 color: {
-                    background: n.color, border: '#ffffff',
-                    highlight: {background: n.color, border: '#333333'},
-                    hover: {background: n.color, border: '#333333'}
+                    background: nodeColor,
+                    border: 'rgba(255,255,255,0.8)',
+                    highlight: {background: nodeColor, border: '#1a1a1a'},
+                    hover: {background: nodeColor, border: '#1a1a1a'}
                 }
             });
         }
@@ -245,9 +300,10 @@ function updateLegend(typeColors) {
     var container = document.getElementById('legend-items');
     container.innerHTML = '';
     for (var type in typeColors) {
+        var color = ENTITY_COLORS[type] || typeColors[type];
         var item = document.createElement('div');
         item.className = 'legend-item';
-        item.innerHTML = '<span class="legend-dot" style="background:' + typeColors[type] + '"></span>' + type;
+        item.innerHTML = '<span class="legend-dot" style="background:' + color + '"></span>' + type;
         container.appendChild(item);
     }
 }
@@ -256,9 +312,10 @@ function updateTables(graphData) {
     var tbody1 = document.getElementById('entities-table-body');
     tbody1.innerHTML = '';
     graphData.nodes.forEach(function(n) {
+        var color = ENTITY_COLORS[n.type] || n.color;
         var tr = document.createElement('tr');
         tr.innerHTML = '<td>' + n.fullName + '</td>' +
-            '<td><span class="type-badge" style="background:' + n.color + '">' + n.type + '</span></td>' +
+            '<td><span class="type-badge" style="background:' + color + '">' + n.type + '</span></td>' +
             '<td>' + n.description + '</td>';
         tbody1.appendChild(tr);
     });
