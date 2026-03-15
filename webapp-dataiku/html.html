@@ -12,20 +12,42 @@
 <div class="main">
     <!-- Sidebar -->
     <div class="sidebar">
-        <h2>Data Source</h2>
+        <div class="sidebar-header">
+            <h2>Data Source</h2>
+        </div>
 
-        <textarea id="text-input" placeholder="Paste your text here...">Morgan Stanley's wealth management division reported strong Q4 2025 results, driven by increased client assets and higher fee-based revenues. CEO Ted Pick highlighted the firm's strategic focus on integrating technology across its advisory platform. The division saw net new assets of $120 billion for the year.
+        <!-- Input mode toggle -->
+        <div class="input-toggle">
+            <button class="toggle-btn active" id="toggle-text" data-mode="text">Paste Text</button>
+            <button class="toggle-btn" id="toggle-upload" data-mode="upload">Upload File</button>
+        </div>
+
+        <!-- Text input mode -->
+        <div class="input-mode active" id="mode-text">
+            <textarea id="text-input" placeholder="Paste your text here...">Morgan Stanley's wealth management division reported strong Q4 2025 results, driven by increased client assets and higher fee-based revenues. CEO Ted Pick highlighted the firm's strategic focus on integrating technology across its advisory platform. The division saw net new assets of $120 billion for the year.
 
 Meanwhile, the institutional securities group faced headwinds from lower trading volumes in fixed income markets. CFO Sharon Yeshaya noted that the firm is investing heavily in AI-driven risk analytics to improve trading desk performance.
 
 Competitor Goldman Sachs also reported mixed results, with its asset management division outperforming while investment banking revenues declined. JPMorgan Chase continued to lead in overall revenue, benefiting from its diversified business model.
 
 Industry analysts from Barclays and UBS forecast that wealth management will remain the key growth driver for large banks in 2026, as interest rate cuts are expected to boost asset valuations and client activity.</textarea>
+        </div>
 
-        <div class="file-upload" id="file-upload">
-            Drop file or click to upload
-            <div class="file-types">.txt .md .pdf .docx .pptx .xlsx .msg .eml</div>
-            <input type="file" id="file-input" accept=".txt,.md,.csv,.pdf,.docx,.pptx,.xlsx,.msg,.eml">
+        <!-- Upload mode -->
+        <div class="input-mode" id="mode-upload">
+            <div class="file-upload" id="file-upload">
+                <div class="upload-icon">+</div>
+                <div class="upload-text">Drop file or click to upload</div>
+                <div class="file-types">.txt .md .csv .pdf .docx .pptx .xlsx .msg .eml</div>
+                <input type="file" id="file-input" accept=".txt,.md,.csv,.pdf,.docx,.pptx,.xlsx,.msg,.eml">
+            </div>
+            <div class="file-preview" id="file-preview" style="display:none;">
+                <div class="file-preview-header">
+                    <span class="file-preview-name" id="file-preview-name"></span>
+                    <button class="file-preview-clear" id="file-preview-clear">Remove</button>
+                </div>
+                <div class="file-preview-text" id="file-preview-text"></div>
+            </div>
         </div>
 
         <button class="btn-primary" id="btn-build">Build Knowledge Graph</button>

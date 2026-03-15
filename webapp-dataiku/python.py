@@ -104,24 +104,28 @@ def deduplicate_entities(G):
     if not mappings:
         return G
 
+    # Build new graph with merged entities
     new_G = nx.DiGraph()
 
+    # Copy nodes, merging as needed
     for node, data in G.nodes(data=True):
         canonical = mappings.get(node, node)
         if canonical not in new_G:
             new_G.add_node(canonical, **data)
         else:
+            # Keep the richer description
             existing = new_G.nodes[canonical]
             if len(data.get('description', '')) > len(existing.get('description', '')):
                 existing['description'] = data['description']
             if existing.get('type', 'Unknown') == 'Unknown' and data.get('type', 'Unknown') != 'Unknown':
                 existing['type'] = data['type']
 
+    # Copy edges, remapping to canonical names
     for src, tgt, data in G.edges(data=True):
         new_src = mappings.get(src, src)
         new_tgt = mappings.get(tgt, tgt)
         if new_src == new_tgt:
-            continue
+            continue  # Skip self-loops created by merging
         if not new_G.has_edge(new_src, new_tgt):
             if new_src not in new_G:
                 new_G.add_node(new_src, type='Unknown', description='')
@@ -241,59 +245,139 @@ def build_graph_async(session_id, text):
     session['status'] = 'done'
 
 
-# --- File parsing ---
+# --- File parsing (structure-preserving) ---
 def extract_text_from_file(file_obj, filename):
+    import io
     ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
 
-    if ext in ('txt', 'md', 'csv'):
+    if ext in ('txt', 'md'):
         return file_obj.read().decode('utf-8', errors='ignore')
+
+    elif ext == 'csv':
+        try:
+            import csv
+            raw = file_obj.read().decode('utf-8', errors='ignore')
+            reader = csv.reader(raw.strip().splitlines())
+            rows = list(reader)
+            if not rows:
+                return raw
+            header = rows[0]
+            parts = ['[Table: ' + filename + ']']
+            parts.append('Columns: ' + ' | '.join(header))
+            parts.append('')
+            for row in rows[1:]:
+                entry = []
+                for i, val in enumerate(row):
+                    if val.strip():
+                        col = header[i] if i < len(header) else 'Col' + str(i+1)
+                        entry.append(col + ': ' + val.strip())
+                if entry:
+                    parts.append('; '.join(entry))
+            return '\n'.join(parts)
+        except Exception:
+            return file_obj.read().decode('utf-8', errors='ignore')
 
     elif ext == 'pdf':
         try:
             import fitz
             pdf = fitz.open(stream=file_obj.read(), filetype='pdf')
-            return '\n'.join([page.get_text() for page in pdf])
+            parts = ['[Document: ' + filename + ', ' + str(len(pdf)) + ' pages]', '']
+            for i, page in enumerate(pdf):
+                text = page.get_text().strip()
+                if text:
+                    parts.append('--- Page ' + str(i+1) + ' ---')
+                    parts.append(text)
+                    parts.append('')
+            return '\n'.join(parts)
         except ImportError:
             return '[Error: PyMuPDF not installed for PDF support]'
 
     elif ext == 'docx':
         try:
             from docx import Document
-            import io
             doc = Document(io.BytesIO(file_obj.read()))
-            return '\n'.join([p.text for p in doc.paragraphs if p.text.strip()])
+            parts = ['[Document: ' + filename + ']', '']
+            for para in doc.paragraphs:
+                text = para.text.strip()
+                if not text:
+                    continue
+                style = para.style.name if para.style else ''
+                if 'Heading 1' in style:
+                    parts.append('# ' + text)
+                elif 'Heading 2' in style:
+                    parts.append('## ' + text)
+                elif 'Heading 3' in style:
+                    parts.append('### ' + text)
+                elif 'List' in style:
+                    parts.append('- ' + text)
+                else:
+                    parts.append(text)
+            for table in doc.tables:
+                parts.append('')
+                parts.append('[Table]')
+                for ri, row in enumerate(table.rows):
+                    cells = [cell.text.strip() for cell in row.cells]
+                    parts.append(' | '.join(cells))
+                    if ri == 0:
+                        parts.append('-' * 40)
+                parts.append('')
+            return '\n'.join(parts)
         except ImportError:
             return '[Error: python-docx not installed for DOCX support]'
 
     elif ext == 'pptx':
         try:
             from pptx import Presentation
-            import io
             prs = Presentation(io.BytesIO(file_obj.read()))
-            texts = []
-            for slide in prs.slides:
+            parts = ['[Presentation: ' + filename + ', ' + str(len(prs.slides)) + ' slides]', '']
+            for i, slide in enumerate(prs.slides):
+                slide_texts = []
                 for shape in slide.shapes:
                     if shape.has_text_frame:
                         for para in shape.text_frame.paragraphs:
                             t = para.text.strip()
                             if t:
-                                texts.append(t)
-            return '\n'.join(texts)
+                                slide_texts.append(t)
+                    if shape.has_table:
+                        table = shape.table
+                        for row in table.rows:
+                            cells = [cell.text.strip() for cell in row.cells]
+                            slide_texts.append(' | '.join(cells))
+                if slide.has_notes_slide and slide.notes_slide.notes_text_frame:
+                    notes = slide.notes_slide.notes_text_frame.text.strip()
+                    if notes:
+                        slide_texts.append('[Speaker Notes] ' + notes)
+                if slide_texts:
+                    parts.append('--- Slide ' + str(i+1) + ' ---')
+                    parts.extend(slide_texts)
+                    parts.append('')
+            return '\n'.join(parts)
         except ImportError:
             return '[Error: python-pptx not installed for PPTX support]'
 
     elif ext == 'xlsx':
         try:
             import openpyxl
-            import io
             wb = openpyxl.load_workbook(io.BytesIO(file_obj.read()), read_only=True)
-            texts = []
+            parts = ['[Spreadsheet: ' + filename + ', ' + str(len(wb.sheetnames)) + ' sheets]', '']
             for ws in wb.worksheets:
-                for row in ws.iter_rows(values_only=True):
-                    vals = [str(c) for c in row if c is not None]
-                    if vals:
-                        texts.append(' | '.join(vals))
-            return '\n'.join(texts)
+                rows = list(ws.iter_rows(values_only=True))
+                if not rows:
+                    continue
+                parts.append('--- Sheet: ' + ws.title + ' ---')
+                header = [str(c) if c is not None else '' for c in rows[0]]
+                parts.append('Columns: ' + ' | '.join(header))
+                parts.append('')
+                for row in rows[1:]:
+                    entry = []
+                    for i, val in enumerate(row):
+                        if val is not None and str(val).strip():
+                            col = header[i] if i < len(header) and header[i] else 'Col' + str(i+1)
+                            entry.append(col + ': ' + str(val).strip())
+                    if entry:
+                        parts.append('; '.join(entry))
+                parts.append('')
+            return '\n'.join(parts)
         except ImportError:
             return '[Error: openpyxl not installed for XLSX support]'
 
@@ -302,9 +386,11 @@ def extract_text_from_file(file_obj, filename):
             import email
             from email import policy
             msg = email.message_from_bytes(file_obj.read(), policy=policy.default)
-            parts = []
+            parts = ['[Email: ' + filename + ']']
             parts.append('From: ' + str(msg.get('From', '')))
             parts.append('To: ' + str(msg.get('To', '')))
+            if msg.get('Cc'):
+                parts.append('Cc: ' + str(msg.get('Cc', '')))
             parts.append('Date: ' + str(msg.get('Date', '')))
             parts.append('Subject: ' + str(msg.get('Subject', '')))
             parts.append('')
@@ -314,6 +400,7 @@ def extract_text_from_file(file_obj, filename):
                 if body.get_content_type() == 'text/html':
                     import re as _re
                     content = _re.sub(r'<[^>]+>', ' ', content)
+                    content = _re.sub(r'\s+', ' ', content).strip()
                 parts.append(content)
             return '\n'.join(parts)
         except Exception as e:
@@ -322,9 +409,8 @@ def extract_text_from_file(file_obj, filename):
     elif ext == 'msg':
         try:
             import extract_msg
-            import io
             msg = extract_msg.Message(io.BytesIO(file_obj.read()))
-            parts = []
+            parts = ['[Email: ' + filename + ']']
             parts.append('From: ' + str(msg.sender or ''))
             parts.append('To: ' + str(msg.to or ''))
             parts.append('Date: ' + str(msg.date or ''))

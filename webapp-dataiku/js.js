@@ -52,42 +52,95 @@ for (var i = 0; i < allTabs.length; i++) {
 }
 
 // --- File upload ---
+// --- Input mode toggle ---
+var toggleBtns = document.querySelectorAll('.toggle-btn');
+var inputModes = document.querySelectorAll('.input-mode');
+var currentMode = 'text';
+var uploadedText = '';
+
+for (var t = 0; t < toggleBtns.length; t++) {
+    (function(btn) {
+        btn.addEventListener('click', function() {
+            currentMode = btn.getAttribute('data-mode');
+            for (var k = 0; k < toggleBtns.length; k++) toggleBtns[k].classList.remove('active');
+            for (var k = 0; k < inputModes.length; k++) inputModes[k].classList.remove('active');
+            btn.classList.add('active');
+            document.getElementById('mode-' + currentMode).classList.add('active');
+        });
+    })(toggleBtns[t]);
+}
+
+// --- File upload ---
 var fileUpload = document.getElementById('file-upload');
 var fileInput = document.getElementById('file-input');
 var textarea = document.getElementById('text-input');
+var filePreview = document.getElementById('file-preview');
+var filePreviewName = document.getElementById('file-preview-name');
+var filePreviewText = document.getElementById('file-preview-text');
+var filePreviewClear = document.getElementById('file-preview-clear');
+
+function showFilePreview(name, text) {
+    uploadedText = text;
+    filePreviewName.textContent = name;
+    filePreviewText.textContent = text.substring(0, 2000) + (text.length > 2000 ? '\n\n... (' + text.length + ' chars total)' : '');
+    fileUpload.style.display = 'none';
+    filePreview.style.display = 'flex';
+}
+
+function clearFilePreview() {
+    uploadedText = '';
+    fileInput.value = '';
+    fileUpload.style.display = 'flex';
+    filePreview.style.display = 'none';
+}
+
+filePreviewClear.addEventListener('click', clearFilePreview);
 
 fileUpload.addEventListener('click', function() { fileInput.click(); });
+fileUpload.addEventListener('dragover', function(e) { e.preventDefault(); fileUpload.style.borderColor = 'var(--text-secondary)'; });
+fileUpload.addEventListener('dragleave', function() { fileUpload.style.borderColor = ''; });
+fileUpload.addEventListener('drop', function(e) {
+    e.preventDefault();
+    fileUpload.style.borderColor = '';
+    if (e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        fileInput.dispatchEvent(new Event('change'));
+    }
+});
+
 fileInput.addEventListener('change', function(e) {
     var file = e.target.files[0];
     if (!file) return;
 
-    var textExts = ['txt', 'md', 'csv'];
+    var textExts = ['txt', 'md'];
     var ext = file.name.split('.').pop().toLowerCase();
 
     if (textExts.indexOf(ext) !== -1) {
         var reader = new FileReader();
         reader.onload = function(ev) {
-            textarea.value = ev.target.result;
-            fileUpload.innerHTML = 'Loaded: ' + file.name + '<div class="file-types">.txt .md .pdf .docx .pptx .xlsx .msg .eml</div>';
+            showFilePreview(file.name, ev.target.result);
         };
         reader.readAsText(file);
     } else {
-        fileUpload.innerHTML = '<span class="spinner"></span> Parsing ' + file.name + '...';
+        // All other files go to backend for structure-preserving parsing
+        fileUpload.innerHTML = '<span class="spinner"></span><div class="upload-text">Parsing ' + file.name + '...</div>';
         var formData = new FormData();
         formData.append('file', file);
         var xhr = new XMLHttpRequest();
         xhr.open('POST', getBackendUrl('upload'));
         xhr.onload = function() {
+            // Reset upload area first
+            fileUpload.innerHTML = '<div class="upload-icon">+</div><div class="upload-text">Drop file or click to upload</div><div class="file-types">.txt .md .csv .pdf .docx .pptx .xlsx .msg .eml</div>';
             if (xhr.status === 200) {
                 var data = JSON.parse(xhr.responseText);
-                textarea.value = data.text;
-                fileUpload.innerHTML = 'Loaded: ' + file.name + '<div class="file-types">.txt .md .pdf .docx .pptx .xlsx .msg .eml</div>';
+                showFilePreview(file.name, data.text);
             } else {
-                fileUpload.innerHTML = 'Error parsing file<div class="file-types">.txt .md .pdf .docx .pptx .xlsx .msg .eml</div>';
+                alert('Error parsing file');
             }
         };
         xhr.onerror = function() {
-            fileUpload.innerHTML = 'Upload failed<div class="file-types">.txt .md .pdf .docx .pptx .xlsx .msg .eml</div>';
+            fileUpload.innerHTML = '<div class="upload-icon">+</div><div class="upload-text">Drop file or click to upload</div><div class="file-types">.txt .md .csv .pdf .docx .pptx .xlsx .msg .eml</div>';
+            alert('Upload failed');
         };
         xhr.send(formData);
     }
@@ -120,7 +173,7 @@ function setProgress(pct) {
 var buildBtn = document.getElementById('btn-build');
 
 buildBtn.addEventListener('click', function() {
-    var text = textarea.value.trim();
+    var text = currentMode === 'upload' ? uploadedText.trim() : textarea.value.trim();
     if (!text) { alert('Please provide some text first.'); return; }
 
     buildBtn.disabled = true;
