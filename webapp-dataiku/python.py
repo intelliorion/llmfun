@@ -262,17 +262,16 @@ def extract_text_from_file(file_obj, filename):
             if not rows:
                 return raw
             header = rows[0]
-            parts = ['[Table: ' + filename + ']']
-            parts.append('Columns: ' + ' | '.join(header))
-            parts.append('')
-            for row in rows[1:]:
-                entry = []
+            parts = ['[Table: ' + filename + ', ' + str(len(rows)-1) + ' rows]', '']
+            for ri, row in enumerate(rows[1:], 1):
+                record = ['[Record ' + str(ri) + ']']
                 for i, val in enumerate(row):
                     if val.strip():
                         col = header[i] if i < len(header) else 'Col' + str(i+1)
-                        entry.append(col + ': ' + val.strip())
-                if entry:
-                    parts.append('; '.join(entry))
+                        record.append('  ' + col + ': ' + val.strip())
+                if len(record) > 1:
+                    parts.append('\n'.join(record))
+                    parts.append('')
             return '\n'.join(parts)
         except Exception:
             return file_obj.read().decode('utf-8', errors='ignore')
@@ -366,17 +365,16 @@ def extract_text_from_file(file_obj, filename):
                     continue
                 parts.append('--- Sheet: ' + ws.title + ' ---')
                 header = [str(c) if c is not None else '' for c in rows[0]]
-                parts.append('Columns: ' + ' | '.join(header))
                 parts.append('')
-                for row in rows[1:]:
-                    entry = []
+                for ri, row in enumerate(rows[1:], 1):
+                    record = ['[Record ' + str(ri) + ']']
                     for i, val in enumerate(row):
                         if val is not None and str(val).strip():
                             col = header[i] if i < len(header) and header[i] else 'Col' + str(i+1)
-                            entry.append(col + ': ' + str(val).strip())
-                    if entry:
-                        parts.append('; '.join(entry))
-                parts.append('')
+                            record.append('  ' + col + ': ' + str(val).strip())
+                    if len(record) > 1:
+                        parts.append('\n'.join(record))
+                        parts.append('')
             return '\n'.join(parts)
         except ImportError:
             return '[Error: openpyxl not installed for XLSX support]'

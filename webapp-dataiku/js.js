@@ -164,6 +164,48 @@ fileInput.addEventListener('change', function(e) {
     fileInput.value = '';
 });
 
+// --- Start Over ---
+var resetBtn = document.getElementById('btn-reset');
+resetBtn.addEventListener('click', function() {
+    // Clear session
+    sessionId = null;
+    if (pollingTimer) { clearInterval(pollingTimer); pollingTimer = null; }
+
+    // Clear uploaded files
+    uploadedFiles = [];
+    uploadedText = '';
+    fileIdCounter = 0;
+    renderFileList();
+    fileInput.value = '';
+
+    // Clear text input
+    textarea.value = '';
+
+    // Clear graph
+    if (visNodes) visNodes.clear();
+    if (visEdges) visEdges.clear();
+    document.getElementById('legend-items').innerHTML = '';
+
+    // Clear tables, report, chat
+    document.getElementById('entities-table-body').innerHTML = '';
+    document.getElementById('relationships-table-body').innerHTML = '';
+    document.getElementById('report-content').innerHTML = '<p style="color:var(--text-tertiary);">Click "Generate Report" after building a graph.</p>';
+    document.getElementById('chat-messages').innerHTML = '<div class="empty-state" id="chat-empty"><div><p style="font-size:14px;">Ask questions about your knowledge graph</p></div></div>';
+
+    // Reset UI state
+    resetSteps();
+    document.getElementById('building-hint').classList.remove('visible');
+    buildBtn.disabled = false;
+    buildBtn.textContent = 'Build Knowledge Graph';
+    resetBtn.style.display = 'none';
+
+    // Switch to Graph tab
+    for (var j = 0; j < allTabs.length; j++) allTabs[j].classList.remove('active');
+    for (var j = 0; j < allPanels.length; j++) allPanels[j].classList.remove('active');
+    allTabs[0].classList.add('active');
+    allPanels[0].classList.add('active');
+});
+
 // --- Step indicator helpers ---
 function resetSteps() {
     var steps = document.querySelectorAll('.step-indicator');
@@ -308,6 +350,7 @@ function startPolling() {
                 hint.classList.remove('visible');
                 buildBtn.disabled = false;
                 buildBtn.textContent = 'Build Knowledge Graph';
+                resetBtn.style.display = 'block';
                 setProgress(100);
                 setStep('step-extract', 'done');
                 setStep('step-dedup', 'done');

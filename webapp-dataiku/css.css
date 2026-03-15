@@ -215,6 +215,14 @@ html, body {
     background: var(--border); color: var(--text-tertiary);
     cursor: not-allowed; opacity: 1;
 }
+.btn-secondary {
+    width: 100%; padding: 10px;
+    background: transparent; color: var(--text-secondary);
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: all var(--transition); margin-top: -4px;
+}
+.btn-secondary:hover { border-color: var(--text-secondary); color: var(--text-primary); }
 
 /* --- Content --- */
 .content {
