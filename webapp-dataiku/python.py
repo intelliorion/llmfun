@@ -4,6 +4,7 @@ import threading
 import uuid
 import networkx as nx
 import dataiku
+from flask import request, Response
 
 # --- State ---
 sessions = {}
@@ -42,6 +43,9 @@ Return ONLY valid JSON, no markdown fences, no extra text.
 Text:
 {text}
 """
+
+def json_response(data, status=200):
+    return Response(json.dumps(data), status=status, mimetype='application/json')
 
 # --- Helper Functions ---
 def clean_llm_json(raw):
@@ -163,12 +167,12 @@ def build_graph_async(session_id, text):
 
 
 # --- Flask Routes ---
-@app.route('/api/build', methods=['POST'])
+@app.route('/build', methods=['POST'])
 def api_build():
-    data = request.get_json()
+    data = request.get_json(force=True)
     text = data.get('text', '').strip()
     if not text:
-        return json.dumps({'error': 'No text provided'}), 400
+        return json_response({'error': 'No text provided'}, 400)
 
     session_id = str(uuid.uuid4())
     sessions[session_id] = {
@@ -186,15 +190,15 @@ def api_build():
     thread.daemon = True
     thread.start()
 
-    return json.dumps({'session_id': session_id})
+    return json_response({'session_id': session_id})
 
 
-@app.route('/api/status/<session_id>')
+@app.route('/status/<session_id>')
 def api_status(session_id):
     session = sessions.get(session_id)
     if not session:
-        return json.dumps({'error': 'Session not found'}), 404
-    return json.dumps({
+        return json_response({'error': 'Session not found'}, 404)
+    return json_response({
         'status': session['status'],
         'current_chunk': session['current_chunk'],
         'total_chunks': session['total_chunks'],
@@ -203,11 +207,11 @@ def api_status(session_id):
     })
 
 
-@app.route('/api/report/<session_id>', methods=['POST'])
+@app.route('/report/<session_id>', methods=['POST'])
 def api_report(session_id):
     session = sessions.get(session_id)
     if not session or not session.get('graph'):
-        return json.dumps({'error': 'No graph built yet'}), 400
+        return json_response({'error': 'No graph built yet'}, 400)
 
     ctx = get_full_context(session['graph'])
     prompt = """You are an analyst generating a research report.
@@ -229,19 +233,19 @@ Be concise and professional."""
     completion = llm.new_completion()
     completion.with_message(prompt)
     resp = completion.execute()
-    return json.dumps({'report': resp.text})
+    return json_response({'report': resp.text})
 
 
-@app.route('/api/ask/<session_id>', methods=['POST'])
+@app.route('/ask/<session_id>', methods=['POST'])
 def api_ask(session_id):
     session = sessions.get(session_id)
     if not session or not session.get('graph'):
-        return json.dumps({'error': 'No graph built yet'}), 400
+        return json_response({'error': 'No graph built yet'}, 400)
 
-    data = request.get_json()
+    data = request.get_json(force=True)
     question = data.get('question', '').strip()
     if not question:
-        return json.dumps({'error': 'No question provided'}), 400
+        return json_response({'error': 'No question provided'}, 400)
 
     ctx = get_full_context(session['graph'])
     prompt = """You are a research assistant. Answer the question using ONLY the provided data.
@@ -264,4 +268,4 @@ Answer concisely."""
     session['messages'].append({'role': 'user', 'content': question})
     session['messages'].append({'role': 'assistant', 'content': resp.text})
 
-    return json.dumps({'answer': resp.text})
+    return json_response({'answer': resp.text})

@@ -4,6 +4,17 @@ var visNodes = null;
 var visEdges = null;
 var pollingTimer = null;
 
+// --- Get backend URL (Dataiku standard webapp) ---
+function getBackendUrl(path) {
+    // Dataiku standard webapps: backend is at the same origin
+    // The webapp backend routes are relative to the webapp URL
+    // Try dataiku.getWebAppBackendUrl if available, fallback to relative path
+    if (typeof dataiku !== 'undefined' && dataiku.getWebAppBackendUrl) {
+        return dataiku.getWebAppBackendUrl(path);
+    }
+    return '/web-apps-backends/' + path;
+}
+
 // --- Wait for vis.js to load ---
 function waitForVis(callback) {
     if (typeof vis !== 'undefined') {
@@ -69,7 +80,7 @@ buildBtn.addEventListener('click', function() {
         hint.classList.add('visible');
 
         var xhr = new XMLHttpRequest();
-        xhr.open('POST', getBackendUrl('/api/build'));
+        xhr.open('POST', getBackendUrl('build'));
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.onload = function() {
             if (xhr.status === 200) {
@@ -77,7 +88,7 @@ buildBtn.addEventListener('click', function() {
                 sessionId = data.session_id;
                 startPolling();
             } else {
-                alert('Error starting build');
+                alert('Error starting build: ' + xhr.status + ' ' + xhr.responseText.substring(0, 200));
                 buildBtn.disabled = false;
                 buildBtn.textContent = 'Build Knowledge Graph';
             }
@@ -90,11 +101,6 @@ buildBtn.addEventListener('click', function() {
         xhr.send(JSON.stringify({text: text}));
     });
 });
-
-// --- Get backend URL (works in Dataiku) ---
-function getBackendUrl(path) {
-    return dataiku.getWebAppBackendUrl(path);
-}
 
 // --- Init vis.js ---
 function initGraph() {
@@ -139,7 +145,7 @@ function startPolling() {
     if (pollingTimer) clearInterval(pollingTimer);
     pollingTimer = setInterval(function() {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', getBackendUrl('/api/status/' + sessionId));
+        xhr.open('GET', getBackendUrl('status/' + sessionId));
         xhr.onload = function() {
             if (xhr.status !== 200) return;
             var data = JSON.parse(xhr.responseText);
@@ -250,7 +256,7 @@ document.getElementById('btn-report').addEventListener('click', function() {
     content.innerHTML = '<span class="spinner"></span> Generating report...';
 
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', getBackendUrl('/api/report/' + sessionId));
+    xhr.open('POST', getBackendUrl('report/' + sessionId));
     xhr.onload = function() {
         var data = JSON.parse(xhr.responseText);
         content.innerHTML = formatMarkdown(data.report);
@@ -284,7 +290,7 @@ function sendMessage() {
     var loadingEl = addChatMessage('assistant', '<span class="spinner"></span> Thinking...');
 
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', getBackendUrl('/api/ask/' + sessionId));
+    xhr.open('POST', getBackendUrl('ask/' + sessionId));
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.onload = function() {
         var data = JSON.parse(xhr.responseText);
@@ -301,7 +307,6 @@ function sendMessage() {
 
 function addChatMessage(role, content) {
     var container = document.getElementById('chat-messages');
-    // Remove empty state
     var empty = document.getElementById('chat-empty');
     if (empty) empty.remove();
 
@@ -316,7 +321,9 @@ function addChatMessage(role, content) {
 function formatMarkdown(text) {
     if (!text) return '';
     return text
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
         .replace(/^### (.+)$/gm, '<h4>$1</h4>')
