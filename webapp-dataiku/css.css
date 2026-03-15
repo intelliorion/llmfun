@@ -338,10 +338,11 @@ html, body {
 
 /* --- Entities --- */
 .entities-panel {
-    display: flex; flex-direction: column; gap: 20px;
+    display: flex; flex-direction: row; gap: 20px;
     padding: 24px; overflow: auto; flex: 1;
 }
 .entities-panel .table-section {
+    flex: 1; min-width: 0;
     background: var(--bg-card); border-radius: var(--radius-md);
     border: 1px solid var(--border); overflow: auto;
     box-shadow: var(--shadow-sm);
