@@ -44,6 +44,28 @@ Text:
 {text}
 """
 
+DEDUP_PROMPT = """You are an entity resolution agent. Given a list of entity names extracted from text,
+identify groups of names that refer to the SAME real-world entity (duplicates, abbreviations, typos, partial names).
+
+Entity list:
+{entities}
+
+Return a JSON object mapping each variant name to its canonical (best/fullest) form:
+{{
+  "mappings": {{
+    "variant_name": "Canonical Name",
+    "another_variant": "Canonical Name"
+  }}
+}}
+
+Rules:
+- Only include names that need to be merged. Skip names that are already unique.
+- Choose the most complete, properly spelled version as the canonical name.
+- Examples: "J.P. Morgan" and "JPMorgan Chase" -> use "JPMorgan Chase". "Ted P." and "Ted Pick" -> use "Ted Pick".
+- If unsure, do NOT merge. Only merge when clearly the same entity.
+- Return ONLY valid JSON, no markdown fences, no extra text.
+"""
+
 def json_response(data, status=200):
     return Response(json.dumps(data), status=status, mimetype='application/json')
 
@@ -65,6 +87,49 @@ def extract_entities(text):
     resp = completion.execute()
     cleaned = clean_llm_json(resp.text)
     return json.loads(cleaned)
+
+
+def deduplicate_entities(G):
+    entity_names = list(G.nodes())
+    if len(entity_names) < 2:
+        return G
+
+    completion = llm.new_completion()
+    completion.with_message(DEDUP_PROMPT.format(entities='\n'.join(entity_names)))
+    resp = completion.execute()
+    cleaned = clean_llm_json(resp.text)
+    result = json.loads(cleaned)
+    mappings = result.get('mappings', {})
+
+    if not mappings:
+        return G
+
+    new_G = nx.DiGraph()
+
+    for node, data in G.nodes(data=True):
+        canonical = mappings.get(node, node)
+        if canonical not in new_G:
+            new_G.add_node(canonical, **data)
+        else:
+            existing = new_G.nodes[canonical]
+            if len(data.get('description', '')) > len(existing.get('description', '')):
+                existing['description'] = data['description']
+            if existing.get('type', 'Unknown') == 'Unknown' and data.get('type', 'Unknown') != 'Unknown':
+                existing['type'] = data['type']
+
+    for src, tgt, data in G.edges(data=True):
+        new_src = mappings.get(src, src)
+        new_tgt = mappings.get(tgt, tgt)
+        if new_src == new_tgt:
+            continue
+        if not new_G.has_edge(new_src, new_tgt):
+            if new_src not in new_G:
+                new_G.add_node(new_src, type='Unknown', description='')
+            if new_tgt not in new_G:
+                new_G.add_node(new_tgt, type='Unknown', description='')
+            new_G.add_edge(new_src, new_tgt, **data)
+
+    return new_G
 
 
 def chunk_text(text, chunk_size=400, overlap=30):
@@ -162,6 +227,16 @@ def build_graph_async(session_id, text):
             session['graph_data'] = graph_to_json(G)
         except Exception as e:
             session.setdefault('errors', []).append('Chunk ' + str(i+1) + ': ' + str(e))
+
+    # Agent 2: Entity deduplication
+    if G.number_of_nodes() > 1:
+        session['status'] = 'deduplicating'
+        try:
+            G = deduplicate_entities(G)
+            session['graph'] = G
+            session['graph_data'] = graph_to_json(G)
+        except Exception as e:
+            session.setdefault('errors', []).append('Dedup: ' + str(e))
 
     session['status'] = 'done'
 
