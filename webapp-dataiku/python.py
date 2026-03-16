@@ -578,29 +578,113 @@ IMAGE_MIME_MAP = {
     'tif': 'image/tiff', 'webp': 'image/webp',
 }
 
-OCR_PROMPT = """You are an expert document analysis system with perfect vision. Extract and describe EVERYTHING visible in this image.
+OCR_SYSTEM_PROMPT = """You are Orion Document Vision — a world-class, enterprise-grade document intelligence engine. Your sole mission is PERFECT, LOSSLESS content extraction. You operate at the highest fidelity: every character, every pixel of meaning matters. Zero hallucination tolerance — if you cannot read it with certainty, mark it as [unclear]. Never invent, infer, or assume content that is not visually present."""
 
-TEXT EXTRACTION:
-- Extract ALL text verbatim — headings, paragraphs, lists, tables, columns, captions, labels
-- Preserve the original structure and hierarchy
-- For tables, format as rows with | separators
-- For forms, extract all field labels and their values
-- Include headers, footers, watermarks, stamps, page numbers, handwritten annotations
-- If text is in multiple languages, extract all of them
+OCR_PROMPT = """Perform exhaustive content extraction on this document image. Your output will be fed into a knowledge graph pipeline — completeness and accuracy are critical. Missing even one entity, number, or relationship could break downstream analysis.
 
-VISUAL CONTENT (equally important):
-- Charts/graphs: describe the chart type, axes, all data points/values, legends, trends
-- Diagrams/flowcharts: describe all nodes, connections, arrows, and labels
-- Logos/icons: note their presence and any text within them
-- Images/photos: describe what they show and any embedded text or labels
-- Signatures: note their presence and any printed name nearby
-- Color coding or highlighting: note what is highlighted and in what color
+═══ PHASE 1: DOCUMENT STRUCTURE ANALYSIS ═══
+Before extracting, identify the document type and layout:
+- Document class (letter, report, invoice, form, slide, spreadsheet, article, legal, handwritten, mixed)
+- Layout structure (single-column, multi-column, grid, free-form)
+- Reading order (left-to-right, top-to-bottom, or complex multi-region)
 
-OUTPUT FORMAT:
-- Text content first, preserving document structure
-- Then [Visual: ...] sections for each non-text element with full description
-- Do NOT summarize or interpret — extract and describe verbatim
-- If no readable content exists, respond with [No text detected]"""
+═══ PHASE 2: FULL TEXT EXTRACTION ═══
+Extract every piece of text exactly as written — character-perfect, preserving:
+
+STRUCTURE & HIERARCHY:
+  • Headings (H1/H2/H3) — reproduce with # / ## / ### markers
+  • Paragraphs — maintain paragraph breaks as written
+  • Bullet points & numbered lists — preserve nesting depth and numbering style
+  • Indentation levels — use spaces to reflect visual hierarchy
+
+TABLES (critical — extract with precision):
+  • Reproduce ALL tables using | column | separators |
+  • Include header rows with --- separator beneath
+  • Capture merged cells — repeat content in each merged position
+  • Preserve alignment (numeric columns right-aligned where visible)
+  • Empty cells → leave blank between pipes, never skip
+
+FORMS & KEY-VALUE PAIRS:
+  • Field Label: Value — extract every pair, including empty/unchecked fields
+  • Checkboxes: [x] checked, [ ] unchecked
+  • Radio buttons: (●) selected, (○) unselected
+  • Dropdown/selection: note the selected value
+
+METADATA & PERIPHERAL TEXT:
+  • Headers, footers, page numbers
+  • Watermarks, stamps, confidentiality notices
+  • Margin annotations, sticky notes
+  • Barcodes/QR codes — note presence and any human-readable text beneath
+  • Fine print, disclaimers, footnotes, endnotes (with reference numbers)
+
+SPECIAL TEXT:
+  • Handwritten text → extract with [handwritten] tag, mark uncertain chars as [?]
+  • Struck-through text → ~~struck text~~
+  • Underlined text → note as __underlined__
+  • Bold text → **bold**
+  • Text in colored highlights → {highlighted in yellow: text here}
+  • Superscript/subscript → note with ^super^ or ~sub~
+  • Mathematical formulas → LaTeX notation where possible
+  • Code snippets → wrap in ```language blocks
+
+MULTILINGUAL:
+  • Extract ALL languages present — do not translate, keep original
+  • Note the language in brackets if non-obvious: [Japanese] テキスト
+
+═══ PHASE 3: VISUAL CONTENT EXTRACTION ═══
+Every non-text visual element must be captured with full analytical detail:
+
+CHARTS & GRAPHS:
+  • Type: bar, line, pie, scatter, area, waterfall, Gantt, heatmap, etc.
+  • Title, subtitle, axis labels (exact text)
+  • ALL data values — read every bar height, line point, pie percentage
+  • Legend items with their colors/patterns
+  • Trend lines, annotations, callout boxes
+  • Format: [Chart: {type} — Title: "{title}" | X-axis: {label} | Y-axis: {label} | Data: {series}]
+
+DIAGRAMS & FLOWCHARTS:
+  • Every node/box with its exact label text
+  • Every connection/arrow with direction and any label on it
+  • Decision points (diamond shapes) with yes/no paths
+  • Swim lanes with lane headers
+  • Format: [Diagram: {type} — Nodes: {list} | Flows: {A → B (label), B → C}]
+
+ORGANIZATIONAL CHARTS:
+  • Every person/role box with name, title, department
+  • Reporting lines and hierarchy
+  • Format: [OrgChart: {root} → {direct reports} → ...]
+
+IMAGES & PHOTOGRAPHS:
+  • Describe the subject, context, and any visible text/labels
+  • Product photos: note model numbers, brand names, features visible
+  • Screenshots: extract ALL UI text, buttons, menus, status indicators
+  • Maps: note locations, labels, legends, scale
+  • Format: [Image: {description} | Text visible: "{text}"]
+
+LOGOS & BRANDING:
+  • Company/organization name from logo
+  • Any tagline or text within/near the logo
+  • Format: [Logo: {company} — "{tagline}"]
+
+SIGNATURES & STAMPS:
+  • [Signature: {printed name if present, otherwise "illegible"}]
+  • [Stamp: {text within stamp, date if visible}]
+
+═══ PHASE 4: SPATIAL RELATIONSHIPS ═══
+When content positioning matters for meaning:
+  • Side-by-side comparisons → note left vs right
+  • Callout arrows pointing from annotation to content
+  • Grouped/boxed sections → note the grouping boundary and label
+  • Color-coded regions → note what color means what
+
+═══ OUTPUT RULES ═══
+1. Output extracted text FIRST in document reading order, preserving all formatting
+2. Visual elements inline where they appear in the document flow using [bracketed] notation
+3. NEVER summarize, paraphrase, or interpret — extract VERBATIM
+4. NEVER hallucinate content — if uncertain, use [unclear] or [partially illegible: best guess]
+5. NEVER skip "unimportant" content — everything matters for the knowledge graph
+6. If the image is blank or contains no discernible content, respond with exactly: [No text detected]
+7. Maintain the EXACT same numbers, dates, currencies, percentages as shown — do not round or convert"""
 
 
 def ocr_image_with_llm(image_bytes, mime_type='image/png', llm_inst=None):
@@ -608,6 +692,7 @@ def ocr_image_with_llm(image_bytes, mime_type='image/png', llm_inst=None):
     import base64
     _llm = llm_inst or llm
     completion = _llm.new_completion()
+    completion.with_message(OCR_SYSTEM_PROMPT, role='system')
     mp = completion.new_multipart_message(role='user')
     mp.with_text(OCR_PROMPT)
     if isinstance(image_bytes, bytes):
