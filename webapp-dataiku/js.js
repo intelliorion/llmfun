@@ -6,6 +6,7 @@ var pollingTimer = null;
 var graphDataStore = null; // Full graph data for lookups
 var edgeLabelsVisible = true;
 var hiddenTypes = {};
+var selectedModel = 'gpt-4o';
 
 // --- Dynamic color palette for entity types ---
 var COLOR_PALETTE = [
@@ -76,6 +77,23 @@ for (var t = 0; t < toggleBtns.length; t++) {
         });
     })(toggleBtns[t]);
 }
+
+// --- Model toggle ---
+var modelToggle = document.getElementById('model-toggle');
+var label4o = document.getElementById('label-4o');
+var label5 = document.getElementById('label-5');
+
+modelToggle.addEventListener('change', function() {
+    if (modelToggle.checked) {
+        selectedModel = 'gpt-5';
+        label4o.classList.remove('active');
+        label5.classList.add('active');
+    } else {
+        selectedModel = 'gpt-4o';
+        label5.classList.remove('active');
+        label4o.classList.add('active');
+    }
+});
 
 // --- File upload (multi-file) ---
 var fileUpload = document.getElementById('file-upload');
@@ -298,7 +316,7 @@ buildBtn.addEventListener('click', function() {
             buildBtn.textContent = 'Build Knowledge Graph';
             resetSteps();
         };
-        xhr.send(JSON.stringify({text: text}));
+        xhr.send(JSON.stringify({text: text, model: selectedModel}));
     });
 });
 

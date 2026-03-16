@@ -10,10 +10,17 @@ from flask import request, Response
 sessions = {}
 
 # --- LLM ---
-def get_llm():
+AVAILABLE_MODELS = {
+    'gpt-4o': 'openai:MSOpenAI:gpt-4o',
+    'gpt-5': 'openai:MSOpenAI:gpt-5'
+}
+DEFAULT_MODEL = 'gpt-4o'
+
+def get_llm(model_key=None):
     client = dataiku.api_client()
     project = client.get_default_project()
-    return project.get_llm('openai:MSOpenAI:gpt-4o')
+    model_id = AVAILABLE_MODELS.get(model_key or DEFAULT_MODEL, AVAILABLE_MODELS[DEFAULT_MODEL])
+    return project.get_llm(model_id)
 
 llm = get_llm()
 
@@ -111,19 +118,20 @@ def clean_llm_json(raw):
     return text.strip()
 
 
-def infer_schema(text):
+def infer_schema(text, llm_inst=None):
     """Agent 0: Analyze data and define a focused ontology."""
-    # Send first ~2000 chars as a sample
+    _llm = llm_inst or llm
     sample = text[:2000]
-    completion = llm.new_completion()
+    completion = _llm.new_completion()
     completion.with_message(SCHEMA_PROMPT.format(text=sample))
     resp = completion.execute()
     cleaned = clean_llm_json(resp.text)
     return json.loads(cleaned)
 
 
-def extract_entities(text, schema):
-    completion = llm.new_completion()
+def extract_entities(text, schema, llm_inst=None):
+    _llm = llm_inst or llm
+    completion = _llm.new_completion()
     prompt = EXTRACTION_PROMPT.format(
         text=text,
         entity_types=', '.join(schema['entity_types']),
@@ -136,12 +144,13 @@ def extract_entities(text, schema):
     return json.loads(cleaned)
 
 
-def deduplicate_entities(G):
+def deduplicate_entities(G, llm_inst=None):
+    _llm = llm_inst or llm
     entity_names = list(G.nodes())
     if len(entity_names) < 2:
         return G
 
-    completion = llm.new_completion()
+    completion = _llm.new_completion()
     completion.with_message(DEDUP_PROMPT.format(entities='\n'.join(entity_names)))
     resp = completion.execute()
     cleaned = clean_llm_json(resp.text)
@@ -247,14 +256,16 @@ def get_full_context(G):
 
 
 # --- Background graph building ---
-def build_graph_async(session_id, text):
+def build_graph_async(session_id, text, model_key=None):
     session = sessions[session_id]
     session['status'] = 'analyzing'
     session['source_text'] = text
+    llm_inst = get_llm(model_key) if model_key else llm
+    session['llm_inst'] = llm_inst
 
     # Agent 0: Infer schema/ontology
     try:
-        schema = infer_schema(text)
+        schema = infer_schema(text, llm_inst)
         session['schema'] = schema
     except Exception as e:
         session.setdefault('errors', []).append('Schema: ' + str(e))
@@ -269,7 +280,7 @@ def build_graph_async(session_id, text):
     for i, chunk in enumerate(chunks):
         session['current_chunk'] = i + 1
         try:
-            result = extract_entities(chunk, schema)
+            result = extract_entities(chunk, schema, llm_inst)
             for entity in result.get('entities', []):
                 if entity['name'] not in G:
                     G.add_node(entity['name'], type=entity['type'],
@@ -292,7 +303,7 @@ def build_graph_async(session_id, text):
     if G.number_of_nodes() > 1:
         session['status'] = 'deduplicating'
         try:
-            G = deduplicate_entities(G)
+            G = deduplicate_entities(G, llm_inst)
             session['graph'] = G
             session['graph_data'] = graph_to_json(G)
         except Exception as e:
@@ -510,7 +521,8 @@ def api_build():
         'errors': []
     }
 
-    thread = threading.Thread(target=build_graph_async, args=(session_id, text))
+    model_key = data.get('model', DEFAULT_MODEL)
+    thread = threading.Thread(target=build_graph_async, args=(session_id, text, model_key))
     thread.daemon = True
     thread.start()
 
@@ -555,7 +567,8 @@ Write a report with these sections:
 
 Be concise and professional."""
 
-    completion = llm.new_completion()
+    _llm = session.get('llm_inst', llm)
+    completion = _llm.new_completion()
     completion.with_message(prompt)
     resp = completion.execute()
     return json_response({'report': resp.text})
@@ -586,7 +599,8 @@ Question: """ + question + """
 
 Answer concisely."""
 
-    completion = llm.new_completion()
+    _llm = session.get('llm_inst', llm)
+    completion = _llm.new_completion()
     completion.with_message(prompt)
     resp = completion.execute()
 

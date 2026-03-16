@@ -76,6 +76,62 @@ html, body {
     letter-spacing: 0.3px;
 }
 
+/* --- Model Switch --- */
+.model-switch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-right: 4px;
+}
+.model-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-tertiary);
+    transition: color var(--transition);
+    cursor: default;
+}
+.model-label.active {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+}
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.switch-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--border);
+    border-radius: 20px;
+    transition: background var(--transition);
+}
+.switch-slider::before {
+    content: '';
+    position: absolute;
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform var(--transition);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+.switch input:checked + .switch-slider {
+    background: var(--accent-blue);
+}
+.switch input:checked + .switch-slider::before {
+    transform: translateX(16px);
+}
+
 /* --- Layout --- */
 .main {
     display: flex;
