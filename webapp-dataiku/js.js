@@ -298,9 +298,13 @@ resetBtn.addEventListener('click', function() {
     document.getElementById('entities-building').classList.remove('visible');
     document.getElementById('report-building').classList.remove('visible');
     document.getElementById('qa-building').classList.remove('visible');
+    document.getElementById('whatif-building').classList.remove('visible');
     document.getElementById('chat-messages').innerHTML = '<div class="empty-state" id="chat-empty"><div><p style="font-size:14px;">Ask questions about your data</p></div></div>';
     document.getElementById('suggested-questions').innerHTML = '';
     document.getElementById('suggested-questions').classList.remove('visible');
+    document.getElementById('whatif-results').innerHTML = '<div class="empty-state" id="whatif-empty"><p style="font-size:14px;">Describe a change scenario to see its impact</p></div>';
+    document.getElementById('whatif-suggestions').innerHTML = '';
+    document.getElementById('whatif-suggestions').classList.remove('visible');
     document.getElementById('stats-bar').classList.remove('visible');
     document.getElementById('stats-bar').innerHTML = '';
     document.getElementById('schema-display').style.display = 'none';
@@ -422,11 +426,15 @@ buildBtn.addEventListener('click', function() {
     document.getElementById('chat-messages').innerHTML = '';
     document.getElementById('suggested-questions').innerHTML = '';
     document.getElementById('suggested-questions').classList.remove('visible');
+    document.getElementById('whatif-results').innerHTML = '<div class="empty-state" id="whatif-empty"><p style="font-size:14px;">Describe a change scenario to see its impact</p></div>';
+    document.getElementById('whatif-suggestions').innerHTML = '';
+    document.getElementById('whatif-suggestions').classList.remove('visible');
 
     // Show building indicators on other panels
     document.getElementById('entities-building').classList.add('visible');
     document.getElementById('report-building').classList.add('visible');
     document.getElementById('qa-building').classList.add('visible');
+    document.getElementById('whatif-building').classList.add('visible');
 
     waitForVis(function() {
         initGraph();
@@ -963,6 +971,7 @@ function startPolling() {
                 document.getElementById('entities-building').classList.remove('visible');
                 document.getElementById('report-building').classList.remove('visible');
                 document.getElementById('qa-building').classList.remove('visible');
+                document.getElementById('whatif-building').classList.remove('visible');
                 document.getElementById('progress-container').style.display = 'none';
                 if (visNodes && visNodes.length > 0) {
                     document.getElementById('graph-toolbar').style.display = 'flex';
@@ -999,6 +1008,8 @@ function startPolling() {
                 document.getElementById('entities-building').classList.remove('visible');
                 document.getElementById('report-building').classList.remove('visible');
                 document.getElementById('qa-building').classList.remove('visible');
+                document.getElementById('whatif-building').classList.remove('visible');
+                loadWhatIfSuggestions();
 
                 // Show summary card
                 if (data.summary) {
@@ -1275,6 +1286,168 @@ function addChatMessage(role, content) {
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
     return div;
+}
+
+// --- What-If Analysis ---
+var whatifInput = document.getElementById('whatif-input');
+var whatifSendBtn = document.getElementById('whatif-send');
+
+whatifSendBtn.addEventListener('click', sendWhatIf);
+whatifInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendWhatIf(); }
+});
+
+function sendWhatIf() {
+    if (!sessionId) { alert('Build a graph first.'); return; }
+    var scenario = whatifInput.value.trim();
+    if (!scenario) return;
+
+    whatifInput.value = '';
+    whatifSendBtn.disabled = true;
+    whatifSendBtn.textContent = 'Analyzing...';
+
+    var resultsEl = document.getElementById('whatif-results');
+    var emptyEl = document.getElementById('whatif-empty');
+    if (emptyEl) emptyEl.remove();
+
+    // Add scenario card
+    var scenarioDiv = document.createElement('div');
+    scenarioDiv.className = 'whatif-scenario';
+    scenarioDiv.innerHTML = '<div class="whatif-scenario-q">' + escapeHtml(scenario) + '</div>' +
+        '<div class="whatif-loading"><span class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px;"></span>' +
+        '<span style="font-size:13px;color:var(--text-secondary);">Running impact analysis...</span></div>';
+    resultsEl.appendChild(scenarioDiv);
+    resultsEl.scrollTop = resultsEl.scrollHeight;
+
+    // Hide suggestions after first use
+    document.getElementById('whatif-suggestions').classList.remove('visible');
+
+    fetch(getBackendUrl('whatif/' + sessionId), {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({scenario: scenario})
+    }).then(function(response) {
+        return response.json();
+    }).then(function(data) {
+        var result = data.result;
+        var loadingEl = scenarioDiv.querySelector('.whatif-loading');
+        if (loadingEl) loadingEl.remove();
+
+        var html = '';
+
+        // Summary card with risk meter
+        html += '<div class="whatif-summary-card">';
+        html += '<div class="whatif-summary-title">Impact Assessment</div>';
+        html += '<div class="whatif-summary-text">' + escapeHtml(result.summary || '') + '</div>';
+        var riskLevel = result.overall_risk || 'medium';
+        var riskScore = result.risk_score || 50;
+        html += '<div class="whatif-risk-meter">';
+        html += '<span class="whatif-risk-label" style="color:' + getRiskColor(riskLevel) + ';">' + riskLevel.toUpperCase() + ' RISK</span>';
+        html += '<div class="whatif-risk-bar"><div class="whatif-risk-fill ' + riskLevel + '" style="width:' + riskScore + '%;"></div></div>';
+        html += '<span style="font-size:11px;color:var(--text-tertiary);">' + riskScore + '/100</span>';
+        html += '</div></div>';
+
+        // Impact cards
+        var impacts = result.impacts || [];
+        for (var i = 0; i < impacts.length; i++) {
+            var imp = impacts[i];
+            var sev = imp.severity || 'info';
+            html += '<div class="whatif-impact-card">';
+            html += '<div class="whatif-impact-header">';
+            html += '<div class="whatif-impact-icon ' + sev + '">' + getSeverityIcon(sev) + '</div>';
+            html += '<div class="whatif-impact-label">' + escapeHtml(imp.title || '') + '</div>';
+            html += '<span class="whatif-impact-severity ' + sev + '">' + sev + '</span>';
+            html += '</div>';
+            html += '<div class="whatif-impact-body">' + escapeHtml(imp.description || '') + '</div>';
+            if (imp.affected_entities && imp.affected_entities.length > 0) {
+                html += '<div class="whatif-impact-entities">';
+                for (var j = 0; j < imp.affected_entities.length; j++) {
+                    html += '<span class="whatif-entity-tag">' + escapeHtml(imp.affected_entities[j]) + '</span>';
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+
+        // Broken relationships
+        var broken = result.broken_relationships || [];
+        if (broken.length > 0) {
+            html += '<div class="whatif-impact-card" style="border-left:3px solid #ef4444;">';
+            html += '<div class="whatif-impact-header"><div class="whatif-impact-icon critical">&#x26A0;</div>';
+            html += '<div class="whatif-impact-label">Broken Relationships (' + broken.length + ')</div></div>';
+            for (var k = 0; k < broken.length; k++) {
+                var br = broken[k];
+                html += '<div style="font-size:12px;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,0.04);border-radius:6px;">';
+                html += '<strong>' + escapeHtml(br.source) + '</strong> <span style="color:var(--text-tertiary);">&#x2192; [' + escapeHtml(br.relation) + '] &#x2192;</span> <strong>' + escapeHtml(br.target) + '</strong>';
+                if (br.consequence) html += '<div style="color:var(--text-secondary);margin-top:2px;">' + escapeHtml(br.consequence) + '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+
+        // Recommendations
+        var recs = result.recommendations || [];
+        if (recs.length > 0) {
+            html += '<div class="whatif-impact-card" style="border-left:3px solid #0081f2;">';
+            html += '<div class="whatif-impact-header"><div class="whatif-impact-icon info">&#x1F4A1;</div>';
+            html += '<div class="whatif-impact-label">Recommendations</div></div>';
+            html += '<div class="whatif-impact-body"><ul style="margin:0;padding-left:18px;">';
+            for (var r = 0; r < recs.length; r++) {
+                html += '<li style="margin-bottom:4px;">' + escapeHtml(recs[r]) + '</li>';
+            }
+            html += '</ul></div></div>';
+        }
+
+        scenarioDiv.innerHTML = '<div class="whatif-scenario-q">' + escapeHtml(scenario) + '</div>' + html;
+        resultsEl.scrollTop = resultsEl.scrollHeight;
+        whatifSendBtn.disabled = false;
+        whatifSendBtn.textContent = 'Analyze';
+        whatifInput.focus();
+    }).catch(function() {
+        var loadingEl = scenarioDiv.querySelector('.whatif-loading');
+        if (loadingEl) loadingEl.innerHTML = '<span style="color:#ef4444;font-size:13px;">Analysis failed. Try again.</span>';
+        whatifSendBtn.disabled = false;
+        whatifSendBtn.textContent = 'Analyze';
+    });
+}
+
+function loadWhatIfSuggestions() {
+    if (!sessionId) return;
+    fetch(getBackendUrl('whatif_suggestions/' + sessionId))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var suggestions = data.suggestions || [];
+            var container = document.getElementById('whatif-suggestions');
+            container.innerHTML = '';
+            suggestions.forEach(function(s) {
+                var btn = document.createElement('div');
+                btn.className = 'whatif-suggestion';
+                btn.textContent = s;
+                btn.addEventListener('click', function() {
+                    whatifInput.value = s;
+                    sendWhatIf();
+                });
+                container.appendChild(btn);
+            });
+            if (suggestions.length > 0) container.classList.add('visible');
+        })
+        .catch(function() {});
+}
+
+function getRiskColor(level) {
+    var colors = {critical: '#ef4444', high: '#ea580c', medium: '#ca8a04', low: '#16a34a'};
+    return colors[level] || '#6b6b6b';
+}
+
+function getSeverityIcon(sev) {
+    var icons = {critical: '&#x2716;', high: '&#x26A0;', medium: '&#x25CF;', low: '&#x2714;', info: '&#x2139;'};
+    return icons[sev] || '&#x25CF;';
+}
+
+function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }
 
 function formatMarkdown(text) {

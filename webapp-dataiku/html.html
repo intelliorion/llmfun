@@ -69,6 +69,7 @@ Industry analysts from Barclays and UBS forecast that wealth management will rem
             <div class="tab" data-target="panel-entities">Entities</div>
             <div class="tab" data-target="panel-report">Report</div>
             <div class="tab" data-target="panel-qa">Q&A</div>
+            <div class="tab" data-target="panel-whatif">What-If</div>
         </div>
 
         <!-- Stats bar -->
@@ -201,6 +202,30 @@ Industry analysts from Barclays and UBS forecast that wealth management will rem
                 <button class="btn-generate" id="btn-report">Generate Report</button>
                 <div class="report-content" id="report-content">
                     <p style="color:var(--text-tertiary);">Report auto-generates when build completes.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- What-If Panel -->
+        <div class="tab-panel" id="panel-whatif">
+            <div class="panel-building" id="whatif-building">
+                <div class="breathing-dot"></div>
+                <span>What-If analysis will be available once the build is complete...</span>
+            </div>
+            <div class="whatif-panel">
+                <div class="whatif-header">
+                    <div class="whatif-title">What-If Scenario Analysis</div>
+                    <div class="whatif-subtitle">Propose a hypothetical change and see its cascading impact across the knowledge graph</div>
+                </div>
+                <div class="whatif-suggestions" id="whatif-suggestions"></div>
+                <div class="whatif-input-area">
+                    <input type="text" id="whatif-input" placeholder="e.g. What if we remove [entity]? What if [team A] merges with [team B]?">
+                    <button id="whatif-send">Analyze</button>
+                </div>
+                <div class="whatif-results" id="whatif-results">
+                    <div class="empty-state" id="whatif-empty">
+                        <p style="font-size:14px;">Describe a change scenario to see its impact</p>
+                    </div>
                 </div>
             </div>
         </div>

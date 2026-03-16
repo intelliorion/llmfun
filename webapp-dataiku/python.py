@@ -1198,3 +1198,129 @@ def api_ask_stream(session_id):
 
     return Response(generate(), mimetype='text/event-stream',
                     headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
+
+
+WHATIF_PROMPT = """You are a strategic impact analyst for the Orion knowledge graph platform. Given a knowledge graph and a hypothetical "what-if" scenario, perform a rigorous cascading impact analysis.
+
+Knowledge Graph:
+{context}
+
+Source Text:
+{source}
+
+Scenario: "{scenario}"
+
+Analyze this scenario and return a JSON object with EXACTLY this structure:
+{{
+  "summary": "A 2-3 sentence executive summary of the overall impact",
+  "overall_risk": "critical|high|medium|low",
+  "risk_score": <number 0-100>,
+  "impacts": [
+    {{
+      "title": "Short impact title",
+      "severity": "critical|high|medium|low|info",
+      "description": "Detailed explanation of this specific impact",
+      "affected_entities": ["Entity1", "Entity2"],
+      "category": "structural|operational|relational|data_integrity|downstream"
+    }}
+  ],
+  "broken_relationships": [
+    {{
+      "source": "EntityA",
+      "relation": "RELATION_TYPE",
+      "target": "EntityB",
+      "consequence": "What happens when this link breaks"
+    }}
+  ],
+  "recommendations": [
+    "Actionable recommendation 1",
+    "Actionable recommendation 2"
+  ]
+}}
+
+Rules:
+- Analyze ALL direct impacts (entities/relationships immediately affected)
+- Trace ALL cascading/indirect impacts (second-order, third-order effects)
+- Consider structural integrity: would removing/changing this isolate any subgraphs?
+- Consider operational impact: what processes or workflows break?
+- Be specific — reference actual entity names and relationship types from the graph
+- Order impacts by severity (critical first)
+- Include at least 3-5 impacts if the scenario has meaningful effects
+- Return ONLY valid JSON, no markdown fences, no commentary"""
+
+
+@app.route('/whatif/<session_id>', methods=['POST'])
+def api_whatif(session_id):
+    """What-If scenario analysis — returns structured impact assessment."""
+    session = sessions.get(session_id)
+    if not session or not session.get('graph'):
+        return json_response({'error': 'No graph built yet'}, 400)
+
+    data = request.get_json(force=True)
+    scenario = data.get('scenario', '').strip()
+    if not scenario:
+        return json_response({'error': 'No scenario provided'}, 400)
+
+    _llm = session.get('llm_inst', llm)
+    ctx = get_full_context(session['graph'])
+    source = session['source_text']
+    if len(source) > MAX_CONTEXT_CHARS:
+        source = source[:MAX_CONTEXT_CHARS] + '\n[... truncated ...]'
+
+    prompt = WHATIF_PROMPT.format(context=ctx, source=source, scenario=scenario)
+
+    completion = _llm.new_completion()
+    completion.with_message(prompt)
+    resp = completion.execute()
+    raw = clean_llm_json(resp.text)
+
+    try:
+        result = json.loads(raw)
+    except Exception:
+        result = {
+            'summary': resp.text,
+            'overall_risk': 'medium',
+            'risk_score': 50,
+            'impacts': [],
+            'broken_relationships': [],
+            'recommendations': []
+        }
+
+    return json_response({'result': result})
+
+
+@app.route('/whatif_suggestions/<session_id>')
+def api_whatif_suggestions(session_id):
+    """Generate suggested what-if scenarios based on the graph."""
+    session = sessions.get(session_id)
+    if not session or not session.get('graph'):
+        return json_response({'error': 'No graph built yet'}, 400)
+
+    G = session['graph']
+    suggestions = []
+
+    # Find high-degree nodes (key entities)
+    degrees = sorted(G.degree(), key=lambda x: x[1], reverse=True)
+    if len(degrees) >= 1:
+        top = degrees[0][0]
+        suggestions.append('What if ' + top + ' is removed?')
+    if len(degrees) >= 2:
+        second = degrees[1][0]
+        suggestions.append('What if ' + second + ' leaves the organization?')
+
+    # Find most common relationship type
+    rel_counts = {}
+    for _, _, data in G.edges(data=True):
+        r = data.get('relation', '')
+        rel_counts[r] = rel_counts.get(r, 0) + 1
+    if rel_counts:
+        top_rel = max(rel_counts, key=rel_counts.get)
+        suggestions.append('What if all ' + top_rel + ' relationships are restructured?')
+
+    # Find connected pair for merge scenario
+    if len(degrees) >= 3:
+        a = degrees[0][0]
+        b = degrees[2][0]
+        suggestions.append('What if ' + a + ' merges with ' + b + '?')
+
+    return json_response({'suggestions': suggestions})
