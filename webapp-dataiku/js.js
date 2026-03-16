@@ -4,19 +4,22 @@ var visNodes = null;
 var visEdges = null;
 var pollingTimer = null;
 
-// --- Manus-style color palette for entities ---
-var ENTITY_COLORS = {
-    'Person': '#6366f1',
-    'Organization': '#0ea5e9',
-    'Division': '#8b5cf6',
-    'Role': '#f97316',
-    'Location': '#14b8a6',
-    'Metric': '#f59e0b',
-    'Event': '#ef4444',
-    'Technology': '#10b981',
-    'Market': '#ec4899',
-    'Unknown': '#94a3b8'
-};
+// --- Dynamic color palette for entity types ---
+var COLOR_PALETTE = [
+    '#6366f1', '#0ea5e9', '#8b5cf6', '#f97316', '#14b8a6',
+    '#f59e0b', '#ef4444', '#10b981', '#ec4899', '#06b6d4',
+    '#a855f7', '#84cc16', '#f43f5e', '#22d3ee', '#e879f9'
+];
+var ENTITY_COLORS = {};
+var colorIndex = 0;
+
+function getEntityColor(type) {
+    if (!ENTITY_COLORS[type]) {
+        ENTITY_COLORS[type] = COLOR_PALETTE[colorIndex % COLOR_PALETTE.length];
+        colorIndex++;
+    }
+    return ENTITY_COLORS[type];
+}
 
 // --- Get backend URL (Dataiku standard webapp) ---
 function getBackendUrl(path) {
@@ -183,9 +186,11 @@ resetBtn.addEventListener('click', function() {
     // Clear text input
     textarea.value = '';
 
-    // Clear graph
+    // Clear graph and reset colors
     if (visNodes) visNodes.clear();
     if (visEdges) visEdges.clear();
+    ENTITY_COLORS = {};
+    colorIndex = 0;
     document.getElementById('legend-items').innerHTML = '';
 
     // Clear tables, report, chat
@@ -384,7 +389,7 @@ function updateGraph(graphData) {
 
     graphData.nodes.forEach(function(n) {
         if (!existingNodeIds[n.id]) {
-            var nodeColor = ENTITY_COLORS[n.type] || ENTITY_COLORS['Unknown'];
+            var nodeColor = getEntityColor(n.type);
             visNodes.add({
                 id: n.id, label: n.label,
                 title: '<b>' + n.fullName + '</b><br>Type: ' + n.type + '<br>' + n.description,
@@ -416,7 +421,7 @@ function updateLegend(typeColors) {
     var container = document.getElementById('legend-items');
     container.innerHTML = '';
     for (var type in typeColors) {
-        var color = ENTITY_COLORS[type] || typeColors[type];
+        var color = getEntityColor(type);
         var item = document.createElement('div');
         item.className = 'legend-item';
         item.innerHTML = '<span class="legend-dot" style="background:' + color + '"></span>' + type;
@@ -428,7 +433,7 @@ function updateTables(graphData) {
     var tbody1 = document.getElementById('entities-table-body');
     tbody1.innerHTML = '';
     graphData.nodes.forEach(function(n) {
-        var color = ENTITY_COLORS[n.type] || n.color;
+        var color = getEntityColor(n.type);
         var tr = document.createElement('tr');
         tr.innerHTML = '<td>' + n.fullName + '</td>' +
             '<td><span class="type-badge" style="background:' + color + '">' + n.type + '</span></td>' +
