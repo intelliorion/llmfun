@@ -468,6 +468,28 @@ html, body {
     50% { opacity: 1; transform: scale(1.4); }
 }
 
+/* --- Panel building indicator --- */
+.panel-building {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    margin: 16px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(14,165,233,0.06));
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: var(--text-secondary);
+    animation: fadeInBanner 0.3s ease;
+}
+.panel-building.visible {
+    display: flex;
+}
+@keyframes fadeInBanner {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* --- Summary card --- */
 .summary-card {
     position: absolute;

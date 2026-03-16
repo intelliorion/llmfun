@@ -231,6 +231,9 @@ resetBtn.addEventListener('click', function() {
     document.getElementById('report-content').innerHTML = '<p style="color:var(--text-tertiary);">Report auto-generates when build completes.</p>';
     document.getElementById('btn-report').textContent = 'Generate Report';
     document.getElementById('summary-card').classList.remove('visible');
+    document.getElementById('entities-building').classList.remove('visible');
+    document.getElementById('report-building').classList.remove('visible');
+    document.getElementById('qa-building').classList.remove('visible');
     document.getElementById('chat-messages').innerHTML = '<div class="empty-state" id="chat-empty"><div><p style="font-size:14px;">Ask questions about your data</p></div></div>';
     document.getElementById('suggested-questions').innerHTML = '';
     document.getElementById('suggested-questions').classList.remove('visible');
@@ -323,6 +326,11 @@ buildBtn.addEventListener('click', function() {
     document.getElementById('chat-messages').innerHTML = '';
     document.getElementById('suggested-questions').innerHTML = '';
     document.getElementById('suggested-questions').classList.remove('visible');
+
+    // Show building indicators on other panels
+    document.getElementById('entities-building').classList.add('visible');
+    document.getElementById('report-building').classList.add('visible');
+    document.getElementById('qa-building').classList.add('visible');
 
     waitForVis(function() {
         initGraph();
@@ -784,6 +792,11 @@ function startPolling() {
                 var pct = Math.round((data.current_chunk / data.total_chunks) * 100);
                 hintText.textContent = 'Extracting entities... ' + data.current_chunk + '/' + data.total_chunks;
                 setProgress(10 + pct * 0.7);
+                // Update entities panel building indicator with live count
+                var eb = document.getElementById('entities-building');
+                if (eb.classList.contains('visible') && data.graph_data) {
+                    eb.querySelector('span').textContent = 'Extracting entities (' + data.graph_data.nodes.length + ' found so far, chunk ' + data.current_chunk + '/' + data.total_chunks + ')...';
+                }
                 setStep('step-schema', 'done');
                 setStep('step-extract', 'active');
                 // Show schema once when transitioning to building
@@ -831,6 +844,11 @@ function startPolling() {
                 generateSuggestedQuestions(data.graph_data);
                 // Show toolbar
                 document.getElementById('graph-toolbar').style.display = 'flex';
+
+                // Hide building indicators
+                document.getElementById('entities-building').classList.remove('visible');
+                document.getElementById('report-building').classList.remove('visible');
+                document.getElementById('qa-building').classList.remove('visible');
 
                 // Show summary card
                 if (data.summary) {
