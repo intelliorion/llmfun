@@ -12,7 +12,7 @@ Traditional knowledge graph construction requires manual schema design, entity t
 
 - **Automating ontology design** — An AI agent reads your data and infers the right entity types and relationships, so you don't have to define a schema upfront.
 - **Handling messy, real-world data** — Paste raw text, upload PDFs, Excel spreadsheets, Word docs, emails, or CSVs. Orion preserves structure (e.g., pairing column headers with row values) and extracts meaning from unstructured prose.
-- **Resolving duplicates intelligently** — A dedicated deduplication agent merges variants like "J.P. Morgan" and "JPMorgan Chase" into a single canonical entity.
+- **Resolving duplicates intelligently** — A dedicated deduplication agent identifies abbreviations, typos, and partial names, merging them into single canonical entities.
 - **Making results immediately explorable** — The interactive graph lets you click, search, filter, and export — no additional tooling required.
 
 ## When to Use It
@@ -60,9 +60,8 @@ Orion uses a **3-agent pipeline**, each powered by an LLM via Dataiku's LLM Mesh
                                                 │ graph from Agent 1,│
                                                 │ scans all entity   │
                                                 │ names, and merges  │
-                                                │ duplicates (e.g.   │
-                                                │ "JPMorgan" and     │
-                                                │ "JPMorgan Chase")  │
+                                                │ duplicates, typos, │
+                                                │ and abbreviations  │
                                                 │ into canonical     │
                                                 │ forms. Returns the │
                                                 │ cleaned final graph│
@@ -74,7 +73,7 @@ Orion uses a **3-agent pipeline**, each powered by an LLM via Dataiku's LLM Mesh
 
 1. **Agent 0 — Schema Inference**: Analyzes a sample of your data and defines a focused ontology (3–8 entity types, 3–10 relationship types). This ontology is passed to Agent 1 to constrain extraction and keep the graph clean and consistent.
 2. **Agent 1 — Entity Extraction**: Receives the ontology from Agent 0 and processes your text in chunks, extracting entities and relationships constrained to those types. The graph updates progressively as each chunk is processed. Once all chunks are done, the accumulated graph is passed to Agent 2.
-3. **Agent 2 — Deduplication**: Receives the full graph from Agent 1 and scans all entity names to identify duplicates (abbreviations, typos, partial names like "Ted P." vs "Ted Pick"). It maps variants to canonical forms and merges the corresponding nodes and edges, producing the final cleaned graph.
+3. **Agent 2 — Deduplication**: Receives the full graph from Agent 1 and scans all entity names to identify duplicates (abbreviations, typos, partial names). It maps variants to canonical forms and merges the corresponding nodes and edges, producing the final cleaned graph.
 
 ---
 
