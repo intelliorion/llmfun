@@ -270,6 +270,7 @@ resetBtn.addEventListener('click', function() {
     document.getElementById('stats-bar').classList.remove('visible');
     document.getElementById('stats-bar').innerHTML = '';
     document.getElementById('schema-display').style.display = 'none';
+    document.getElementById('detected-mode').style.display = 'none';
     document.getElementById('graph-toolbar').style.display = 'none';
     document.getElementById('detail-panel').classList.remove('open');
     document.getElementById('graph-search').value = '';
@@ -348,6 +349,7 @@ buildBtn.addEventListener('click', function() {
     buildBtn.textContent = 'Building...';
     resetSteps();
     document.getElementById('schema-display').style.display = 'none';
+    document.getElementById('detected-mode').style.display = 'none';
     document.getElementById('stats-bar').classList.remove('visible');
 
     document.getElementById('entities-table-body').innerHTML = '';
@@ -774,12 +776,35 @@ function exportCSV() {
 // --- Schema display ---
 function showSchema(schema) {
     if (!schema) return;
+
+    // Show detected mode card (only in auto-detect)
+    var modeCard = document.getElementById('detected-mode');
+    if (schema.domain && selectedDomain === 'auto') {
+        var domainName = schema.domain;
+        // Look up friendly name from the dropdown
+        for (var i = 0; i < domainSelect.options.length; i++) {
+            if (domainSelect.options[i].value === schema.domain) {
+                domainName = domainSelect.options[i].textContent;
+                break;
+            }
+        }
+        // Capitalize if it's a raw key
+        if (domainName === schema.domain) {
+            domainName = schema.domain.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+        }
+        modeCard.innerHTML = '<div class="detected-mode-icon">&#x2728;</div>' +
+            '<div class="detected-mode-text">' +
+            '<div class="detected-mode-label">Detected Mode</div>' +
+            '<div class="detected-mode-name">' + domainName + '</div>' +
+            '</div>';
+        modeCard.style.display = 'flex';
+    } else {
+        modeCard.style.display = 'none';
+    }
+
+    // Show schema card
     var el = document.getElementById('schema-display');
     var html = '<b>Detected Schema</b>';
-
-    if (schema.domain) {
-        html += '<span class="schema-domain-badge">' + schema.domain + '</span>';
-    }
 
     if (schema.description) {
         html += '<div style="margin-top:6px;color:var(--text-secondary);font-size:11px;">' + schema.description + '</div>';
@@ -792,6 +817,10 @@ function showSchema(schema) {
             html += '<span class="schema-type-badge" style="background:' + color + '">' + t + '</span>';
         });
         html += '</div>';
+    }
+
+    if (schema.attribute_fields && schema.attribute_fields.length > 0) {
+        html += '<div class="schema-attrs"><span style="color:var(--text-tertiary);">Attributes (in descriptions):</span> ' + schema.attribute_fields.join(', ') + '</div>';
     }
 
     if (schema.relationship_types && schema.relationship_types.length > 0) {
@@ -899,6 +928,7 @@ function startPolling() {
                 setTimeout(function() {
                     document.getElementById('progress-container').style.display = 'none';
                     document.getElementById('schema-display').style.display = 'none';
+                    document.getElementById('detected-mode').style.display = 'none';
                 }, 3000);
             }
         };

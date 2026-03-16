@@ -90,6 +90,16 @@ DOMAIN_TEMPLATES = {
 }
 
 # --- Prompts ---
+ENTITY_VS_ATTRIBUTE_GUIDANCE = """
+CRITICAL — Entity vs. Attribute distinction:
+- An ENTITY is something that has its own identity and participates in relationships (e.g. Person, Organization, Project, System)
+- An ATTRIBUTE is a property of an entity that describes it but does NOT need its own node (e.g. phone number, email address, employee ID, floor number, zip code, date of birth)
+- DO NOT create entity types for attributes. Instead, attributes should be included in the entity's "description" field during extraction.
+- Examples of what should be ENTITIES: Person, Team, Division, Title/Role, Building, Project, System
+- Examples of what should be ATTRIBUTES (NOT entities): Phone Number, Email, Employee ID, Floor, Extension, Badge Number, Hire Date, Address
+- Ask yourself: "Would this create a meaningful node in a graph that connects to other things?" If not, it's an attribute.
+"""
+
 SCHEMA_PROMPT_GENERAL = """You are a data analyst. Read the following text and define a focused ontology for a knowledge graph.
 
 Your job:
@@ -97,19 +107,23 @@ Your job:
 2. Define a SMALL set of entity types (3-8 types max) that capture the key concepts
 3. Define a SMALL set of relationship types (3-10 types max) that capture how entities connect
 4. Keep it focused — fewer, meaningful types are better than many granular ones
+5. Identify fields that are ATTRIBUTES (not entities) so they can be excluded from the graph
+{entity_attr_guidance}
 
 Return a JSON object:
 {{
   "description": "Brief description of what this data is about",
   "domain": "auto-detected domain name",
   "entity_types": ["Type1", "Type2", "Type3"],
-  "relationship_types": ["REL_TYPE_1", "REL_TYPE_2"]
+  "relationship_types": ["REL_TYPE_1", "REL_TYPE_2"],
+  "attribute_fields": ["field1", "field2"]
 }}
 
 Rules:
 - Use clear, singular nouns for entity types (e.g. "Person" not "People")
 - Use UPPER_SNAKE_CASE for relationship types (e.g. "HAS_TITLE" not "has title")
 - Merge similar concepts (e.g. don't have both "Role" and "Title" — pick one)
+- "attribute_fields" should list data fields that are properties/attributes and should NOT become graph nodes
 - Return ONLY valid JSON, no markdown fences, no extra text.
 
 Text (sample):
@@ -120,24 +134,28 @@ SCHEMA_PROMPT_AUTO = """You are a data analyst. Read the following text and dete
 
 Available domains:
 {domain_list}
+{entity_attr_guidance}
 
 Your job:
 1. Read the text sample and classify it into the BEST matching domain above
 2. Use that domain's suggested entity types and relationship types as a starting point
 3. Adapt the ontology to fit the actual data — add, remove, or rename types as needed (stay within 3-8 entity types, 3-10 relationship types)
-4. If no domain fits well, create a custom ontology from scratch
+4. Identify fields that are ATTRIBUTES (not entities) — these should be excluded from graph nodes
+5. If no domain fits well, create a custom ontology from scratch
 
 Return a JSON object:
 {{
   "description": "Brief description of what this data is about",
   "domain": "detected domain key (e.g. 'communication', 'legal', 'general')",
   "entity_types": ["Type1", "Type2", "Type3"],
-  "relationship_types": ["REL_TYPE_1", "REL_TYPE_2"]
+  "relationship_types": ["REL_TYPE_1", "REL_TYPE_2"],
+  "attribute_fields": ["field1", "field2"]
 }}
 
 Rules:
 - Use clear, singular nouns for entity types
 - Use UPPER_SNAKE_CASE for relationship types
+- "attribute_fields" should list data fields that are properties/attributes and should NOT become graph nodes (e.g. phone numbers, IDs, email addresses, floor numbers)
 - Return ONLY valid JSON, no markdown fences, no extra text.
 
 Text (sample):
@@ -149,24 +167,28 @@ SCHEMA_PROMPT_DOMAIN = """You are a domain expert analyzing data for: {domain_na
 Domain context: {domain_desc}
 Suggested entity types: {entity_types}
 Suggested relationship types: {rel_types}
+{entity_attr_guidance}
 
 Read the following text and refine the ontology to fit this specific data.
 You MUST use the suggested types as your starting point, but you may:
 - Add 1-2 additional types if the data clearly needs them
 - Remove types that don't appear in the data
 - Keep the total within 3-8 entity types and 3-10 relationship types
+- Identify fields that are ATTRIBUTES (not entities) — these should be excluded from graph nodes
 
 Return a JSON object:
 {{
   "description": "Brief description of what this data is about",
   "domain": "{domain_key}",
   "entity_types": ["Type1", "Type2", "Type3"],
-  "relationship_types": ["REL_TYPE_1", "REL_TYPE_2"]
+  "relationship_types": ["REL_TYPE_1", "REL_TYPE_2"],
+  "attribute_fields": ["field1", "field2"]
 }}
 
 Rules:
 - Use clear, singular nouns for entity types
 - Use UPPER_SNAKE_CASE for relationship types
+- "attribute_fields" should list data fields that are properties/attributes and should NOT become graph nodes
 - Return ONLY valid JSON, no markdown fences, no extra text.
 
 Text (sample):
@@ -179,11 +201,12 @@ Ontology:
 - Entity types: {entity_types}
 - Relationship types: {relationship_types}
 - Context: {schema_description}
+- Attribute fields (DO NOT create nodes for these — include them in entity descriptions instead): {attribute_fields}
 
 Return a JSON object:
 {{
   "entities": [
-    {{"name": "Entity Name", "type": "EntityType", "description": "brief description"}}
+    {{"name": "Entity Name", "type": "EntityType", "description": "brief description including relevant attributes"}}
   ],
   "relationships": [
     {{"source": "Entity Name", "target": "Entity Name", "relation": "RELATIONSHIP_TYPE", "description": "brief description"}}
@@ -192,8 +215,9 @@ Return a JSON object:
 
 Rules:
 - Use ONLY the entity types and relationship types listed above. Do not invent new ones.
-- Be thorough. Extract every entity and relationship mentioned.
-- For tabular/record data: associate every field value back to its primary entity.
+- Extract meaningful entities that participate in relationships. Skip trivial or isolated data.
+- Attribute fields (like phone numbers, IDs, email addresses, floor numbers) should be folded into the entity's "description" field, NOT created as separate nodes.
+- For tabular/record data: the primary entity is the row subject (e.g. a Person). Other columns are either related entities (if they match an entity type) or attributes (include in description).
 - Return ONLY valid JSON, no markdown fences, no extra text.
 
 Text:
@@ -242,6 +266,8 @@ def infer_schema(text, llm_inst=None, domain='auto'):
     _llm = llm_inst or llm
     sample = text[:2000]
 
+    guidance = ENTITY_VS_ATTRIBUTE_GUIDANCE
+
     if domain != 'auto' and domain in DOMAIN_TEMPLATES and DOMAIN_TEMPLATES[domain]['entity_types']:
         # User selected a specific domain template
         tmpl = DOMAIN_TEMPLATES[domain]
@@ -251,6 +277,7 @@ def infer_schema(text, llm_inst=None, domain='auto'):
             entity_types=', '.join(tmpl['entity_types']),
             rel_types=', '.join(tmpl['relationship_types']),
             domain_key=domain,
+            entity_attr_guidance=guidance,
             text=sample
         )
     elif domain == 'auto':
@@ -262,10 +289,10 @@ def infer_schema(text, llm_inst=None, domain='auto'):
             domain_list += '- ' + key + ' (' + tmpl['name'] + '): ' + tmpl['description'] + '\n'
             domain_list += '  Entity types: ' + ', '.join(tmpl['entity_types']) + '\n'
             domain_list += '  Relationship types: ' + ', '.join(tmpl['relationship_types']) + '\n'
-        prompt = SCHEMA_PROMPT_AUTO.format(domain_list=domain_list, text=sample)
+        prompt = SCHEMA_PROMPT_AUTO.format(domain_list=domain_list, entity_attr_guidance=guidance, text=sample)
     else:
         # General / fallback
-        prompt = SCHEMA_PROMPT_GENERAL.format(text=sample)
+        prompt = SCHEMA_PROMPT_GENERAL.format(entity_attr_guidance=guidance, text=sample)
 
     completion = _llm.new_completion()
     completion.with_message(prompt)
@@ -277,11 +304,13 @@ def infer_schema(text, llm_inst=None, domain='auto'):
 def extract_entities(text, schema, llm_inst=None):
     _llm = llm_inst or llm
     completion = _llm.new_completion()
+    attr_fields = schema.get('attribute_fields', [])
     prompt = EXTRACTION_PROMPT.format(
         text=text,
         entity_types=', '.join(schema['entity_types']),
         relationship_types=', '.join(schema['relationship_types']),
-        schema_description=schema.get('description', '')
+        schema_description=schema.get('description', ''),
+        attribute_fields=', '.join(attr_fields) if attr_fields else 'none specified'
     )
     completion.with_message(prompt)
     resp = completion.execute()

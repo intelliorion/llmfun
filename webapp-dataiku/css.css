@@ -432,12 +432,48 @@ html, body {
 
 /* --- Schema display --- */
 .schema-display {
-    position: absolute; bottom: 16px; right: 20px;
+    position: absolute; bottom: 80px; right: 20px;
     background: var(--bg-card); border: 1px solid var(--border);
     border-radius: var(--radius-sm); padding: 14px 18px;
     box-shadow: var(--shadow-md); z-index: 10;
     max-width: 320px; font-size: 12px;
 }
+
+/* --- Detected mode card --- */
+.detected-mode {
+    position: absolute;
+    bottom: 16px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 16px rgba(99,102,241,0.3);
+    z-index: 11;
+    animation: slideInMode 0.4s ease;
+}
+.detected-mode-icon {
+    font-size: 20px;
+}
+.detected-mode-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    opacity: 0.8;
+}
+.detected-mode-name {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+@keyframes slideInMode {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .schema-display b {
     font-size: 11px; color: var(--text-secondary);
     text-transform: uppercase; letter-spacing: 0.5px;
@@ -450,6 +486,10 @@ html, body {
 .schema-rels {
     margin-top: 8px; font-size: 11px; color: var(--text-secondary);
     line-height: 1.5;
+}
+.schema-attrs {
+    margin-top: 6px; font-size: 10px; color: var(--text-tertiary);
+    line-height: 1.4; font-style: italic;
 }
 .schema-domain-badge {
     display: inline-block;
