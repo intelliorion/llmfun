@@ -395,7 +395,7 @@ html, body {
 
 /* --- Schema display --- */
 .schema-display {
-    position: absolute; top: 16px; right: 20px;
+    position: absolute; bottom: 16px; right: 20px;
     background: var(--bg-card); border: 1px solid var(--border);
     border-radius: var(--radius-sm); padding: 14px 18px;
     box-shadow: var(--shadow-md); z-index: 10;
