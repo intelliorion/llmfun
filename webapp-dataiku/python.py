@@ -81,6 +81,12 @@ DOMAIN_TEMPLATES = {
         'entity_types': ['Dataset', 'Metric', 'Dimension', 'Source', 'Insight', 'Trend', 'Segment'],
         'relationship_types': ['MEASURED_BY', 'SOURCED_FROM', 'CORRELATES_WITH', 'SEGMENTED_BY', 'DRIVES', 'COMPARED_TO', 'DERIVED_FROM', 'INDICATES']
     },
+    'team_management': {
+        'name': 'Team Management & Performance',
+        'description': 'Analyze employee goals, 360 reviews, performance ratings, team structure, skills, and division targets to map the full talent landscape — who reports to whom, who is excelling, who needs development, goal alignment, skill gaps, and organizational risk.',
+        'entity_types': ['Employee', 'Team', 'Division', 'Goal', 'Review', 'Skill', 'Initiative', 'Role'],
+        'relationship_types': ['REPORTS_TO', 'MANAGES', 'BELONGS_TO', 'HAS_GOAL', 'REVIEWED_BY', 'POSSESSES_SKILL', 'CONTRIBUTES_TO', 'ALIGNED_WITH', 'DEPENDS_ON', 'MENTORS', 'COLLABORATES_WITH', 'BLOCKED_BY']
+    },
     'general': {
         'name': 'General',
         'description': None,  # Will use auto-inference
