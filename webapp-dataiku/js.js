@@ -1288,9 +1288,10 @@ function addChatMessage(role, content) {
     return div;
 }
 
-// --- What-If Analysis ---
+// --- What-If Simulation (MiroFish-inspired) ---
 var whatifInput = document.getElementById('whatif-input');
 var whatifSendBtn = document.getElementById('whatif-send');
+var currentWhatifScenario = '';
 
 whatifSendBtn.addEventListener('click', sendWhatIf);
 whatifInput.addEventListener('keydown', function(e) {
@@ -1302,24 +1303,26 @@ function sendWhatIf() {
     var scenario = whatifInput.value.trim();
     if (!scenario) return;
 
+    currentWhatifScenario = scenario;
     whatifInput.value = '';
     whatifSendBtn.disabled = true;
-    whatifSendBtn.textContent = 'Analyzing...';
+    whatifSendBtn.textContent = 'Simulating...';
 
     var resultsEl = document.getElementById('whatif-results');
     var emptyEl = document.getElementById('whatif-empty');
     if (emptyEl) emptyEl.remove();
 
-    // Add scenario card
     var scenarioDiv = document.createElement('div');
     scenarioDiv.className = 'whatif-scenario';
     scenarioDiv.innerHTML = '<div class="whatif-scenario-q">' + escapeHtml(scenario) + '</div>' +
-        '<div class="whatif-loading"><span class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px;"></span>' +
-        '<span style="font-size:13px;color:var(--text-secondary);">Running impact analysis...</span></div>';
+        '<div class="whatif-loading">' +
+        '<div class="whatif-sim-progress">' +
+        '<span class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px;"></span>' +
+        '<span style="font-size:13px;color:var(--text-secondary);">Initializing agents &amp; running simulation...</span>' +
+        '</div></div>';
     resultsEl.appendChild(scenarioDiv);
     resultsEl.scrollTop = resultsEl.scrollHeight;
 
-    // Hide suggestions after first use
     document.getElementById('whatif-suggestions').classList.remove('visible');
 
     fetch(getBackendUrl('whatif/' + sessionId), {
@@ -1330,62 +1333,112 @@ function sendWhatIf() {
         return response.json();
     }).then(function(data) {
         var result = data.result;
-        var loadingEl = scenarioDiv.querySelector('.whatif-loading');
-        if (loadingEl) loadingEl.remove();
-
         var html = '';
 
-        // Summary card with risk meter
-        html += '<div class="whatif-summary-card">';
-        html += '<div class="whatif-summary-title">Impact Assessment</div>';
-        html += '<div class="whatif-summary-text">' + escapeHtml(result.summary || '') + '</div>';
+        // --- Summary + Risk Meter ---
         var riskLevel = result.overall_risk || 'medium';
         var riskScore = result.risk_score || 50;
+        html += '<div class="whatif-summary-card">';
+        html += '<div class="whatif-summary-title">Simulation Complete</div>';
+        html += '<div class="whatif-summary-text">' + escapeHtml(result.summary || '') + '</div>';
         html += '<div class="whatif-risk-meter">';
         html += '<span class="whatif-risk-label" style="color:' + getRiskColor(riskLevel) + ';">' + riskLevel.toUpperCase() + ' RISK</span>';
         html += '<div class="whatif-risk-bar"><div class="whatif-risk-fill ' + riskLevel + '" style="width:' + riskScore + '%;"></div></div>';
         html += '<span style="font-size:11px;color:var(--text-tertiary);">' + riskScore + '/100</span>';
         html += '</div></div>';
 
-        // Impact cards
-        var impacts = result.impacts || [];
-        for (var i = 0; i < impacts.length; i++) {
-            var imp = impacts[i];
-            var sev = imp.severity || 'info';
-            html += '<div class="whatif-impact-card">';
-            html += '<div class="whatif-impact-header">';
-            html += '<div class="whatif-impact-icon ' + sev + '">' + getSeverityIcon(sev) + '</div>';
-            html += '<div class="whatif-impact-label">' + escapeHtml(imp.title || '') + '</div>';
-            html += '<span class="whatif-impact-severity ' + sev + '">' + sev + '</span>';
-            html += '</div>';
-            html += '<div class="whatif-impact-body">' + escapeHtml(imp.description || '') + '</div>';
-            if (imp.affected_entities && imp.affected_entities.length > 0) {
-                html += '<div class="whatif-impact-entities">';
-                for (var j = 0; j < imp.affected_entities.length; j++) {
-                    html += '<span class="whatif-entity-tag">' + escapeHtml(imp.affected_entities[j]) + '</span>';
+        // --- Simulation Timeline (rounds) ---
+        var rounds = result.simulation_rounds || [];
+        if (rounds.length > 0) {
+            html += '<div class="whatif-timeline">';
+            for (var ri = 0; ri < rounds.length; ri++) {
+                var round = rounds[ri];
+                var roundNum = round.round || (ri + 1);
+                html += '<div class="whatif-round">';
+                html += '<div class="whatif-round-header">';
+                html += '<div class="whatif-round-num">R' + roundNum + '</div>';
+                html += '<div class="whatif-round-title">' + escapeHtml(round.title || '') + '</div>';
+                html += '</div>';
+                html += '<div class="whatif-round-desc">' + escapeHtml(round.description || '') + '</div>';
+                var events = round.events || [];
+                for (var ei = 0; ei < events.length; ei++) {
+                    var evt = events[ei];
+                    var sentColor = getSentimentColor(evt.sentiment);
+                    html += '<div class="whatif-event">';
+                    html += '<div class="whatif-event-dot" style="background:' + sentColor + ';"></div>';
+                    html += '<div class="whatif-event-content">';
+                    html += '<span class="whatif-event-entity">' + escapeHtml(evt.entity || '') + '</span>';
+                    if (evt.entity_type) html += '<span class="whatif-event-type">' + escapeHtml(evt.entity_type) + '</span>';
+                    html += '<div class="whatif-event-action">' + escapeHtml(evt.action || '') + '</div>';
+                    html += '</div></div>';
                 }
                 html += '</div>';
             }
             html += '</div>';
         }
 
-        // Broken relationships
-        var broken = result.broken_relationships || [];
-        if (broken.length > 0) {
-            html += '<div class="whatif-impact-card" style="border-left:3px solid #ef4444;">';
-            html += '<div class="whatif-impact-header"><div class="whatif-impact-icon critical">&#x26A0;</div>';
-            html += '<div class="whatif-impact-label">Broken Relationships (' + broken.length + ')</div></div>';
-            for (var k = 0; k < broken.length; k++) {
-                var br = broken[k];
-                html += '<div style="font-size:12px;margin-top:6px;padding:6px 10px;background:rgba(239,68,68,0.04);border-radius:6px;">';
-                html += '<strong>' + escapeHtml(br.source) + '</strong> <span style="color:var(--text-tertiary);">&#x2192; [' + escapeHtml(br.relation) + '] &#x2192;</span> <strong>' + escapeHtml(br.target) + '</strong>';
-                if (br.consequence) html += '<div style="color:var(--text-secondary);margin-top:2px;">' + escapeHtml(br.consequence) + '</div>';
+        // --- Agent Perspectives (interview-ready) ---
+        var agents = result.agent_perspectives || [];
+        if (agents.length > 0) {
+            html += '<div class="whatif-agents-section">';
+            html += '<div class="whatif-section-title">Agent Perspectives <span style="font-weight:400;color:var(--text-tertiary);font-size:11px;">Click to interview</span></div>';
+            for (var ai = 0; ai < agents.length; ai++) {
+                var agent = agents[ai];
+                var impLevel = agent.impact_level || 'medium';
+                html += '<div class="whatif-agent-card" data-entity="' + escapeHtml(agent.entity || '') + '" data-reaction="' + escapeHtml(agent.reaction || '') + '">';
+                html += '<div class="whatif-agent-header">';
+                html += '<div class="whatif-agent-avatar" style="background:' + getSentimentColor(agent.sentiment) + ';">' + (agent.entity || '?').charAt(0).toUpperCase() + '</div>';
+                html += '<div class="whatif-agent-info">';
+                html += '<div class="whatif-agent-name">' + escapeHtml(agent.entity || '') + '</div>';
+                html += '<div class="whatif-agent-role">' + escapeHtml(agent.entity_type || '') + ' &middot; ' + escapeHtml(agent.role_in_graph || '') + '</div>';
+                html += '</div>';
+                html += '<span class="whatif-impact-severity ' + impLevel + '">' + impLevel + '</span>';
+                html += '</div>';
+                html += '<div class="whatif-agent-reaction">' + escapeHtml(agent.reaction || '') + '</div>';
+                if (agent.quote) {
+                    html += '<div class="whatif-agent-quote">&ldquo;' + escapeHtml(agent.quote) + '&rdquo;</div>';
+                }
+                html += '<div class="whatif-agent-interview-btn">Interview this agent &rarr;</div>';
                 html += '</div>';
             }
             html += '</div>';
         }
 
-        // Recommendations
+        // --- Broken & New Relationships ---
+        var broken = result.broken_relationships || [];
+        var newRels = result.new_relationships || [];
+        if (broken.length > 0) {
+            html += '<div class="whatif-impact-card" style="border-left:3px solid #ef4444;">';
+            html += '<div class="whatif-impact-header"><div class="whatif-impact-icon critical">&#x26D4;</div>';
+            html += '<div class="whatif-impact-label">Broken Relationships (' + broken.length + ')</div></div>';
+            for (var k = 0; k < broken.length; k++) {
+                var br = broken[k];
+                html += '<div class="whatif-rel-item broken">';
+                html += '<strong>' + escapeHtml(br.source || '') + '</strong>';
+                html += ' <span class="whatif-rel-arrow">&#x2192; [' + escapeHtml(br.relation || '') + '] &#x2192;</span> ';
+                html += '<strong>' + escapeHtml(br.target || '') + '</strong>';
+                if (br.consequence) html += '<div class="whatif-rel-consequence">' + escapeHtml(br.consequence) + '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+        if (newRels.length > 0) {
+            html += '<div class="whatif-impact-card" style="border-left:3px solid #16a34a;">';
+            html += '<div class="whatif-impact-header"><div class="whatif-impact-icon low">&#x2795;</div>';
+            html += '<div class="whatif-impact-label">New Relationships Formed (' + newRels.length + ')</div></div>';
+            for (var nr = 0; nr < newRels.length; nr++) {
+                var rel = newRels[nr];
+                html += '<div class="whatif-rel-item new-rel">';
+                html += '<strong>' + escapeHtml(rel.source || '') + '</strong>';
+                html += ' <span class="whatif-rel-arrow" style="color:#16a34a;">&#x2192; [' + escapeHtml(rel.relation || '') + '] &#x2192;</span> ';
+                html += '<strong>' + escapeHtml(rel.target || '') + '</strong>';
+                if (rel.reason) html += '<div class="whatif-rel-consequence" style="color:#16a34a;">' + escapeHtml(rel.reason) + '</div>';
+                html += '</div>';
+            }
+            html += '</div>';
+        }
+
+        // --- Recommendations ---
         var recs = result.recommendations || [];
         if (recs.length > 0) {
             html += '<div class="whatif-impact-card" style="border-left:3px solid #0081f2;">';
@@ -1399,16 +1452,96 @@ function sendWhatIf() {
         }
 
         scenarioDiv.innerHTML = '<div class="whatif-scenario-q">' + escapeHtml(scenario) + '</div>' + html;
+
+        // Bind interview click handlers
+        var agentCards = scenarioDiv.querySelectorAll('.whatif-agent-card');
+        for (var ac = 0; ac < agentCards.length; ac++) {
+            (function(card) {
+                card.querySelector('.whatif-agent-interview-btn').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openAgentInterview(card.getAttribute('data-entity'), card.getAttribute('data-reaction'), scenario, card);
+                });
+            })(agentCards[ac]);
+        }
+
         resultsEl.scrollTop = resultsEl.scrollHeight;
         whatifSendBtn.disabled = false;
-        whatifSendBtn.textContent = 'Analyze';
+        whatifSendBtn.textContent = 'Simulate';
         whatifInput.focus();
     }).catch(function() {
-        var loadingEl = scenarioDiv.querySelector('.whatif-loading');
-        if (loadingEl) loadingEl.innerHTML = '<span style="color:#ef4444;font-size:13px;">Analysis failed. Try again.</span>';
+        scenarioDiv.querySelector('.whatif-loading').innerHTML = '<span style="color:#ef4444;font-size:13px;">Simulation failed. Try again.</span>';
         whatifSendBtn.disabled = false;
-        whatifSendBtn.textContent = 'Analyze';
+        whatifSendBtn.textContent = 'Simulate';
     });
+}
+
+// --- Agent Interview Modal ---
+function openAgentInterview(entityName, reaction, scenario, cardEl) {
+    // Check if interview panel already open for this card
+    var existing = cardEl.querySelector('.whatif-interview-panel');
+    if (existing) { existing.remove(); return; }
+
+    var panel = document.createElement('div');
+    panel.className = 'whatif-interview-panel';
+    panel.innerHTML =
+        '<div class="whatif-interview-header">' +
+        '<span>Interview: <strong>' + escapeHtml(entityName) + '</strong></span>' +
+        '<button class="whatif-interview-close">&times;</button></div>' +
+        '<div class="whatif-interview-messages" id="interview-msgs-' + entityName.replace(/\s+/g, '_') + '"></div>' +
+        '<div class="whatif-interview-input-area">' +
+        '<input type="text" class="whatif-interview-input" placeholder="Ask ' + escapeHtml(entityName) + ' anything...">' +
+        '<button class="whatif-interview-send">Ask</button></div>';
+    cardEl.appendChild(panel);
+
+    var messagesEl = panel.querySelector('.whatif-interview-messages');
+    var input = panel.querySelector('.whatif-interview-input');
+    var sendBtn = panel.querySelector('.whatif-interview-send');
+    var closeBtn = panel.querySelector('.whatif-interview-close');
+
+    closeBtn.addEventListener('click', function() { panel.remove(); });
+
+    function sendInterview() {
+        var q = input.value.trim();
+        if (!q) return;
+        input.value = '';
+        sendBtn.disabled = true;
+
+        // Add user message
+        messagesEl.innerHTML += '<div class="whatif-int-msg user"><div class="whatif-int-bubble user">' + escapeHtml(q) + '</div></div>';
+
+        // Add loading
+        var loadingId = 'int-loading-' + Date.now();
+        messagesEl.innerHTML += '<div class="whatif-int-msg agent" id="' + loadingId + '"><div class="whatif-int-bubble agent"><span class="spinner" style="width:12px;height:12px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span>Thinking...</div></div>';
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+
+        fetch(getBackendUrl('whatif_interview/' + sessionId), {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                entity: entityName,
+                question: q,
+                scenario: scenario,
+                reaction: reaction
+            })
+        }).then(function(r) { return r.json(); })
+        .then(function(data) {
+            var loadEl = document.getElementById(loadingId);
+            if (loadEl) loadEl.querySelector('.whatif-int-bubble').innerHTML = formatMarkdown(data.answer || 'No response.');
+            sendBtn.disabled = false;
+            input.focus();
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }).catch(function() {
+            var loadEl = document.getElementById(loadingId);
+            if (loadEl) loadEl.querySelector('.whatif-int-bubble').textContent = 'Interview failed.';
+            sendBtn.disabled = false;
+        });
+    }
+
+    sendBtn.addEventListener('click', sendInterview);
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); sendInterview(); }
+    });
+    input.focus();
 }
 
 function loadWhatIfSuggestions() {
@@ -1437,6 +1570,11 @@ function loadWhatIfSuggestions() {
 function getRiskColor(level) {
     var colors = {critical: '#ef4444', high: '#ea580c', medium: '#ca8a04', low: '#16a34a'};
     return colors[level] || '#6b6b6b';
+}
+
+function getSentimentColor(s) {
+    var colors = {negative: '#ef4444', alarmed: '#ea580c', neutral: '#6b6b6b', positive: '#16a34a', opportunistic: '#0081f2'};
+    return colors[s] || '#6b6b6b';
 }
 
 function getSeverityIcon(sev) {

@@ -923,6 +923,131 @@ html, body {
     font-size: 11px; font-weight: 600; white-space: nowrap;
 }
 
+/* Simulation Timeline */
+.whatif-timeline { margin-bottom: 16px; }
+.whatif-round {
+    position: relative; padding-left: 28px; margin-bottom: 16px;
+    border-left: 2px solid var(--border); margin-left: 12px;
+}
+.whatif-round:last-child { border-left-color: transparent; }
+.whatif-round-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.whatif-round-num {
+    position: absolute; left: -13px; top: 0;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #7B2D8E; color: #fff; font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+}
+.whatif-round-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.whatif-round-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; line-height: 1.5; }
+.whatif-event {
+    display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px;
+    padding: 6px 10px; background: var(--bg); border-radius: 8px;
+}
+.whatif-event-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+}
+.whatif-event-entity {
+    font-size: 12px; font-weight: 600; color: var(--text-primary); margin-right: 6px;
+}
+.whatif-event-type {
+    font-size: 10px; padding: 1px 6px; border-radius: 6px;
+    background: var(--accent-soft); color: var(--text-tertiary);
+}
+.whatif-event-action { font-size: 12px; color: var(--text-secondary); margin-top: 2px; line-height: 1.4; }
+
+/* Agent Perspective Cards */
+.whatif-agents-section { margin-bottom: 16px; }
+.whatif-section-title {
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+    margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.whatif-agent-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 14px; margin-bottom: 10px;
+    transition: border-color var(--transition);
+}
+.whatif-agent-card:hover { border-color: #7B2D8E; }
+.whatif-agent-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.whatif-agent-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff; font-size: 14px; flex-shrink: 0;
+}
+.whatif-agent-info { flex: 1; min-width: 0; }
+.whatif-agent-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.whatif-agent-role { font-size: 11px; color: var(--text-tertiary); }
+.whatif-agent-reaction { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 6px; }
+.whatif-agent-quote {
+    font-size: 12px; font-style: italic; color: #7B2D8E;
+    padding: 6px 12px; background: rgba(123,45,142,0.04);
+    border-radius: 8px; border-left: 2px solid #7B2D8E; margin-bottom: 8px;
+}
+.whatif-agent-interview-btn {
+    font-size: 11px; color: #7B2D8E; font-weight: 600; cursor: pointer;
+    padding: 4px 0; transition: opacity var(--transition);
+}
+.whatif-agent-interview-btn:hover { opacity: 0.7; }
+
+/* Relationship Items */
+.whatif-rel-item {
+    font-size: 12px; margin-top: 6px; padding: 6px 10px; border-radius: 6px;
+}
+.whatif-rel-item.broken { background: rgba(239,68,68,0.04); }
+.whatif-rel-item.new-rel { background: rgba(22,163,74,0.04); }
+.whatif-rel-arrow { color: var(--text-tertiary); }
+.whatif-rel-consequence { color: var(--text-secondary); margin-top: 2px; font-size: 11px; }
+
+/* Agent Interview Panel */
+.whatif-interview-panel {
+    margin-top: 10px; border: 1px solid #7B2D8E; border-radius: var(--radius-md);
+    overflow: hidden; background: var(--bg);
+}
+.whatif-interview-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 12px; background: rgba(123,45,142,0.06);
+    font-size: 12px; color: var(--text-primary);
+}
+.whatif-interview-close {
+    background: none; border: none; font-size: 16px; cursor: pointer;
+    color: var(--text-tertiary); padding: 0 4px;
+}
+.whatif-interview-messages {
+    max-height: 240px; overflow-y: auto; padding: 10px 12px;
+    background: var(--bg-card);
+}
+.whatif-int-msg { margin-bottom: 8px; display: flex; }
+.whatif-int-msg.user { justify-content: flex-end; }
+.whatif-int-msg.agent { justify-content: flex-start; }
+.whatif-int-bubble {
+    max-width: 85%; padding: 8px 12px; border-radius: 12px;
+    font-size: 12px; line-height: 1.5;
+}
+.whatif-int-bubble.user {
+    background: #7B2D8E; color: #fff; border-bottom-right-radius: 4px;
+}
+.whatif-int-bubble.agent {
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text-primary); border-bottom-left-radius: 4px;
+}
+.whatif-interview-input-area {
+    display: flex; gap: 6px; padding: 8px 12px; border-top: 1px solid var(--border);
+    background: var(--bg-card);
+}
+.whatif-interview-input {
+    flex: 1; padding: 6px 12px; border: 1px solid var(--border);
+    border-radius: 16px; font-size: 12px; outline: none;
+    background: var(--bg-input);
+}
+.whatif-interview-input:focus { border-color: #7B2D8E; }
+.whatif-interview-send {
+    padding: 6px 14px; background: #7B2D8E; color: #fff;
+    border: none; border-radius: 16px; font-size: 11px;
+    font-weight: 600; cursor: pointer;
+}
+.whatif-interview-send:hover { opacity: 0.85; }
+.whatif-interview-send:disabled { background: var(--border); color: var(--text-tertiary); }
+.whatif-sim-progress { display: flex; align-items: center; padding: 8px 0; }
+
 /* --- Empty state --- */
 .empty-state {
     display: flex; flex: 1; align-items: center; justify-content: center;

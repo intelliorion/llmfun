@@ -1200,7 +1200,9 @@ def api_ask_stream(session_id):
                     headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
 
 
-WHATIF_PROMPT = """You are a strategic impact analyst for the Orion knowledge graph platform. Given a knowledge graph and a hypothetical "what-if" scenario, perform a rigorous cascading impact analysis.
+WHATIF_SIMULATE_PROMPT = """You are the Orion Simulation Engine — a multi-agent scenario simulator inspired by swarm intelligence. Given a knowledge graph representing a real-world system and a hypothetical "what-if" scenario, you will SIMULATE how entities in the graph would react, adapt, and cascade effects over multiple rounds.
+
+Think of each entity in the graph as an intelligent agent with its own goals, constraints, and relationships. Simulate their reactions as the scenario unfolds.
 
 Knowledge Graph:
 {context}
@@ -1210,18 +1212,47 @@ Source Text:
 
 Scenario: "{scenario}"
 
-Analyze this scenario and return a JSON object with EXACTLY this structure:
+Run a multi-round simulation and return a JSON object with EXACTLY this structure:
 {{
-  "summary": "A 2-3 sentence executive summary of the overall impact",
+  "summary": "2-3 sentence executive summary of the simulation outcome",
   "overall_risk": "critical|high|medium|low",
   "risk_score": <number 0-100>,
-  "impacts": [
+  "simulation_rounds": [
     {{
-      "title": "Short impact title",
-      "severity": "critical|high|medium|low|info",
-      "description": "Detailed explanation of this specific impact",
-      "affected_entities": ["Entity1", "Entity2"],
-      "category": "structural|operational|relational|data_integrity|downstream"
+      "round": 1,
+      "title": "Immediate Impact",
+      "description": "What happens first — the direct, immediate effects",
+      "events": [
+        {{
+          "entity": "EntityName",
+          "entity_type": "Person|Team|System|etc",
+          "action": "What this entity does or experiences",
+          "sentiment": "negative|neutral|positive|alarmed"
+        }}
+      ]
+    }},
+    {{
+      "round": 2,
+      "title": "Ripple Effects",
+      "description": "Second-order cascading effects as entities react to Round 1",
+      "events": [...]
+    }},
+    {{
+      "round": 3,
+      "title": "Adaptation & Stabilization",
+      "description": "How the system adapts — new equilibrium or continued instability",
+      "events": [...]
+    }}
+  ],
+  "agent_perspectives": [
+    {{
+      "entity": "EntityName",
+      "entity_type": "Person|Team|etc",
+      "role_in_graph": "Brief description of their role based on graph relationships",
+      "reaction": "First-person perspective: how they experience and respond to this scenario",
+      "sentiment": "negative|neutral|positive|alarmed|opportunistic",
+      "impact_level": "critical|high|medium|low",
+      "quote": "A realistic one-line quote from this entity's perspective"
     }}
   ],
   "broken_relationships": [
@@ -1232,26 +1263,53 @@ Analyze this scenario and return a JSON object with EXACTLY this structure:
       "consequence": "What happens when this link breaks"
     }}
   ],
+  "new_relationships": [
+    {{
+      "source": "EntityA",
+      "relation": "NEW_RELATION",
+      "target": "EntityB",
+      "reason": "Why this new connection forms as a result"
+    }}
+  ],
   "recommendations": [
     "Actionable recommendation 1",
     "Actionable recommendation 2"
   ]
 }}
 
-Rules:
-- Analyze ALL direct impacts (entities/relationships immediately affected)
-- Trace ALL cascading/indirect impacts (second-order, third-order effects)
-- Consider structural integrity: would removing/changing this isolate any subgraphs?
-- Consider operational impact: what processes or workflows break?
-- Be specific — reference actual entity names and relationship types from the graph
-- Order impacts by severity (critical first)
-- Include at least 3-5 impacts if the scenario has meaningful effects
+SIMULATION RULES:
+- Generate exactly 3 rounds: Immediate → Ripple → Adaptation
+- Each round should have 2-5 entity events showing realistic agent behavior
+- agent_perspectives: include the top 4-6 most affected entities with FIRST-PERSON reactions
+- Each agent perspective must include a realistic "quote" — what they would actually say
+- broken_relationships: list connections that are severed or weakened
+- new_relationships: list NEW connections that form as the system adapts
+- Entities should behave consistently with their type, role, and graph position
+- High-degree entities (hubs) should show more impact than peripheral nodes
+- Consider: power dynamics, dependencies, information flow, bottlenecks
+- Be specific — use actual entity names and relationship types from the graph
 - Return ONLY valid JSON, no markdown fences, no commentary"""
+
+
+WHATIF_INTERVIEW_PROMPT = """You are roleplaying as {entity_name}, a {entity_type} in an organizational knowledge graph.
+
+Your profile based on the graph:
+{entity_context}
+
+The following scenario has been proposed: "{scenario}"
+
+The simulation showed your reaction: {agent_reaction}
+
+Now the user is interviewing you about this scenario. Respond in FIRST PERSON as {entity_name}. Stay in character. Be specific about how this affects you, your relationships, and your work. Reference real entities and relationships from your graph context.
+
+If you don't know something, say so honestly from {entity_name}'s perspective — don't make up facts not in the graph.
+
+User's question: {question}"""
 
 
 @app.route('/whatif/<session_id>', methods=['POST'])
 def api_whatif(session_id):
-    """What-If scenario analysis — returns structured impact assessment."""
+    """What-If simulation — multi-round agent-based impact analysis."""
     session = sessions.get(session_id)
     if not session or not session.get('graph'):
         return json_response({'error': 'No graph built yet'}, 400)
@@ -1267,7 +1325,7 @@ def api_whatif(session_id):
     if len(source) > MAX_CONTEXT_CHARS:
         source = source[:MAX_CONTEXT_CHARS] + '\n[... truncated ...]'
 
-    prompt = WHATIF_PROMPT.format(context=ctx, source=source, scenario=scenario)
+    prompt = WHATIF_SIMULATE_PROMPT.format(context=ctx, source=source, scenario=scenario)
 
     completion = _llm.new_completion()
     completion.with_message(prompt)
@@ -1281,12 +1339,76 @@ def api_whatif(session_id):
             'summary': resp.text,
             'overall_risk': 'medium',
             'risk_score': 50,
-            'impacts': [],
+            'simulation_rounds': [],
+            'agent_perspectives': [],
             'broken_relationships': [],
+            'new_relationships': [],
             'recommendations': []
         }
 
+    # Store scenario + result for agent interviews
+    if 'whatif_history' not in session:
+        session['whatif_history'] = []
+    session['whatif_history'].append({
+        'scenario': scenario,
+        'result': result
+    })
+
     return json_response({'result': result})
+
+
+@app.route('/whatif_interview/<session_id>', methods=['POST'])
+def api_whatif_interview(session_id):
+    """Interview a specific entity about a what-if scenario — MiroFish-style agent chat."""
+    session = sessions.get(session_id)
+    if not session or not session.get('graph'):
+        return json_response({'error': 'No graph built yet'}, 400)
+
+    data = request.get_json(force=True)
+    entity_name = data.get('entity', '').strip()
+    question = data.get('question', '').strip()
+    scenario = data.get('scenario', '').strip()
+    agent_reaction = data.get('reaction', '')
+
+    if not entity_name or not question:
+        return json_response({'error': 'Entity and question required'}, 400)
+
+    G = session['graph']
+    _llm = session.get('llm_inst', llm)
+
+    # Build entity context from graph
+    entity_context_lines = []
+    node_data = G.nodes.get(entity_name, {})
+    entity_type = node_data.get('type', 'Entity')
+    entity_context_lines.append('Type: ' + entity_type)
+    if node_data.get('description'):
+        entity_context_lines.append('Description: ' + node_data['description'])
+
+    # Relationships
+    entity_context_lines.append('')
+    entity_context_lines.append('Relationships:')
+    for src, tgt, edata in G.edges(data=True):
+        if src == entity_name:
+            entity_context_lines.append('  You --[' + edata.get('relation', '') + ']--> ' + tgt)
+        elif tgt == entity_name:
+            entity_context_lines.append('  ' + src + ' --[' + edata.get('relation', '') + ']--> You')
+
+    entity_context = '\n'.join(entity_context_lines)
+
+    prompt = WHATIF_INTERVIEW_PROMPT.format(
+        entity_name=entity_name,
+        entity_type=entity_type,
+        entity_context=entity_context,
+        scenario=scenario,
+        agent_reaction=agent_reaction,
+        question=question
+    )
+
+    completion = _llm.new_completion()
+    completion.with_message(prompt)
+    resp = completion.execute()
+
+    return json_response({'answer': resp.text.strip(), 'entity': entity_name})
 
 
 @app.route('/whatif_suggestions/<session_id>')
@@ -1299,28 +1421,33 @@ def api_whatif_suggestions(session_id):
     G = session['graph']
     suggestions = []
 
-    # Find high-degree nodes (key entities)
     degrees = sorted(G.degree(), key=lambda x: x[1], reverse=True)
     if len(degrees) >= 1:
         top = degrees[0][0]
-        suggestions.append('What if ' + top + ' is removed?')
+        top_type = G.nodes[top].get('type', 'entity')
+        suggestions.append('What if ' + top + ' is removed from the system?')
     if len(degrees) >= 2:
         second = degrees[1][0]
-        suggestions.append('What if ' + second + ' leaves the organization?')
+        suggestions.append('What if ' + second + ' changes its role entirely?')
 
-    # Find most common relationship type
     rel_counts = {}
     for _, _, data in G.edges(data=True):
         r = data.get('relation', '')
         rel_counts[r] = rel_counts.get(r, 0) + 1
     if rel_counts:
         top_rel = max(rel_counts, key=rel_counts.get)
-        suggestions.append('What if all ' + top_rel + ' relationships are restructured?')
+        suggestions.append('What if all ' + top_rel + ' relationships are dissolved?')
 
-    # Find connected pair for merge scenario
     if len(degrees) >= 3:
         a = degrees[0][0]
         b = degrees[2][0]
-        suggestions.append('What if ' + a + ' merges with ' + b + '?')
+        suggestions.append('What if ' + a + ' and ' + b + ' merge into one?')
+
+    # Add a "new connection" suggestion
+    if len(degrees) >= 4:
+        c = degrees[1][0]
+        d = degrees[3][0]
+        if not G.has_edge(c, d) and not G.has_edge(d, c):
+            suggestions.append('What if ' + c + ' starts reporting to ' + d + '?')
 
     return json_response({'suggestions': suggestions})
