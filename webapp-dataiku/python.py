@@ -22,9 +22,39 @@ ORION_COLORS = ['#216CA6', '#1A936F', '#7B2D8E', '#C5283D', '#2E86AB',
                 '#5ba3d9', '#e07a2f', '#6C757D', '#0d7377', '#8B5CF6']
 
 # --- Prompts ---
-EXTRACTION_PROMPT = """Analyze the following text and extract all entities and relationships.
+SCHEMA_PROMPT = """You are a data analyst. Read the following text and define a focused ontology for a knowledge graph.
 
-Return a JSON object with exactly this structure:
+Your job:
+1. Understand what this data is about (e.g. employee directory, financial report, research paper, etc.)
+2. Define a SMALL set of entity types (3-8 types max) that capture the key concepts
+3. Define a SMALL set of relationship types (3-10 types max) that capture how entities connect
+4. Keep it focused — fewer, meaningful types are better than many granular ones
+
+Return a JSON object:
+{{
+  "description": "Brief description of what this data is about",
+  "entity_types": ["Type1", "Type2", "Type3"],
+  "relationship_types": ["REL_TYPE_1", "REL_TYPE_2"]
+}}
+
+Rules:
+- Use clear, singular nouns for entity types (e.g. "Person" not "People")
+- Use UPPER_SNAKE_CASE for relationship types (e.g. "HAS_TITLE" not "has title")
+- Merge similar concepts (e.g. don't have both "Role" and "Title" — pick one)
+- Return ONLY valid JSON, no markdown fences, no extra text.
+
+Text (sample):
+{text}
+"""
+
+EXTRACTION_PROMPT = """Extract entities and relationships from the text below using ONLY the provided ontology.
+
+Ontology:
+- Entity types: {entity_types}
+- Relationship types: {relationship_types}
+- Context: {schema_description}
+
+Return a JSON object:
 {{
   "entities": [
     {{"name": "Entity Name", "type": "EntityType", "description": "brief description"}}
@@ -34,10 +64,10 @@ Return a JSON object with exactly this structure:
   ]
 }}
 
-Instructions:
-- Infer appropriate entity types and relationship types from the data. Do NOT limit yourself to predefined types.
-- For structured/tabular data: every column header implies an entity type or relationship. Associate every field value back to its record's primary entity (e.g. person, item).
+Rules:
+- Use ONLY the entity types and relationship types listed above. Do not invent new ones.
 - Be thorough. Extract every entity and relationship mentioned.
+- For tabular/record data: associate every field value back to its primary entity.
 - Return ONLY valid JSON, no markdown fences, no extra text.
 
 Text:
@@ -81,9 +111,26 @@ def clean_llm_json(raw):
     return text.strip()
 
 
-def extract_entities(text):
+def infer_schema(text):
+    """Agent 0: Analyze data and define a focused ontology."""
+    # Send first ~2000 chars as a sample
+    sample = text[:2000]
     completion = llm.new_completion()
-    completion.with_message(EXTRACTION_PROMPT.format(text=text))
+    completion.with_message(SCHEMA_PROMPT.format(text=sample))
+    resp = completion.execute()
+    cleaned = clean_llm_json(resp.text)
+    return json.loads(cleaned)
+
+
+def extract_entities(text, schema):
+    completion = llm.new_completion()
+    prompt = EXTRACTION_PROMPT.format(
+        text=text,
+        entity_types=', '.join(schema['entity_types']),
+        relationship_types=', '.join(schema['relationship_types']),
+        schema_description=schema.get('description', '')
+    )
+    completion.with_message(prompt)
     resp = completion.execute()
     cleaned = clean_llm_json(resp.text)
     return json.loads(cleaned)
@@ -202,9 +249,18 @@ def get_full_context(G):
 # --- Background graph building ---
 def build_graph_async(session_id, text):
     session = sessions[session_id]
-    session['status'] = 'building'
+    session['status'] = 'analyzing'
     session['source_text'] = text
 
+    # Agent 0: Infer schema/ontology
+    try:
+        schema = infer_schema(text)
+        session['schema'] = schema
+    except Exception as e:
+        session.setdefault('errors', []).append('Schema: ' + str(e))
+        schema = {'entity_types': ['Entity'], 'relationship_types': ['RELATED_TO'], 'description': ''}
+
+    session['status'] = 'building'
     chunks = chunk_text(text)
     total = len(chunks)
     session['total_chunks'] = total
@@ -213,7 +269,7 @@ def build_graph_async(session_id, text):
     for i, chunk in enumerate(chunks):
         session['current_chunk'] = i + 1
         try:
-            result = extract_entities(chunk)
+            result = extract_entities(chunk, schema)
             for entity in result.get('entities', []):
                 if entity['name'] not in G:
                     G.add_node(entity['name'], type=entity['type'],

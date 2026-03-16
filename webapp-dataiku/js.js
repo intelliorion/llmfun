@@ -337,14 +337,20 @@ function startPolling() {
             var hint = document.getElementById('building-hint');
             var hintText = document.getElementById('hint-text');
 
-            if (data.status === 'building') {
+            if (data.status === 'analyzing') {
+                hintText.textContent = 'Analyzing data schema...';
+                setProgress(5);
+                setStep('step-schema', 'active');
+            } else if (data.status === 'building') {
                 var pct = Math.round((data.current_chunk / data.total_chunks) * 100);
                 hintText.textContent = 'Extracting entities... ' + data.current_chunk + '/' + data.total_chunks;
-                setProgress(pct * 0.8); // 80% for extraction
+                setProgress(10 + pct * 0.7); // 10-80% for extraction
+                setStep('step-schema', 'done');
                 setStep('step-extract', 'active');
             } else if (data.status === 'deduplicating') {
                 hintText.textContent = 'Resolving duplicate entities...';
                 setProgress(90);
+                setStep('step-schema', 'done');
                 setStep('step-extract', 'done');
                 setStep('step-dedup', 'active');
             }
@@ -359,6 +365,7 @@ function startPolling() {
                 buildBtn.textContent = 'Build Knowledge Graph';
                 resetBtn.style.display = 'block';
                 setProgress(100);
+                setStep('step-schema', 'done');
                 setStep('step-extract', 'done');
                 setStep('step-dedup', 'done');
                 setStep('step-done', 'done');
