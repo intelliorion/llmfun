@@ -9,6 +9,8 @@ var ENTITY_COLORS = {
     'Person': '#6366f1',
     'Organization': '#0ea5e9',
     'Division': '#8b5cf6',
+    'Role': '#f97316',
+    'Location': '#14b8a6',
     'Metric': '#f59e0b',
     'Event': '#ef4444',
     'Technology': '#10b981',

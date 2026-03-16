@@ -27,15 +27,22 @@ EXTRACTION_PROMPT = """Analyze the following text and extract all entities and r
 Return a JSON object with exactly this structure:
 {{
   "entities": [
-    {{"name": "Entity Name", "type": "Person|Organization|Division|Metric|Event", "description": "brief description"}}
+    {{"name": "Entity Name", "type": "EntityType", "description": "brief description"}}
   ],
   "relationships": [
     {{"source": "Entity Name", "target": "Entity Name", "relation": "RELATIONSHIP_TYPE", "description": "brief description"}}
   ]
 }}
 
-Entity types: Person, Organization, Division, Metric, Event, Technology, Market
-Relationship types: WORKS_AT, LEADS, PART_OF, COMPETES_WITH, REPORTS, INVESTS_IN, FORECASTS, IMPACTS
+Entity types: Person, Organization, Division, Role, Location, Metric, Event, Technology, Market
+Relationship types: WORKS_AT, HAS_TITLE, BELONGS_TO, LOCATED_AT, LEADS, PART_OF, COMPETES_WITH, REPORTS_TO, INVESTS_IN, FORECASTS, IMPACTS, MANAGES, SUPERVISES
+
+IMPORTANT for structured/tabular data:
+- When data has records with fields like Name, Title, Division, Building, Floor, ID, etc., treat each field value as an entity or relationship.
+- Titles like VP, ED, MD, Director, Analyst, Associate are Role entities. Connect the person to their title with HAS_TITLE.
+- Division/Department/Team values are Division entities. Connect with BELONGS_TO.
+- Building/Floor/Office/City values are Location entities. Connect with LOCATED_AT.
+- Always associate every attribute back to its person or parent entity.
 
 Be thorough. Extract every entity and relationship mentioned.
 Return ONLY valid JSON, no markdown fences, no extra text.
