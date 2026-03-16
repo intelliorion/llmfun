@@ -154,7 +154,7 @@ var textarea = document.getElementById('text-input');
 var uploadedFiles = [];
 var fileIdCounter = 0;
 
-var UPLOAD_AREA_HTML = '<div class="upload-icon">+</div><div class="upload-text">Drop files or click to upload</div><div class="file-types">.txt .md .csv .pdf .docx .pptx .xlsx .msg .eml</div>';
+var UPLOAD_AREA_HTML = '<div class="upload-icon">+</div><div class="upload-text">Drop files or click to upload</div><div class="file-types">.txt .md .csv .pdf .docx .pptx .xlsx .msg .eml .png .jpg .jpeg .gif .tiff .webp</div>';
 
 function addFile(name, text) {
     var id = ++fileIdCounter;
@@ -200,9 +200,15 @@ function processFiles(files) {
                 reader.onload = function(ev) { addFile(file.name, ev.target.result); };
                 reader.readAsText(file);
             } else {
-                fileUpload.innerHTML = '<span class="spinner"></span><div class="upload-text">Parsing ' + file.name + '...</div>';
+                var imageExts = ['png','jpg','jpeg','gif','bmp','tiff','tif','webp'];
+                var isImage = imageExts.indexOf(ext) !== -1;
+                var isPdf = ext === 'pdf';
+                var parseMsg = isImage ? 'Extracting text from image' : (isPdf ? 'Parsing PDF (OCR if needed)' : 'Parsing');
+                fileUpload.innerHTML = '<span class="spinner"></span><div class="upload-text">' + parseMsg + ' ' + file.name + '...</div>';
                 var formData = new FormData();
                 formData.append('file', file);
+                var modelSel = document.getElementById('model-select');
+                if (modelSel && modelSel.value) formData.append('model', modelSel.value);
                 var xhr = new XMLHttpRequest();
                 xhr.open('POST', getBackendUrl('upload'));
                 xhr.onload = function() {

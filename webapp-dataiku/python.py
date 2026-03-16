@@ -570,9 +570,53 @@ def build_graph_async(session_id, text, model_id=None, domain='auto'):
 
 
 # --- File parsing (structure-preserving) ---
-def extract_text_from_file(file_obj, filename):
+IMAGE_EXTENSIONS = ('png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'tif', 'webp')
+
+IMAGE_MIME_MAP = {
+    'png': 'image/png', 'jpg': 'image/jpeg', 'jpeg': 'image/jpeg',
+    'gif': 'image/gif', 'bmp': 'image/bmp', 'tiff': 'image/tiff',
+    'tif': 'image/tiff', 'webp': 'image/webp',
+}
+
+OCR_PROMPT = """You are an expert document OCR system. Extract ALL text content from this image with perfect accuracy.
+Rules:
+- Preserve the original structure: headings, paragraphs, lists, tables, columns
+- For tables, format as rows with | separators
+- For forms, extract all field labels and their values
+- Include ALL text — headers, footers, watermarks, stamps, handwritten notes, captions
+- If text is in multiple languages, extract all of them
+- If the image contains charts or diagrams, describe the data and labels
+- Do NOT summarize or interpret — extract verbatim
+- If no readable text exists, respond with [No text detected]"""
+
+
+def ocr_image_with_llm(image_bytes, mime_type='image/png', llm_inst=None):
+    """Send an image to the LLM for text extraction via vision."""
+    import base64
+    _llm = llm_inst or llm
+    completion = _llm.new_completion()
+    mp = completion.new_multipart_message(role='user')
+    mp.with_text(OCR_PROMPT)
+    if isinstance(image_bytes, bytes):
+        img_b64 = base64.b64encode(image_bytes).decode('utf-8')
+    else:
+        img_b64 = image_bytes
+    mp.with_inline_image(img_b64, mime_type=mime_type)
+    mp.add()
+    resp = completion.execute()
+    return resp.text.strip()
+
+
+def extract_text_from_file(file_obj, filename, llm_inst=None):
     import io
     ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+
+    # --- Image files: direct LLM OCR ---
+    if ext in IMAGE_EXTENSIONS:
+        image_bytes = file_obj.read()
+        mime = IMAGE_MIME_MAP.get(ext, 'image/png')
+        text = ocr_image_with_llm(image_bytes, mime_type=mime, llm_inst=llm_inst)
+        return '[Image: ' + filename + ']\n\n' + text
 
     if ext in ('txt', 'md'):
         return file_obj.read().decode('utf-8', errors='ignore')
@@ -603,14 +647,38 @@ def extract_text_from_file(file_obj, filename):
     elif ext == 'pdf':
         try:
             import fitz
-            pdf = fitz.open(stream=file_obj.read(), filetype='pdf')
+            pdf_bytes = file_obj.read()
+            pdf = fitz.open(stream=pdf_bytes, filetype='pdf')
             parts = ['[Document: ' + filename + ', ' + str(len(pdf)) + ' pages]', '']
+            ocr_pages = []
             for i, page in enumerate(pdf):
                 text = page.get_text().strip()
-                if text:
+                # If page has meaningful text (>50 chars), use it directly
+                if text and len(text) > 50:
                     parts.append('--- Page ' + str(i+1) + ' ---')
                     parts.append(text)
                     parts.append('')
+                else:
+                    # Page is image-like or has very little text — queue for OCR
+                    ocr_pages.append(i)
+            # OCR image-like pages via LLM vision
+            if ocr_pages:
+                for i in ocr_pages:
+                    page = pdf[i]
+                    # Render page as high-res PNG (2x zoom for quality)
+                    mat = fitz.Matrix(2.0, 2.0)
+                    pix = page.get_pixmap(matrix=mat)
+                    img_bytes = pix.tobytes('png')
+                    try:
+                        ocr_text = ocr_image_with_llm(img_bytes, mime_type='image/png', llm_inst=llm_inst)
+                        if ocr_text and ocr_text != '[No text detected]':
+                            parts.append('--- Page ' + str(i+1) + ' (OCR) ---')
+                            parts.append(ocr_text)
+                            parts.append('')
+                    except Exception as e:
+                        parts.append('--- Page ' + str(i+1) + ' ---')
+                        parts.append('[OCR failed: ' + str(e) + ']')
+                        parts.append('')
             return '\n'.join(parts)
         except ImportError:
             return '[Error: PyMuPDF not installed for PDF support]'
@@ -772,7 +840,9 @@ def api_upload():
     f = request.files['file']
     if not f.filename:
         return json_response({'error': 'No file selected'}, 400)
-    text = extract_text_from_file(f, f.filename)
+    model_id = request.form.get('model', None)
+    llm_inst = get_llm(model_id) if model_id else llm
+    text = extract_text_from_file(f, f.filename, llm_inst=llm_inst)
     return json_response({'text': text, 'filename': f.filename})
 
 
