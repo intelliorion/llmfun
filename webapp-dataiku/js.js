@@ -229,7 +229,7 @@ resetBtn.addEventListener('click', function() {
     document.getElementById('entities-table-body').innerHTML = '';
     document.getElementById('relationships-table-body').innerHTML = '';
     document.getElementById('report-content').innerHTML = '<p style="color:var(--text-tertiary);">Click "Generate Report" after building a graph.</p>';
-    document.getElementById('chat-messages').innerHTML = '<div class="empty-state" id="chat-empty"><div><p style="font-size:14px;">Ask questions about your knowledge graph</p></div></div>';
+    document.getElementById('chat-messages').innerHTML = '<div class="empty-state" id="chat-empty"><div><p style="font-size:14px;">Ask questions about your data</p></div></div>';
     document.getElementById('suggested-questions').innerHTML = '';
     document.getElementById('suggested-questions').classList.remove('visible');
     document.getElementById('stats-bar').classList.remove('visible');
@@ -241,7 +241,7 @@ resetBtn.addEventListener('click', function() {
     resetSteps();
     document.getElementById('building-hint').classList.remove('visible');
     buildBtn.disabled = false;
-    buildBtn.textContent = 'Build Knowledge Graph';
+    buildBtn.textContent = 'Build';
     resetBtn.style.display = 'none';
     for (var j = 0; j < allTabs.length; j++) allTabs[j].classList.remove('active');
     for (var j = 0; j < allPanels.length; j++) allPanels[j].classList.remove('active');
@@ -327,14 +327,14 @@ buildBtn.addEventListener('click', function() {
             } else {
                 alert('Error starting build: ' + xhr.status + ' ' + xhr.responseText.substring(0, 200));
                 buildBtn.disabled = false;
-                buildBtn.textContent = 'Build Knowledge Graph';
+                buildBtn.textContent = 'Build';
                 resetSteps();
             }
         };
         xhr.onerror = function() {
             alert('Network error');
             buildBtn.disabled = false;
-            buildBtn.textContent = 'Build Knowledge Graph';
+            buildBtn.textContent = 'Build';
             resetSteps();
         };
         xhr.send(JSON.stringify({text: text, model: selectedModel}));
@@ -698,7 +698,7 @@ function startPolling() {
                 pollingTimer = null;
                 hint.classList.remove('visible');
                 buildBtn.disabled = false;
-                buildBtn.textContent = 'Build Knowledge Graph';
+                buildBtn.textContent = 'Build';
                 resetBtn.style.display = 'block';
                 setProgress(100);
                 setStep('step-schema', 'done');
