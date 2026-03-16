@@ -498,6 +498,10 @@ def build_graph_async(session_id, text, model_id=None, domain='auto'):
         session.setdefault('errors', []).append('Schema: ' + str(e))
         schema = {'entity_types': ['Entity'], 'relationship_types': ['RELATED_TO'], 'description': ''}
 
+    if session.get('stopped'):
+        session['status'] = 'stopped'
+        return
+
     session['status'] = 'building'
     chunks = chunk_text(text)
     total = len(chunks)
@@ -505,6 +509,11 @@ def build_graph_async(session_id, text, model_id=None, domain='auto'):
     G = nx.DiGraph()
 
     for i, chunk in enumerate(chunks):
+        if session.get('stopped'):
+            session['status'] = 'stopped'
+            session['graph'] = G
+            session['graph_data'] = graph_to_json(G)
+            return
         session['current_chunk'] = i + 1
         try:
             result = extract_entities(chunk, schema, llm_inst)
@@ -527,6 +536,9 @@ def build_graph_async(session_id, text, model_id=None, domain='auto'):
             session.setdefault('errors', []).append('Chunk ' + str(i+1) + ': ' + str(e))
 
     # Agent 2: Entity deduplication
+    if session.get('stopped'):
+        session['status'] = 'stopped'
+        return
     if G.number_of_nodes() > 1:
         session['status'] = 'deduplicating'
         try:
@@ -544,6 +556,9 @@ def build_graph_async(session_id, text, model_id=None, domain='auto'):
         session.setdefault('errors', []).append('Summary: ' + str(e))
 
     # Auto-generate report
+    if session.get('stopped'):
+        session['status'] = 'stopped'
+        return
     session['status'] = 'reporting'
     try:
         report = generate_report(session, llm_inst)
@@ -804,6 +819,15 @@ def api_status(session_id):
         'summary': session.get('summary', None),
         'report': session.get('report', None)
     })
+
+
+@app.route('/stop/<session_id>', methods=['POST'])
+def api_stop(session_id):
+    session = sessions.get(session_id)
+    if not session:
+        return json_response({'error': 'Session not found'}, 404)
+    session['stopped'] = True
+    return json_response({'ok': True})
 
 
 @app.route('/report/<session_id>', methods=['POST'])

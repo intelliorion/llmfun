@@ -338,6 +338,36 @@ function showSummaryCard(text) {
     }, 8000);
 }
 
+// --- Stop build ---
+var stopBtn = document.getElementById('btn-stop');
+stopBtn.addEventListener('click', function() {
+    if (!sessionId) return;
+    // Send stop request to backend
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', getBackendUrl('stop/' + sessionId));
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send('{}');
+    // Immediately stop polling and clean up UI
+    if (pollingTimer) { clearInterval(pollingTimer); pollingTimer = null; }
+    document.getElementById('building-hint').classList.remove('visible');
+    document.getElementById('entities-building').classList.remove('visible');
+    document.getElementById('report-building').classList.remove('visible');
+    document.getElementById('qa-building').classList.remove('visible');
+    buildBtn.disabled = false;
+    buildBtn.textContent = 'Build';
+    resetBtn.style.display = 'block';
+    document.getElementById('progress-container').style.display = 'none';
+    // Show toolbar if there are any nodes already
+    if (visNodes && visNodes.length > 0) {
+        document.getElementById('graph-toolbar').style.display = 'flex';
+        if (graphDataStore) {
+            updateTables(graphDataStore);
+            updateStats(graphDataStore);
+            generateSuggestedQuestions(graphDataStore);
+        }
+    }
+});
+
 // --- Build graph ---
 var buildBtn = document.getElementById('btn-build');
 
@@ -777,24 +807,28 @@ function exportCSV() {
 function showSchema(schema) {
     if (!schema) return;
 
-    // Show detected mode card (only in auto-detect)
+    // Show mode card — "Detected Mode" for auto, "Chosen Mode" for user-selected
     var modeCard = document.getElementById('detected-mode');
-    if (schema.domain && selectedDomain === 'auto') {
-        var domainName = schema.domain;
+    var isAuto = selectedDomain === 'auto';
+    var domainKey = isAuto ? schema.domain : selectedDomain;
+    if (domainKey) {
+        var domainName = domainKey;
         // Look up friendly name from the dropdown
         for (var i = 0; i < domainSelect.options.length; i++) {
-            if (domainSelect.options[i].value === schema.domain) {
+            if (domainSelect.options[i].value === domainKey) {
                 domainName = domainSelect.options[i].textContent;
                 break;
             }
         }
         // Capitalize if it's a raw key
-        if (domainName === schema.domain) {
-            domainName = schema.domain.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+        if (domainName === domainKey) {
+            domainName = domainKey.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
         }
-        modeCard.innerHTML = '<div class="detected-mode-icon">&#x2728;</div>' +
+        var modeLabel = isAuto ? 'Detected Mode' : 'Chosen Mode';
+        var modeIcon = isAuto ? '&#x2728;' : '&#x2705;';
+        modeCard.innerHTML = '<div class="detected-mode-icon">' + modeIcon + '</div>' +
             '<div class="detected-mode-text">' +
-            '<div class="detected-mode-label">Detected Mode</div>' +
+            '<div class="detected-mode-label">' + modeLabel + '</div>' +
             '<div class="detected-mode-name">' + domainName + '</div>' +
             '</div>';
         modeCard.style.display = 'flex';
@@ -884,6 +918,25 @@ function startPolling() {
 
             updateGraph(data.graph_data);
             updateStats(data.graph_data);
+
+            if (data.status === 'stopped') {
+                clearInterval(pollingTimer);
+                pollingTimer = null;
+                hint.classList.remove('visible');
+                buildBtn.disabled = false;
+                buildBtn.textContent = 'Build';
+                resetBtn.style.display = 'block';
+                document.getElementById('entities-building').classList.remove('visible');
+                document.getElementById('report-building').classList.remove('visible');
+                document.getElementById('qa-building').classList.remove('visible');
+                document.getElementById('progress-container').style.display = 'none';
+                if (visNodes && visNodes.length > 0) {
+                    document.getElementById('graph-toolbar').style.display = 'flex';
+                    updateTables(data.graph_data);
+                    generateSuggestedQuestions(data.graph_data);
+                }
+                return;
+            }
 
             if (data.status === 'done') {
                 clearInterval(pollingTimer);

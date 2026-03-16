@@ -535,6 +535,13 @@ html, body {
     box-shadow: var(--shadow-lg);
 }
 .building-hint.visible { display: flex; }
+.btn-stop {
+    background: rgba(239,68,68,0.9); color: #fff; border: none;
+    padding: 4px 14px; border-radius: 12px; font-size: 12px;
+    font-weight: 600; cursor: pointer; margin-left: 6px;
+    transition: background 0.2s;
+}
+.btn-stop:hover { background: rgba(239,68,68,1); }
 
 /* --- Progress bar --- */
 .progress-container {
