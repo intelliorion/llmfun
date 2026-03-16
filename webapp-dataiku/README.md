@@ -1,19 +1,19 @@
-# Orion Knowledge Graph
+# Orion
 
-**An AI-powered knowledge graph builder for Morgan Stanley CS TTIA, built on Dataiku.**
+**Morgan Stanley TTIA — AI-Powered Entity & Relationship Intelligence**
 
-Orion transforms unstructured text and documents into interactive, explorable knowledge graphs — automatically extracting entities, relationships, and structure using a 3-agent LLM pipeline.
+Orion transforms unstructured text and documents into interactive, explorable entity maps — automatically discovering people, organizations, concepts, and their connections using a 3-agent LLM pipeline built on Dataiku.
 
 ---
 
 ## Why Use Orion
 
-Traditional knowledge graph construction requires manual schema design, entity tagging, and relationship mapping — a process that can take weeks for even a small corpus. Orion eliminates this by:
+Traditional entity analysis requires manual schema design, tagging, and relationship mapping — a process that can take weeks for even a small corpus. Orion eliminates this by:
 
 - **Automating ontology design** — An AI agent reads your data and infers the right entity types and relationships, so you don't have to define a schema upfront.
 - **Handling messy, real-world data** — Paste raw text, upload PDFs, Excel spreadsheets, Word docs, emails, or CSVs. Orion preserves structure (e.g., pairing column headers with row values) and extracts meaning from unstructured prose.
 - **Resolving duplicates intelligently** — A dedicated deduplication agent identifies abbreviations, typos, and partial names, merging them into single canonical entities.
-- **Making results immediately explorable** — The interactive graph lets you click, search, filter, and export — no additional tooling required.
+- **Making results immediately explorable** — The interactive visualization lets you click, search, filter, and export — no additional tooling required.
 
 ## When to Use It
 
@@ -22,8 +22,8 @@ Traditional knowledge graph construction requires manual schema design, entity t
 | **Analyzing reports or filings** | Paste a quarterly earnings transcript to map companies, people, divisions, and their relationships |
 | **Exploring structured datasets** | Upload an employee directory (XLSX/CSV) to visualize org structure, titles, and locations |
 | **Research & due diligence** | Feed in research notes or news articles to surface connections between entities |
-| **Quick prototyping** | Test whether a knowledge graph approach adds value to a use case before investing in a full pipeline |
-| **Meeting prep** | Build a graph from briefing docs to quickly understand the landscape of people, orgs, and topics |
+| **Quick prototyping** | Test whether an entity mapping approach adds value to a use case before investing in a full pipeline |
+| **Meeting prep** | Build a map from briefing docs to quickly understand the landscape of people, orgs, and topics |
 
 ---
 
@@ -48,8 +48,8 @@ Orion uses a **3-agent pipeline**, each powered by an LLM via Dataiku's LLM Mesh
 │                    │                              │ each text chunk    │
 └──────────────────┘                              └────────┬───────────┘
                                                            │
-                                                  Graph (all extracted
-                                                  entities + relationships)
+                                                  All extracted entities
+                                                  + relationships
                                                            │
                                                            ▼
                                                 ┌──────────────────┐
@@ -57,23 +57,23 @@ Orion uses a **3-agent pipeline**, each powered by an LLM via Dataiku's LLM Mesh
                                                 │   Deduplication    │
                                                 │                    │
                                                 │ Receives the full  │
-                                                │ graph from Agent 1,│
-                                                │ scans all entity   │
-                                                │ names, and merges  │
-                                                │ duplicates, typos, │
-                                                │ and abbreviations  │
+                                                │ entity map from    │
+                                                │ Agent 1, scans all │
+                                                │ entity names and   │
+                                                │ merges duplicates, │
+                                                │ typos, and abbrevs │
                                                 │ into canonical     │
                                                 │ forms. Returns the │
-                                                │ cleaned final graph│
+                                                │ cleaned final map  │
                                                 └──────────────────┘
                                                            │
                                                            ▼
-                                                    Final Knowledge Graph
+                                                   Final Entity Map
 ```
 
-1. **Agent 0 — Schema Inference**: Analyzes a sample of your data and defines a focused ontology (3–8 entity types, 3–10 relationship types). This ontology is passed to Agent 1 to constrain extraction and keep the graph clean and consistent.
-2. **Agent 1 — Entity Extraction**: Receives the ontology from Agent 0 and processes your text in chunks, extracting entities and relationships constrained to those types. The graph updates progressively as each chunk is processed. Once all chunks are done, the accumulated graph is passed to Agent 2.
-3. **Agent 2 — Deduplication**: Receives the full graph from Agent 1 and scans all entity names to identify duplicates (abbreviations, typos, partial names). It maps variants to canonical forms and merges the corresponding nodes and edges, producing the final cleaned graph.
+1. **Agent 0 — Schema Inference**: Analyzes a sample of your data and defines a focused ontology (3–8 entity types, 3–10 relationship types). This ontology is passed to Agent 1 to constrain extraction and keep results clean and consistent.
+2. **Agent 1 — Entity Extraction**: Receives the ontology from Agent 0 and processes your text in chunks, extracting entities and relationships constrained to those types. The visualization updates progressively as each chunk is processed. Once all chunks are done, the accumulated results are passed to Agent 2.
+3. **Agent 2 — Deduplication**: Receives the full entity map from Agent 1 and scans all entity names to identify duplicates (abbreviations, typos, partial names). It maps variants to canonical forms and merges the corresponding nodes and edges, producing the final cleaned output.
 
 ---
 
@@ -94,18 +94,18 @@ You have two options:
 
   You can upload multiple files at once or add files one by one. Each file appears in the file list and can be removed individually before building.
 
-### 2. Build the Graph
+### 2. Build
 
 Click **"Build Knowledge Graph"**. You'll see progress indicators for each stage:
 
 1. **Analyzing data** — Agent 0 infers the ontology. A schema card appears showing discovered entity types and relationship types.
-2. **Extracting entities** — Agent 1 processes chunks. The graph renders progressively, and the stats bar updates in real-time.
+2. **Extracting entities** — Agent 1 processes chunks. The visualization renders progressively, and the stats bar updates in real-time.
 3. **Resolving duplicates** — Agent 2 merges variants.
-4. **Complete** — The final graph is ready to explore.
+4. **Complete** — The final entity map is ready to explore.
 
-### 3. Explore the Graph
+### 3. Explore
 
-#### Interactive Graph (Graph Tab)
+#### Graph View (Graph Tab)
 - **Click a node** to open the detail panel showing its name, type, description, and all connections.
 - **Click an edge** to see the source, target, relationship type, and description.
 - **Search** — Type in the search bar to highlight matching entities. Non-matching nodes fade out, and the view focuses on the first match.
@@ -113,8 +113,8 @@ Click **"Build Knowledge Graph"**. You'll see progress indicators for each stage
 - **Zoom & fit** — Use the `+`, `−`, and fit-to-screen buttons in the toolbar.
 - **Toggle edge labels** — Click "Aa" in the toolbar to show/hide relationship labels.
 - **Export** — Click the export button to download as:
-  - **PNG** — Image of the current graph view
-  - **JSON** — Full graph data (entities + relationships)
+  - **PNG** — Image of the current view
+  - **JSON** — Full entity and relationship data
   - **CSV** — Entities and relationships in tabular format
 
 #### Entities Tab
@@ -123,14 +123,14 @@ A tabular view with two side-by-side tables:
 - **Relationships** — Source, relation, target, and description for every connection
 
 #### Report Tab
-Click **"Generate Report"** to produce an AI-written summary of the knowledge graph, covering key entities, relationships, and insights.
+Click **"Generate Report"** to produce an AI-written summary covering key entities, relationships, and insights.
 
 #### Q&A Tab
-Ask natural-language questions about your knowledge graph. After the graph is built, suggested questions are auto-generated based on the graph data (e.g., "What are the key relationships involving [top entity]?"). Click any suggestion or type your own question.
+Ask natural-language questions about your data. After building, suggested questions are auto-generated based on the extracted entities (e.g., "What are the key relationships involving [top entity]?"). Click any suggestion or type your own question.
 
 ### 4. Start Over
 
-Click **"Start Over"** to reset everything — uploaded files, graph, stats, and all panels — and begin with a fresh dataset.
+Click **"Start Over"** to reset everything — uploaded files, visualization, stats, and all panels — and begin with a fresh dataset.
 
 ---
 
@@ -142,8 +142,8 @@ Orion runs as a **Dataiku Webapp** (Standard, Code-based). It consists of four f
 |---|---|
 | `python.py` | Flask backend — LLM pipeline, file parsing, session management |
 | `html.html` | UI structure |
-| `css.css` | Styling (Manus-inspired design system) |
-| `js.js` | Frontend logic — graph rendering, interactions, export |
+| `css.css` | Styling |
+| `js.js` | Frontend logic — visualization, interactions, export |
 
 ### Prerequisites
 
@@ -193,19 +193,20 @@ Browser (vis.js)          Dataiku Webapp Backend (Flask)
 ┌──────────────┐         ┌──────────────────────────────┐
 │  html/css/js │◀───────▶│  python.py                   │
 │              │  REST   │                              │
-│  - vis.js    │  API    │  POST /upload                │
-│    graph     │         │  POST /build                 │
-│  - detail    │         │  GET  /status/<id>           │
-│    panel     │         │  POST /report/<id>           │
-│  - search    │         │  POST /ask/<id>              │
-│  - export    │         │                              │
-└──────────────┘         │  ┌──────────┐  ┌──────────┐  │
+│  - vis.js    │  API    │  GET  /models                │
+│  - detail    │         │  POST /upload                │
+│    panel     │         │  POST /build                 │
+│  - search    │         │  GET  /status/<id>           │
+│  - export    │         │  POST /report/<id>           │
+│              │         │  POST /ask/<id>              │
+└──────────────┘         │                              │
+                         │  ┌──────────┐  ┌──────────┐  │
                          │  │ NetworkX │  │ Dataiku  │  │
                          │  │ DiGraph  │  │ LLM Mesh │  │
                          │  └──────────┘  └──────────┘  │
                          └──────────────────────────────┘
 ```
 
-- **Session-based**: Each graph build creates a session with a unique ID. Multiple users can build graphs concurrently.
-- **Progressive rendering**: The frontend polls `/status/<id>` every 2 seconds during build, rendering new nodes and edges as they arrive.
-- **In-memory**: Graph data lives in a Python dictionary (`sessions`). Restarting the webapp backend clears all sessions.
+- **Session-based**: Each build creates a session with a unique ID. Multiple users can work concurrently.
+- **Progressive rendering**: The frontend polls `/status/<id>` every 2 seconds during build, rendering new entities and connections as they arrive.
+- **In-memory**: Data lives in a Python dictionary (`sessions`). Restarting the webapp backend clears all sessions.
