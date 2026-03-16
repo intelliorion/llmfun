@@ -29,7 +29,7 @@ Traditional knowledge graph construction requires manual schema design, entity t
 
 ## How It Works
 
-Orion uses a **3-agent pipeline**, each powered by GPT-4o via Dataiku's LLM Mesh. The agents work sequentially — each agent's output feeds directly into the next:
+Orion uses a **3-agent pipeline**, each powered by an LLM via Dataiku's LLM Mesh (model is selectable from a dropdown in the header). The agents work sequentially — each agent's output feeds directly into the next:
 
 ```
   Raw Text
@@ -149,7 +149,7 @@ Orion runs as a **Dataiku Webapp** (Standard, Code-based). It consists of four f
 ### Prerequisites
 
 - **Dataiku DSS** instance with access to the LLM Mesh
-- **LLM Connection**: `openai:MSOpenAI:gpt-4o` configured in the project
+- **LLM Connection**: At least one LLM configured in the project's LLM Mesh (e.g., `openai:MSOpenAI:gpt-4o`). All available models are automatically listed in the UI dropdown.
 - **Python packages** (available in the Dataiku code env): `networkx`, `openpyxl`, `python-pptx`, `pdfplumber`
 - **vis.js** is loaded from CDN (`unpkg.com/vis-network`)
 
@@ -165,7 +165,7 @@ Orion runs as a **Dataiku Webapp** (Standard, Code-based). It consists of four f
 
 ### Customization
 
-- **LLM model**: Change the model ID in `get_llm()` (line 16 of `python.py`). Must be a model accessible through your Dataiku LLM Mesh.
+- **LLM model**: All models available in your Dataiku LLM Mesh are automatically listed in the header dropdown. Select your preferred model before building. No code changes needed.
 - **Color palette**: Edit `ORION_COLORS` in `python.py` to match your brand.
 - **Schema prompt**: Adjust `SCHEMA_PROMPT` to bias the ontology toward specific domains.
 - **Chunk size**: Modify `chunk_size` in `build_graph_async()` to control how text is split for extraction (default: 3000 characters).
