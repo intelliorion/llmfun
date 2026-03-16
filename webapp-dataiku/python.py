@@ -578,16 +578,29 @@ IMAGE_MIME_MAP = {
     'tif': 'image/tiff', 'webp': 'image/webp',
 }
 
-OCR_PROMPT = """You are an expert document OCR system. Extract ALL text content from this image with perfect accuracy.
-Rules:
-- Preserve the original structure: headings, paragraphs, lists, tables, columns
+OCR_PROMPT = """You are an expert document analysis system with perfect vision. Extract and describe EVERYTHING visible in this image.
+
+TEXT EXTRACTION:
+- Extract ALL text verbatim — headings, paragraphs, lists, tables, columns, captions, labels
+- Preserve the original structure and hierarchy
 - For tables, format as rows with | separators
 - For forms, extract all field labels and their values
-- Include ALL text — headers, footers, watermarks, stamps, handwritten notes, captions
+- Include headers, footers, watermarks, stamps, page numbers, handwritten annotations
 - If text is in multiple languages, extract all of them
-- If the image contains charts or diagrams, describe the data and labels
-- Do NOT summarize or interpret — extract verbatim
-- If no readable text exists, respond with [No text detected]"""
+
+VISUAL CONTENT (equally important):
+- Charts/graphs: describe the chart type, axes, all data points/values, legends, trends
+- Diagrams/flowcharts: describe all nodes, connections, arrows, and labels
+- Logos/icons: note their presence and any text within them
+- Images/photos: describe what they show and any embedded text or labels
+- Signatures: note their presence and any printed name nearby
+- Color coding or highlighting: note what is highlighted and in what color
+
+OUTPUT FORMAT:
+- Text content first, preserving document structure
+- Then [Visual: ...] sections for each non-text element with full description
+- Do NOT summarize or interpret — extract and describe verbatim
+- If no readable content exists, respond with [No text detected]"""
 
 
 def ocr_image_with_llm(image_bytes, mime_type='image/png', llm_inst=None):
@@ -655,41 +668,27 @@ def extract_text_from_file(file_obj, filename, llm_inst=None, on_progress=None):
             pdf_bytes = file_obj.read()
             pdf = fitz.open(stream=pdf_bytes, filetype='pdf')
             total_pages = len(pdf)
-            _progress('Opened PDF — ' + str(total_pages) + ' pages', 'PyMuPDF')
+            _progress('Opened PDF — ' + str(total_pages) + ' pages. Using LLM Vision for full capture.', 'LLM Vision OCR')
             parts = ['[Document: ' + filename + ', ' + str(total_pages) + ' pages]', '']
-            ocr_pages = []
             for i, page in enumerate(pdf):
-                _progress('Page ' + str(i+1) + '/' + str(total_pages) + ' — extracting embedded text...', 'Text Extraction')
-                text = page.get_text().strip()
-                if text and len(text) > 50:
-                    parts.append('--- Page ' + str(i+1) + ' ---')
-                    parts.append(text)
-                    parts.append('')
-                else:
-                    ocr_pages.append(i)
-            if ocr_pages:
-                _progress(str(len(ocr_pages)) + ' image-like page(s) detected — switching to LLM Vision OCR', 'LLM Vision OCR')
-                for idx, i in enumerate(ocr_pages):
-                    page = pdf[i]
-                    _progress('Page ' + str(i+1) + ' — rendering to image & sending to LLM Vision (' + str(idx+1) + '/' + str(len(ocr_pages)) + ')...', 'LLM Vision OCR')
-                    mat = fitz.Matrix(2.0, 2.0)
-                    pix = page.get_pixmap(matrix=mat)
-                    img_bytes = pix.tobytes('png')
-                    try:
-                        ocr_text = ocr_image_with_llm(img_bytes, mime_type='image/png', llm_inst=llm_inst)
-                        if ocr_text and ocr_text != '[No text detected]':
-                            parts.append('--- Page ' + str(i+1) + ' (OCR) ---')
-                            parts.append(ocr_text)
-                            parts.append('')
-                            _progress('Page ' + str(i+1) + ' — OCR complete', 'LLM Vision OCR')
-                    except Exception as e:
+                _progress('Page ' + str(i+1) + '/' + str(total_pages) + ' — rendering & sending to LLM Vision...', 'LLM Vision OCR')
+                # Always render page as image so LLM sees text + embedded images/charts/diagrams
+                mat = fitz.Matrix(2.0, 2.0)
+                pix = page.get_pixmap(matrix=mat)
+                img_bytes = pix.tobytes('png')
+                try:
+                    page_text = ocr_image_with_llm(img_bytes, mime_type='image/png', llm_inst=llm_inst)
+                    if page_text and page_text != '[No text detected]':
                         parts.append('--- Page ' + str(i+1) + ' ---')
-                        parts.append('[OCR failed: ' + str(e) + ']')
+                        parts.append(page_text)
                         parts.append('')
-                        _progress('Page ' + str(i+1) + ' — OCR failed: ' + str(e), 'LLM Vision OCR')
-            else:
-                _progress('All pages had embedded text — no OCR needed', 'Text Extraction')
-            _progress('PDF processing complete', 'Done')
+                    _progress('Page ' + str(i+1) + '/' + str(total_pages) + ' — complete', 'LLM Vision OCR')
+                except Exception as e:
+                    parts.append('--- Page ' + str(i+1) + ' ---')
+                    parts.append('[Vision failed: ' + str(e) + ']')
+                    parts.append('')
+                    _progress('Page ' + str(i+1) + ' — failed: ' + str(e), 'LLM Vision OCR')
+            _progress('All ' + str(total_pages) + ' pages processed via LLM Vision', 'Done')
             return '\n'.join(parts)
         except ImportError:
             return '[Error: PyMuPDF not installed for PDF support]'
