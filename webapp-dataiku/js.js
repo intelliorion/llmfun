@@ -468,9 +468,8 @@ buildBtn.addEventListener('click', function() {
 
 // --- Init vis.js ---
 // --- Performance thresholds ---
-var PERF_CLUSTER_THRESHOLD = 50;   // Auto-cluster when node count exceeds this
-var PERF_SIMPLIFY_THRESHOLD = 80;  // Simplify rendering (no shadows, no edge labels)
-var graphPerformanceMode = 'normal'; // 'normal' | 'clustered' | 'simplified'
+var PERF_SIMPLIFY_THRESHOLD = 80;  // Simplify rendering for very large graphs
+var graphPerformanceMode = 'normal'; // 'normal' | 'simplified'
 
 function initGraph() {
     var container = document.getElementById('vis-graph');
@@ -1056,13 +1055,10 @@ function updateGraph(graphData) {
     var nodeCount = graphData.nodes.length;
     var edgeCount = graphData.edges.length;
 
-    // --- Auto performance mode ---
+    // --- Auto performance mode for large graphs ---
     if (nodeCount >= PERF_SIMPLIFY_THRESHOLD) {
         graphPerformanceMode = 'simplified';
         applyPerformanceMode('simplified');
-    } else if (nodeCount >= PERF_CLUSTER_THRESHOLD) {
-        graphPerformanceMode = 'clustered';
-        applyPerformanceMode('clustered');
     } else {
         graphPerformanceMode = 'normal';
     }
@@ -1103,11 +1099,6 @@ function updateGraph(graphData) {
     });
 
     updateLegend(graphData.typeColors);
-
-    // Auto-cluster if threshold met and this is a full refresh (done status)
-    if (graphPerformanceMode !== 'normal' && nodeCount >= PERF_CLUSTER_THRESHOLD) {
-        applyClusterByType();
-    }
 }
 
 function applyPerformanceMode(mode) {
@@ -1116,9 +1107,8 @@ function applyPerformanceMode(mode) {
         network.setOptions({
             nodes: {shadow: {enabled: false}},
             edges: {
-                font: {size: 0},
                 smooth: {enabled: false},
-                width: 0.8
+                width: 1
             },
             physics: {
                 barnesHut: {
@@ -1130,78 +1120,8 @@ function applyPerformanceMode(mode) {
                 stabilization: {iterations: 80}
             }
         });
-    } else if (mode === 'clustered') {
-        network.setOptions({
-            edges: {smooth: {type: 'continuous'}},
-            physics: {
-                barnesHut: {
-                    gravitationalConstant: -2500,
-                    springLength: 190,
-                    springConstant: 0.03,
-                    damping: 0.12
-                },
-                stabilization: {iterations: 100}
-            }
-        });
     }
-    // Show performance mode indicator
     showPerfIndicator(mode);
-}
-
-function applyClusterByType() {
-    if (!network || !graphDataStore) return;
-    var typeColors = graphDataStore.typeColors || {};
-
-    // Cluster each entity type with 5+ nodes
-    var typeCounts = {};
-    visNodes.get().forEach(function(n) {
-        var t = n._type || 'Unknown';
-        typeCounts[t] = (typeCounts[t] || 0) + 1;
-    });
-
-    for (var type in typeCounts) {
-        if (typeCounts[type] >= 5) {
-            (function(t) {
-                var clusterColor = getEntityColor(t);
-                network.cluster({
-                    joinCondition: function(nodeOptions) {
-                        return nodeOptions._type === t && !nodeOptions.hidden;
-                    },
-                    clusterNodeProperties: {
-                        id: 'cluster_' + t,
-                        label: t + ' (' + typeCounts[t] + ')',
-                        shape: 'dot',
-                        size: 28 + Math.min(typeCounts[t], 20),
-                        color: {
-                            background: clusterColor,
-                            border: '#fff',
-                            highlight: {background: clusterColor, border: '#1a1a1a'},
-                            hover: {background: clusterColor, border: '#1a1a1a'}
-                        },
-                        borderWidth: 3,
-                        font: {size: 13, color: '#1a1a1a', bold: true},
-                        _type: t,
-                        _isCluster: true
-                    }
-                });
-            })(type);
-        }
-    }
-
-    // Double-click cluster to expand
-    network.on('doubleClick', function(params) {
-        if (params.nodes.length === 1) {
-            var nodeId = params.nodes[0];
-            if (network.isCluster(nodeId)) {
-                network.openCluster(nodeId);
-                // Re-enable physics briefly for layout, then stop
-                network.setOptions({physics: {enabled: true}});
-                setTimeout(function() {
-                    network.setOptions({physics: {enabled: false}});
-                }, 2000);
-            }
-        }
-    });
 }
 
 function showPerfIndicator(mode) {
@@ -1213,9 +1133,7 @@ function showPerfIndicator(mode) {
     el.id = 'perf-indicator';
     el.className = 'perf-indicator';
     if (mode === 'simplified') {
-        el.innerHTML = '<span class="perf-dot"></span>Performance mode: nodes clustered, shadows off, edges simplified. Double-click clusters to expand.';
-    } else {
-        el.innerHTML = '<span class="perf-dot"></span>Clustered mode: entity types grouped. Double-click clusters to expand.';
+        el.innerHTML = '<span class="perf-dot"></span>Performance mode: shadows off, edges simplified for smoother interaction.';
     }
     var graphContainer = document.getElementById('graph-container');
     if (graphContainer) graphContainer.appendChild(el);
