@@ -467,9 +467,6 @@ buildBtn.addEventListener('click', function() {
 });
 
 // --- Init vis.js ---
-// --- Performance thresholds ---
-var PERF_SIMPLIFY_THRESHOLD = 80;  // Simplify rendering for very large graphs
-var graphPerformanceMode = 'normal'; // 'normal' | 'simplified'
 
 function initGraph() {
     var container = document.getElementById('vis-graph');
@@ -1052,17 +1049,6 @@ function updateGraph(graphData) {
     if (!graphData || !visNodes || !visEdges) return;
     graphDataStore = graphData;
 
-    var nodeCount = graphData.nodes.length;
-    var edgeCount = graphData.edges.length;
-
-    // --- Auto performance mode for large graphs ---
-    if (nodeCount >= PERF_SIMPLIFY_THRESHOLD) {
-        graphPerformanceMode = 'simplified';
-        applyPerformanceMode('simplified');
-    } else {
-        graphPerformanceMode = 'normal';
-    }
-
     var existingNodeIds = {};
     visNodes.getIds().forEach(function(id) { existingNodeIds[id] = true; });
 
@@ -1099,44 +1085,6 @@ function updateGraph(graphData) {
     });
 
     updateLegend(graphData.typeColors);
-}
-
-function applyPerformanceMode(mode) {
-    if (!network) return;
-    if (mode === 'simplified') {
-        network.setOptions({
-            nodes: {shadow: {enabled: false}},
-            edges: {
-                smooth: {enabled: false},
-                width: 1
-            },
-            physics: {
-                barnesHut: {
-                    gravitationalConstant: -2000,
-                    springLength: 200,
-                    springConstant: 0.02,
-                    damping: 0.15
-                },
-                stabilization: {iterations: 80}
-            }
-        });
-    }
-    showPerfIndicator(mode);
-}
-
-function showPerfIndicator(mode) {
-    var existing = document.getElementById('perf-indicator');
-    if (existing) existing.remove();
-    if (mode === 'normal') return;
-
-    var el = document.createElement('div');
-    el.id = 'perf-indicator';
-    el.className = 'perf-indicator';
-    if (mode === 'simplified') {
-        el.innerHTML = '<span class="perf-dot"></span>Performance mode: shadows off, edges simplified for smoother interaction.';
-    }
-    var graphContainer = document.getElementById('graph-container');
-    if (graphContainer) graphContainer.appendChild(el);
 }
 
 function updateLegend(typeColors) {
