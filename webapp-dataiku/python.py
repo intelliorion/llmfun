@@ -607,22 +607,27 @@ def ocr_image_with_llm(image_bytes, mime_type='image/png', llm_inst=None):
     return resp.text.strip()
 
 
-def extract_text_from_file(file_obj, filename, llm_inst=None):
+def extract_text_from_file(file_obj, filename, llm_inst=None, on_progress=None):
     import io
     ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    _progress = on_progress or (lambda msg, technique: None)
 
     # --- Image files: direct LLM OCR ---
     if ext in IMAGE_EXTENSIONS:
+        _progress('Sending image to LLM Vision for text extraction...', 'LLM Vision OCR')
         image_bytes = file_obj.read()
         mime = IMAGE_MIME_MAP.get(ext, 'image/png')
         text = ocr_image_with_llm(image_bytes, mime_type=mime, llm_inst=llm_inst)
+        _progress('Text extraction complete', 'LLM Vision OCR')
         return '[Image: ' + filename + ']\n\n' + text
 
     if ext in ('txt', 'md'):
+        _progress('Reading plain text file...', 'Direct Read')
         return file_obj.read().decode('utf-8', errors='ignore')
 
     elif ext == 'csv':
         try:
+            _progress('Parsing CSV structure...', 'CSV Parser')
             import csv
             raw = file_obj.read().decode('utf-8', errors='ignore')
             reader = csv.reader(raw.strip().splitlines())
@@ -649,23 +654,24 @@ def extract_text_from_file(file_obj, filename, llm_inst=None):
             import fitz
             pdf_bytes = file_obj.read()
             pdf = fitz.open(stream=pdf_bytes, filetype='pdf')
-            parts = ['[Document: ' + filename + ', ' + str(len(pdf)) + ' pages]', '']
+            total_pages = len(pdf)
+            _progress('Opened PDF — ' + str(total_pages) + ' pages', 'PyMuPDF')
+            parts = ['[Document: ' + filename + ', ' + str(total_pages) + ' pages]', '']
             ocr_pages = []
             for i, page in enumerate(pdf):
+                _progress('Page ' + str(i+1) + '/' + str(total_pages) + ' — extracting embedded text...', 'Text Extraction')
                 text = page.get_text().strip()
-                # If page has meaningful text (>50 chars), use it directly
                 if text and len(text) > 50:
                     parts.append('--- Page ' + str(i+1) + ' ---')
                     parts.append(text)
                     parts.append('')
                 else:
-                    # Page is image-like or has very little text — queue for OCR
                     ocr_pages.append(i)
-            # OCR image-like pages via LLM vision
             if ocr_pages:
-                for i in ocr_pages:
+                _progress(str(len(ocr_pages)) + ' image-like page(s) detected — switching to LLM Vision OCR', 'LLM Vision OCR')
+                for idx, i in enumerate(ocr_pages):
                     page = pdf[i]
-                    # Render page as high-res PNG (2x zoom for quality)
+                    _progress('Page ' + str(i+1) + ' — rendering to image & sending to LLM Vision (' + str(idx+1) + '/' + str(len(ocr_pages)) + ')...', 'LLM Vision OCR')
                     mat = fitz.Matrix(2.0, 2.0)
                     pix = page.get_pixmap(matrix=mat)
                     img_bytes = pix.tobytes('png')
@@ -675,16 +681,22 @@ def extract_text_from_file(file_obj, filename, llm_inst=None):
                             parts.append('--- Page ' + str(i+1) + ' (OCR) ---')
                             parts.append(ocr_text)
                             parts.append('')
+                            _progress('Page ' + str(i+1) + ' — OCR complete', 'LLM Vision OCR')
                     except Exception as e:
                         parts.append('--- Page ' + str(i+1) + ' ---')
                         parts.append('[OCR failed: ' + str(e) + ']')
                         parts.append('')
+                        _progress('Page ' + str(i+1) + ' — OCR failed: ' + str(e), 'LLM Vision OCR')
+            else:
+                _progress('All pages had embedded text — no OCR needed', 'Text Extraction')
+            _progress('PDF processing complete', 'Done')
             return '\n'.join(parts)
         except ImportError:
             return '[Error: PyMuPDF not installed for PDF support]'
 
     elif ext == 'docx':
         try:
+            _progress('Parsing Word document...', 'python-docx')
             from docx import Document
             doc = Document(io.BytesIO(file_obj.read()))
             parts = ['[Document: ' + filename + ']', '']
@@ -718,6 +730,7 @@ def extract_text_from_file(file_obj, filename, llm_inst=None):
 
     elif ext == 'pptx':
         try:
+            _progress('Parsing PowerPoint slides...', 'python-pptx')
             from pptx import Presentation
             prs = Presentation(io.BytesIO(file_obj.read()))
             parts = ['[Presentation: ' + filename + ', ' + str(len(prs.slides)) + ' slides]', '']
@@ -748,6 +761,7 @@ def extract_text_from_file(file_obj, filename, llm_inst=None):
 
     elif ext == 'xlsx':
         try:
+            _progress('Parsing Excel spreadsheet...', 'openpyxl')
             import openpyxl
             wb = openpyxl.load_workbook(io.BytesIO(file_obj.read()), read_only=True)
             parts = ['[Spreadsheet: ' + filename + ', ' + str(len(wb.sheetnames)) + ' sheets]', '']
@@ -773,6 +787,7 @@ def extract_text_from_file(file_obj, filename, llm_inst=None):
 
     elif ext == 'eml':
         try:
+            _progress('Parsing email (.eml)...', 'Email Parser')
             import email
             from email import policy
             msg = email.message_from_bytes(file_obj.read(), policy=policy.default)
@@ -798,6 +813,7 @@ def extract_text_from_file(file_obj, filename, llm_inst=None):
 
     elif ext == 'msg':
         try:
+            _progress('Parsing Outlook email (.msg)...', 'extract-msg')
             import extract_msg
             msg = extract_msg.Message(io.BytesIO(file_obj.read()))
             parts = ['[Email: ' + filename + ']']
@@ -842,8 +858,48 @@ def api_upload():
         return json_response({'error': 'No file selected'}, 400)
     model_id = request.form.get('model', None)
     llm_inst = get_llm(model_id) if model_id else llm
-    text = extract_text_from_file(f, f.filename, llm_inst=llm_inst)
-    return json_response({'text': text, 'filename': f.filename})
+    fname = f.filename
+
+    # Read file into memory so we can stream response
+    import io
+    file_bytes = f.read()
+    file_like = io.BytesIO(file_bytes)
+
+    # Collect progress events and final text via a queue
+    import queue
+    q = queue.Queue()
+
+    def on_progress(msg, technique):
+        q.put(('progress', msg, technique))
+
+    def run_extract():
+        try:
+            text = extract_text_from_file(file_like, fname, llm_inst=llm_inst, on_progress=on_progress)
+            q.put(('done', text, fname))
+        except Exception as e:
+            q.put(('error', str(e), ''))
+
+    t = threading.Thread(target=run_extract)
+    t.start()
+
+    def generate():
+        while True:
+            try:
+                item = q.get(timeout=120)
+            except Exception:
+                yield 'data: ' + json.dumps({'error': 'Timeout'}) + '\n\n'
+                break
+            if item[0] == 'progress':
+                yield 'data: ' + json.dumps({'progress': item[1], 'technique': item[2]}) + '\n\n'
+            elif item[0] == 'done':
+                yield 'data: ' + json.dumps({'done': True, 'text': item[1], 'filename': item[2]}) + '\n\n'
+                break
+            elif item[0] == 'error':
+                yield 'data: ' + json.dumps({'error': item[1]}) + '\n\n'
+                break
+
+    return Response(generate(), mimetype='text/event-stream',
+                    headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
 
 
 @app.route('/build', methods=['POST'])

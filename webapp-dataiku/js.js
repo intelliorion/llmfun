@@ -200,31 +200,59 @@ function processFiles(files) {
                 reader.onload = function(ev) { addFile(file.name, ev.target.result); };
                 reader.readAsText(file);
             } else {
-                var imageExts = ['png','jpg','jpeg','gif','bmp','tiff','tif','webp'];
-                var isImage = imageExts.indexOf(ext) !== -1;
-                var isPdf = ext === 'pdf';
-                var parseMsg = isImage ? 'Extracting text from image' : (isPdf ? 'Parsing PDF (OCR if needed)' : 'Parsing');
-                fileUpload.innerHTML = '<span class="spinner"></span><div class="upload-text">' + parseMsg + ' ' + file.name + '...</div>';
+                fileUpload.innerHTML = '<span class="spinner"></span><div class="upload-text">Uploading ' + file.name + '...</div><div class="upload-status" id="upload-status"></div>';
                 var formData = new FormData();
                 formData.append('file', file);
                 var modelSel = document.getElementById('model-select');
                 if (modelSel && modelSel.value) formData.append('model', modelSel.value);
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', getBackendUrl('upload'));
-                xhr.onload = function() {
-                    fileUpload.innerHTML = UPLOAD_AREA_HTML;
-                    if (xhr.status === 200) {
-                        var data = JSON.parse(xhr.responseText);
-                        addFile(file.name, data.text);
-                    } else {
-                        alert('Error parsing ' + file.name);
-                    }
-                };
-                xhr.onerror = function() {
-                    fileUpload.innerHTML = UPLOAD_AREA_HTML;
-                    alert('Upload failed for ' + file.name);
-                };
-                xhr.send(formData);
+                // SSE via fetch for streaming progress
+                fetch(getBackendUrl('upload'), { method: 'POST', body: formData })
+                    .then(function(response) {
+                        var reader = response.body.getReader();
+                        var decoder = new TextDecoder();
+                        var buffer = '';
+                        function read() {
+                            reader.read().then(function(result) {
+                                if (result.done) {
+                                    fileUpload.innerHTML = UPLOAD_AREA_HTML;
+                                    return;
+                                }
+                                buffer += decoder.decode(result.value, { stream: true });
+                                var lines = buffer.split('\n');
+                                buffer = lines.pop();
+                                for (var li = 0; li < lines.length; li++) {
+                                    var line = lines[li].trim();
+                                    if (line.indexOf('data: ') === 0) {
+                                        try {
+                                            var evt = JSON.parse(line.substring(6));
+                                            if (evt.progress) {
+                                                var statusEl = document.getElementById('upload-status');
+                                                if (statusEl) {
+                                                    statusEl.innerHTML = '<span class="upload-technique">' + evt.technique + '</span> ' + evt.progress;
+                                                }
+                                                var uploadText = fileUpload.querySelector('.upload-text');
+                                                if (uploadText) uploadText.textContent = 'Processing ' + file.name + '...';
+                                            }
+                                            if (evt.done) {
+                                                fileUpload.innerHTML = UPLOAD_AREA_HTML;
+                                                addFile(file.name, evt.text);
+                                            }
+                                            if (evt.error) {
+                                                fileUpload.innerHTML = UPLOAD_AREA_HTML;
+                                                alert('Error parsing ' + file.name + ': ' + evt.error);
+                                            }
+                                        } catch(e) {}
+                                    }
+                                }
+                                read();
+                            });
+                        }
+                        read();
+                    })
+                    .catch(function() {
+                        fileUpload.innerHTML = UPLOAD_AREA_HTML;
+                        alert('Upload failed for ' + file.name);
+                    });
             }
         })(files[i]);
     }
