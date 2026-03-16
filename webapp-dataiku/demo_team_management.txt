@@ -1,585 +1,173 @@
-============================================================
-MORGAN STANLEY — CORPORATE SERVICES DIVISION
-TECHNOLOGY & TRANSFORMATION INTELLIGENCE ANALYTICS (TTIA)
-ANNUAL TALENT REVIEW PACKAGE — CONFIDENTIAL
-============================================================
-
-DIVISION OVERVIEW
------------------
-Division: Corporate Services — Technology & Transformation Intelligence Analytics (CS TTIA)
+ANNUAL TALENT REVIEW — CONFIDENTIAL
+Division: Corporate Services, Technology & Transformation Intelligence Analytics
 Division Head: Sarah Chen (Managing Director)
-Headcount: 30
-Location: New York (Primary), London, Hong Kong
-FY2026 Division Targets:
-  - Deliver AI-powered analytics platform across 5 business units by Q3 2026
-  - Reduce manual reporting by 60% through automation
-  - Achieve 90%+ internal client satisfaction score
-  - Launch self-service data marketplace for all CS functions
-  - Zero critical production incidents (P1) for 12+ consecutive months
-  - Expand team capability in GenAI/LLM to 80% of engineers trained
+Headcount: 15 | Locations: New York, London | FY2026 Budget: $10M
 
-============================================================
-ORGANIZATIONAL STRUCTURE
-============================================================
+============================
+LEADERSHIP
+============================
 
-LEADERSHIP TEAM
----------------
+Sarah Chen — Managing Director, Division Head
+  Reports to: Robert Hartley (COO)
+  Direct Reports: James Morrison, Priya Kapoor, Michael Zhang
+  Rating: Exceptional (5/5)
+  Projects: Orion AI Platform (executive sponsor), Analytics Marketplace (executive sponsor)
+  Review: "Sarah transformed this division from a support function into a strategic capability. She secured $15M in budget by demonstrating ROI on AI. One of the most effective leaders at the firm."
+  Goals: Launch Orion across 3 business units by Q2 2026; Achieve 95% engagement score; Hire 5 senior AI engineers
 
-[1] Sarah Chen — Managing Director, Division Head
-    Reports to: Robert Hartley (COO, Corporate Services)
-    Direct Reports: James Morrison, Priya Kapoor, Michael Zhang, Lisa Park
-    Tenure: 12 years at MS
-    2025 Rating: Exceptional (5/5)
-    2025 360 Review Summary:
-      - Peers: "Sarah is a visionary leader who transformed TTIA from a support function into a strategic capability. She secured $15M in incremental budget by demonstrating ROI on AI initiatives."
-      - Direct Reports: "Empowering but sets extremely high standards. Always makes time for 1-on-1s despite her schedule. Could improve by delegating more operational decisions."
-      - Skip-Level: "Sarah's team consistently delivers the most innovative solutions in CS. She has a strong talent pipeline."
-      - Stakeholders: "One of the most effective technology leaders at the firm. Her team's work on predictive analytics saved us $8M in operational costs."
-    2026 Goals:
-      G1: Launch Orion AI Platform across Fixed Income, Equities, and Wealth Management by Q2 2026
-      G2: Build strategic partnership with Microsoft/OpenAI for enterprise GenAI capabilities
-      G3: Develop and present 3-year TTIA roadmap to CS Executive Committee by March 2026
-      G4: Achieve 95% employee engagement score (currently 87%)
-      G5: Hire 5 senior AI/ML engineers to close capability gap
+James Morrison — Executive Director, Head of Data & Infrastructure
+  Reports to: Sarah Chen
+  Direct Reports: Anika Patel, David Kim, Patrick Dunn
+  Rating: Strong (4/5)
+  Projects: Cloud Migration Phase 2 (sponsor), Data Quality Program (sponsor)
+  Review: "James runs the most reliable infrastructure in CS — 2.3TB daily at 99.97% uptime. Ready for MD track but needs more executive presence."
+  Goals: Complete cloud migration by Q1; Reduce processing costs by 30%; Develop Anika and David to VP-readiness
+  Succession: Sarah Chen's primary successor
 
-[2] James Morrison — Executive Director, Head of Data Engineering
-    Reports to: Sarah Chen
-    Direct Reports: Anika Patel, David Kim, Rachel Torres, Omar Hassan
-    Tenure: 8 years at MS
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "James runs the most reliable data infrastructure in CS. His migration to the cloud-native stack was executed flawlessly — zero downtime."
-      - Direct Reports: "James is technically brilliant and a great mentor. Sometimes gets too deep in the weeds instead of empowering the team to solve problems. Would benefit from being less hands-on."
-      - Stakeholders: "Data pipelines are rock-solid. James's team processes 2.3TB daily with 99.97% uptime."
-      - Sarah Chen: "James is my most dependable leader. Ready for MD promotion track. Needs to develop more executive presence and stakeholder management skills."
-    2026 Goals:
-      G1: Complete migration of legacy ETL pipelines to Spark/Airflow by Q1 2026
-      G2: Reduce data processing costs by 30% through optimization and spot instances
-      G3: Implement real-time streaming for 10 critical dashboards (currently batch)
-      G4: Develop 2 direct reports to VP-readiness (Anika Patel, David Kim)
-      G5: Establish data quality SLAs with 99.9% accuracy target across all feeds
+Priya Kapoor — Executive Director, Head of AI & Machine Learning
+  Reports to: Sarah Chen
+  Direct Reports: Kevin O'Brien, Sophia Martinez, Wei Liu
+  Rating: Exceptional (5/5)
+  Projects: Orion AI Platform (technical sponsor), AI Center of Excellence (lead)
+  Review: "Priya built the ML platform from scratch — now 40+ models in production. Her NLP models for compliance reduced false positives by 73%. Fast-tracking for MD."
+  Goals: Deploy 5 LLM applications including Orion; Build MLOps framework; Patent 2 novel AI approaches
+  Succession: Kevin O'Brien is primary successor
 
-[3] Priya Kapoor — Executive Director, Head of AI & Machine Learning
-    Reports to: Sarah Chen
-    Direct Reports: Kevin O'Brien, Wei Liu, Sophia Martinez, Tomoko Yamada
-    Tenure: 5 years at MS
-    2025 Rating: Exceptional (5/5)
-    2025 360 Review Summary:
-      - Peers: "Priya is the driving force behind our AI capabilities. She built the ML platform from scratch and it now serves 40+ models in production."
-      - Direct Reports: "Priya is an inspiring leader who creates psychological safety. She encourages experimentation and accepts failure as learning. Sometimes overcommits the team."
-      - Stakeholders: "Priya's NLP models for compliance screening reduced false positives by 73%. Her team is a competitive advantage."
-      - Sarah Chen: "Priya is my strongest technical leader. She has the rare ability to translate complex AI concepts for business audiences. Fast-tracking her for MD."
-    2026 Goals:
-      G1: Deploy 5 production LLM-powered applications (including Orion) by Q3 2026
-      G2: Build MLOps framework with automated model monitoring, retraining, and drift detection
-      G3: Establish AI Center of Excellence — publish internal best practices and host monthly AI demos
-      G4: Reduce model inference costs by 40% through optimization and distillation
-      G5: Patent at least 2 novel AI approaches developed by the team
+Michael Zhang — Executive Director, Head of Analytics & Visualization
+  Reports to: Sarah Chen
+  Direct Reports: Jennifer Walsh, Carlos Mendez, Hannah Lee
+  Rating: Strong (4/5)
+  Projects: Analytics Marketplace (lead), Executive Dashboard Modernization (sponsor)
+  Review: "Michael's dashboards are used by the entire C-suite. Strong technically but needs to be more proactive with stakeholder engagement."
+  Goals: Launch analytics marketplace with 50+ templates by Q2; Migrate legacy Tableau to Streamlit/Plotly
+  Succession: Jennifer Walsh is primary successor
 
-[4] Michael Zhang — Executive Director, Head of Analytics & Visualization
-    Reports to: Sarah Chen
-    Direct Reports: Jennifer Walsh, Carlos Mendez, Yuki Tanaka, Ryan Patel
-    Tenure: 7 years at MS
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Michael's dashboards are used by the entire C-suite. His team sets the standard for data storytelling at MS."
-      - Direct Reports: "Michael gives great creative freedom but could be more structured with sprint planning. Sometimes priorities shift mid-sprint."
-      - Stakeholders: "The executive dashboards Michael's team built transformed how leadership makes decisions. Monthly reports went from 3 days to 3 hours."
-      - Sarah Chen: "Michael needs to be more proactive about stakeholder engagement instead of waiting for requests. Strong technically, needs to develop strategic thinking."
-    2026 Goals:
-      G1: Launch self-service analytics marketplace with 50+ pre-built templates by Q2 2026
-      G2: Migrate all legacy Tableau dashboards to modern stack (Streamlit/Plotly) by Q4 2026
-      G3: Implement automated anomaly detection and alerting on all executive dashboards
-      G4: Reduce dashboard load time to under 2 seconds for 95% of views
-      G5: Conduct quarterly business review presentations to CS leadership (improve stakeholder engagement)
+============================
+DATA & INFRASTRUCTURE TEAM
+============================
 
-[5] Lisa Park — Vice President, Head of Program Management & Delivery
-    Reports to: Sarah Chen
-    Direct Reports: Alex Rivera, Nadia Volkov, Brian Cooper
-    Tenure: 4 years at MS
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Lisa keeps the trains running. She implemented Agile at scale across TTIA and our delivery cadence improved dramatically."
-      - Direct Reports: "Lisa is organized and fair. She protects the team from scope creep effectively. Could be more flexible with process when speed is critical."
-      - Stakeholders: "Since Lisa joined, project delivery went from 60% on-time to 92%. She holds everyone accountable without being adversarial."
-      - Sarah Chen: "Lisa is a rising star. She needs more exposure to executive stakeholders and strategic planning to move to ED level."
-    2026 Goals:
-      G1: Achieve 95% on-time delivery rate across all TTIA projects (currently 92%)
-      G2: Implement OKR framework across the division with quarterly review cadence
-      G3: Reduce project overhead costs by 20% through process automation
-      G4: Launch TTIA internal knowledge base and documentation portal
-      G5: Develop capacity planning model for resource allocation across teams
+Anika Patel — Vice President, Senior Data Engineer
+  Reports to: James Morrison
+  Rating: Exceptional (5/5)
+  Projects: Cloud Migration Phase 2 (contributor), Data Quality Program (contributor), Real-Time Streaming Initiative (lead)
+  Review: "Anika is the go-to for any complex pipeline challenge. Led the cloud migration workstream with zero issues. She elevates everyone around her."
+  Goals: Lead Kafka-based streaming pipelines; Mentor junior engineers; Present at external conference
+  Retention Risk: MEDIUM — wants VP promotion clarity, may explore externally if delayed
+  Succession: James Morrison's primary successor
 
-============================================================
-DATA ENGINEERING TEAM (Reports to James Morrison)
-============================================================
+David Kim — Vice President, Data Platform Engineer
+  Reports to: James Morrison
+  Rating: Strong (4/5)
+  Projects: Cloud Migration Phase 2 (co-lead with Patrick Dunn), Analytics Marketplace (platform dependency), Self-Service Data Platform (lead)
+  Review: "David built the entire CI/CD pipeline for data workloads. Methodical and reliable but needs to improve cross-team communication — tends to work in isolation."
+  Goals: Deploy self-service data platform by Q2; Reduce infrastructure costs by $500K
 
-[6] Anika Patel — Vice President, Senior Data Engineer
-    Reports to: James Morrison
-    Tenure: 6 years at MS
-    Projects: Cloud Migration Phase 2 (contributor), Data Quality & Governance Program (contributor), Real-Time Streaming Initiative (lead)
-    2025 Rating: Exceptional (5/5)
-    2025 360 Review Summary:
-      - Peers: "Anika is the go-to person for any complex data pipeline challenge. She redesigned the equity reference data feed and reduced latency by 80%."
-      - Manager (James): "Anika is VP-ready. She independently led the cloud migration workstream with zero issues. I'm recommending her for the leadership development program."
-      - Direct peers: "Anika is always willing to help and pair-program. She elevates everyone around her."
-    2026 Goals:
-      G1: Lead the real-time streaming initiative — design and implement Kafka-based event pipelines
-      G2: Mentor 2 junior engineers (Hassan, new hire TBD) with monthly 1-on-1s and code reviews
-      G3: Present at 2 internal tech talks and 1 external conference
-      G4: Achieve AWS Solutions Architect Professional certification
+Patrick Dunn — Associate Vice President, Cloud Infrastructure Engineer
+  Reports to: David Kim
+  Rating: Strong (4/5)
+  Projects: Cloud Migration Phase 2 (co-lead with David Kim), Multi-Region Failover (lead), FinOps Practice (lead)
+  Review: "Patrick designed our disaster recovery architecture. Saved $1.2M this year through right-sizing. His infrastructure is bullet-proof."
+  Goals: Implement multi-region failover; Reduce cloud costs by $800K; Evaluate GPU infrastructure for AI workloads
 
-[7] David Kim — Vice President, Data Platform Engineer
-    Reports to: James Morrison
-    Tenure: 5 years at MS
-    Projects: Cloud Migration Phase 2 (co-lead with Patrick Dunn), Analytics Marketplace (platform dependency), Self-Service Data Platform (lead)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "David built our entire CI/CD pipeline for data workloads. He's methodical and his infrastructure never breaks."
-      - Manager (James): "David is strong technically but needs to develop more cross-team communication skills. He tends to work in isolation. His Cloud Migration collab with Patrick is a good stretch."
-      - Stakeholders: "David's platform improvements reduced deployment time from 4 hours to 15 minutes."
-    2026 Goals:
-      G1: Design and deploy self-service data platform (Databricks + Delta Lake) by Q2 2026
-      G2: Implement automated data quality monitoring with PagerDuty integration
-      G3: Improve cross-team collaboration — lead 2 cross-functional initiatives
-      G4: Reduce infrastructure costs by $500K through right-sizing and spot instances
+============================
+AI & MACHINE LEARNING TEAM
+============================
 
-[8] Rachel Torres — Associate, Data Engineer
-    Reports to: James Morrison
-    Tenure: 2 years at MS
-    Projects: Data Quality & Governance Program (contributor), Finance Data Mart (lead), shadowing Anika on Real-Time Streaming
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Rachel has grown tremendously in 2 years. She owns the entire finance data domain and handles it with maturity beyond her level."
-      - Manager (James): "Rachel is a high-potential associate. She needs more exposure to system design and architecture to prepare for VP promotion."
-      - Skip-level (Sarah): "Rachel represents the next generation of talent we need to retain. Flag for retention bonus."
-    2026 Goals:
-      G1: Design and build the finance data mart serving 15+ downstream consumers
-      G2: Lead the data quality initiative for the finance domain — reduce data incidents by 50%
-      G3: Complete system design course and present a capstone architecture review
-      G4: Shadow Anika on 2 strategic projects to learn senior engineering practices
+Kevin O'Brien — Vice President, Senior ML Engineer
+  Reports to: Priya Kapoor
+  Rating: Exceptional (5/5)
+  Projects: Orion AI Platform (technical lead), GenAI Training Program (lead), RAG Framework (lead), AI Center of Excellence (contributor)
+  Review: "Kevin built the LLM fine-tuning pipeline serving 5 business units. He's a force multiplier — makes everyone better. Top ML engineer in all of MS technology. His compliance NLP model saves the firm millions."
+  Goals: Architect Orion as production platform; Build RAG framework; Train 25 engineers on GenAI; Mentor Sophia and Wei
+  RETENTION RISK: HIGH — Actively recruited by Google DeepMind and OpenAI. Compensation review urgently needed.
+  Succession: Priya Kapoor's primary successor
 
-[9] Omar Hassan — Analyst, Junior Data Engineer
-    Reports to: James Morrison
-    Tenure: 1 year at MS (joined from campus)
-    Projects: Cloud Migration Phase 2 (junior contributor), Pipeline Automation (supporting Anika)
-    2025 Rating: Developing (3/5)
-    2025 360 Review Summary:
-      - Peers: "Omar is eager to learn and asks great questions. His code quality has improved significantly since joining."
-      - Manager (James): "Omar has strong foundations but needs to develop production engineering mindset. He's been focused on scripts — needs to think about scale, monitoring, and error handling."
-      - Mentor (Anika): "I see great potential in Omar. He just needs more hands-on production experience."
-    2026 Goals:
-      G1: Own and maintain 3 production data pipelines independently (with Anika as advisor)
-      G2: Learn Kafka and implement at least 1 streaming pipeline
-      G3: Reduce code review turnaround — all PRs should pass first review 80% of the time
-      G4: Complete internal Data Engineering certification program
+Sophia Martinez — Associate, ML Engineer
+  Reports to: Priya Kapoor
+  Rating: Strong (4/5)
+  Projects: Orion AI Platform (core developer — Agent pipeline), AI Center of Excellence (contributor), Prompt Evaluation Framework (lead)
+  Review: "Sophia's prompt engineering skills are exceptional — built Orion's schema detection in 2 weeks. Rising star in GenAI. Best intuition for LLM behavior on the team."
+  Goals: Build prompt evaluation framework; Develop multi-agent orchestration for Orion; Publish internal paper on prompt engineering
 
-============================================================
-AI & MACHINE LEARNING TEAM (Reports to Priya Kapoor)
-============================================================
+Wei Liu — Associate Vice President, ML Engineer
+  Reports to: Priya Kapoor
+  Rating: Strong (4/5)
+  Projects: Orion AI Platform (contributor — vision/OCR module), Document Processing Pipeline (lead), AI Center of Excellence (contributor)
+  Review: "Wei shipped 8 models to production this year — more than anyone. Strong on execution but needs to improve code quality and documentation."
+  Goals: Lead computer vision for document processing; Improve model documentation to 100%; Achieve VP promotion readiness
 
-[10] Kevin O'Brien — Vice President, Senior ML Engineer
-    Reports to: Priya Kapoor
-    Tenure: 4 years at MS
-    Projects: Orion AI Platform (technical lead), AI Center of Excellence (contributor), GenAI Training Program (lead), RAG Framework (lead)
-    2025 Rating: Exceptional (5/5)
-    2025 360 Review Summary:
-      - Peers: "Kevin built our LLM fine-tuning pipeline that serves 5 business units. He's one of the top ML engineers in all of MS technology."
-      - Manager (Priya): "Kevin is a force multiplier — he makes everyone better. His technical depth in LLMs is unmatched. He's ready for ED-track with more leadership development."
-      - Stakeholders: "Kevin's compliance NLP model is saving the firm millions annually."
-    2026 Goals:
-      G1: Architect and deploy the Orion knowledge graph engine as a production-grade platform
-      G2: Build RAG (Retrieval-Augmented Generation) framework for all TTIA LLM applications
-      G3: Establish model governance framework — approval workflows, bias testing, and audit trails
-      G4: Mentor Sophia and Wei on production ML best practices
-      G5: Lead the GenAI training program — train 25 engineers across CS
+============================
+ANALYTICS & VISUALIZATION TEAM
+============================
 
-[11] Wei Liu — Associate Vice President, ML Engineer
-    Reports to: Priya Kapoor
-    Tenure: 3 years at MS
-    Projects: Orion AI Platform (contributor — vision/OCR module), Document Processing Pipeline (lead), AI Center of Excellence (contributor)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Wei is incredibly productive. He shipped 8 models to production this year — more than anyone else on the team."
-      - Manager (Priya): "Wei is strong on execution but needs to slow down and improve code quality and documentation. His models work but are hard to maintain."
-      - Kevin: "Wei has great instincts for model selection. I'm working with him on MLOps discipline."
-    2026 Goals:
-      G1: Improve model documentation coverage to 100% — all production models must have full docs
-      G2: Lead the computer vision initiative for document processing (PDF/image extraction)
-      G3: Reduce model training time by 50% through distributed training and hyperparameter optimization
-      G4: Achieve VP promotion readiness — develop stakeholder presentation skills
+Jennifer Walsh — Vice President, Senior Analytics Engineer
+  Reports to: Michael Zhang
+  Rating: Exceptional (5/5)
+  Projects: Analytics Marketplace (design lead), Executive Dashboard Modernization (lead), Real-Time Trading Floor Dashboard (maintainer)
+  Review: "Jennifer's executive dashboards are legendary — the CFO personally requested she redesign the firmwide P&L view. Her trading floor dashboard is used by 200+ people daily. Pushing for ED promotion."
+  Goals: Lead analytics marketplace UX; Build AI-powered executive dashboard; Present at Technology Summit
+  Retention Risk: MEDIUM — wants ED promotion path clarity and visible executive sponsorship
 
-[12] Sophia Martinez — Associate, ML Engineer
-    Reports to: Priya Kapoor
-    Tenure: 2 years at MS
-    Projects: Orion AI Platform (core developer — Agent pipeline), AI Center of Excellence (contributor), Prompt Evaluation Framework (lead)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Sophia's prompt engineering skills are exceptional. She built the Agent 0 schema detection system for Orion in just 2 weeks."
-      - Manager (Priya): "Sophia is a rising star in the GenAI space. She needs more experience with production systems and monitoring."
-      - Kevin: "Sophia has the best intuition for LLM behavior I've seen. She'll be a VP-level engineer in 2 years."
-    2026 Goals:
-      G1: Build and own the prompt evaluation and testing framework for all TTIA LLM applications
-      G2: Develop the multi-agent orchestration layer for Orion (Agent 0, 1, 2 pipeline)
-      G3: Publish internal paper on prompt engineering best practices
-      G4: Complete production ML systems course and get certified
+Carlos Mendez — Associate Vice President, Analytics Engineer
+  Reports to: Michael Zhang
+  Rating: Strong (4/5)
+  Projects: Analytics Marketplace (contributor — data transforms), Tableau-to-Streamlit Migration (lead), Automated Reporting Pipeline (maintainer)
+  Review: "Carlos is incredibly reliable. Built the automated reporting pipeline that replaced 12 manual reports. Needs more frontend visualization exposure."
+  Goals: Lead Tableau-to-Streamlit migration for 20 dashboards; Build anomaly detection for executive dashboards
 
-[13] Tomoko Yamada — Analyst, Junior ML Engineer
-    Reports to: Priya Kapoor
-    Location: Hong Kong
-    Tenure: 1 year at MS
-    Projects: Orion AI Platform (junior contributor — data labeling & evaluation), AI Center of Excellence (workshop coordinator — Hong Kong), Model Evaluation Pipeline (supporting Wei)
-    2025 Rating: Developing (3/5)
-    2025 360 Review Summary:
-      - Peers: "Tomoko is diligent and thorough in her data analysis work. She needs more ML engineering skills."
-      - Manager (Priya): "Tomoko has a strong analytical foundation from her PhD. She's transitioning from research to engineering — needs structured guidance."
-      - Wei: "I'm mentoring Tomoko on production ML. She's progressing well but needs more confidence."
-    2026 Goals:
-      G1: Build and deploy 2 ML models to production independently
-      G2: Learn MLOps fundamentals — CI/CD for models, monitoring, and alerting
-      G3: Support the Hong Kong team with on-site AI consulting and workshops
-      G4: Transition from Jupyter notebooks to production-grade Python packages
+Hannah Lee — Associate, UX Designer
+  Reports to: Michael Zhang
+  Rating: Strong (4/5)
+  Projects: Analytics Marketplace (UX design lead), Design System (co-lead with Raj), Orion AI Platform (UX contributor)
+  Review: "Hannah transformed the look of our applications — before her everything looked like a spreadsheet. Great design sense. Hannah and Raj make a great team."
+  Goals: Design analytics marketplace UX; Establish design system in Figma; Conduct usability testing for all products
 
-============================================================
-ANALYTICS & VISUALIZATION TEAM (Reports to Michael Zhang)
-============================================================
+Raj Krishnamurthy — Associate Vice President, Full Stack Engineer
+  Reports to: Michael Zhang (dotted line to Priya Kapoor)
+  Rating: Exceptional (5/5)
+  Projects: Orion AI Platform (frontend lead), Analytics Marketplace (frontend architecture), Design System (co-lead with Hannah Lee)
+  Review: "Raj built the entire Orion frontend in record time. Full-stack skills are rare and invaluable. He's the bridge between the AI team and the visualization team. Operates at VP-senior level."
+  Goals: Architect analytics marketplace frontend; Lead design system initiative; Mentor junior developers
+  RETENTION RISK: HIGH — Multiple offers from fintech startups. Wants equity-like incentives.
 
-[14] Jennifer Walsh — Vice President, Senior Analytics Engineer
-    Reports to: Michael Zhang
-    Tenure: 6 years at MS
-    Projects: Analytics Marketplace (design lead — templates & UX), Executive Dashboard Modernization (lead), Real-Time Trading Floor Dashboard (maintainer)
-    2025 Rating: Exceptional (5/5)
-    2025 360 Review Summary:
-      - Peers: "Jennifer's executive dashboards are legendary. The CFO personally requested she redesign the firmwide P&L view."
-      - Manager (Michael): "Jennifer is the creative backbone of the team. She's VP-senior and I'm pushing for her ED promotion."
-      - Stakeholders: "Jennifer's work directly influences executive decision-making. Her real-time trading floor dashboard is used by 200+ people daily."
-    2026 Goals:
-      G1: Lead the analytics marketplace design — create the template library and user experience
-      G2: Build real-time executive dashboard with AI-powered insights and natural language queries
-      G3: Mentor Carlos and Yuki on advanced visualization techniques
-      G4: Present analytics innovations at the MS Technology Summit
+============================
+CROSS-TEAM INITIATIVES
+============================
 
-[15] Carlos Mendez — Associate Vice President, Analytics Engineer
-    Reports to: Michael Zhang
-    Tenure: 3 years at MS
-    Projects: Analytics Marketplace (contributor — backend data transforms), Tableau-to-Streamlit Migration (lead), Automated Reporting Pipeline (maintainer)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Carlos is incredibly reliable. He built the automated reporting pipeline that replaced 12 manual reports."
-      - Manager (Michael): "Carlos is growing into a strong engineer. He needs more exposure to front-end visualization frameworks to round out his skills."
-      - Jennifer: "Carlos is my go-to for complex data transformations. He's solid."
-    2026 Goals:
-      G1: Lead Tableau-to-Streamlit migration for 20 dashboards in H1 2026
-      G2: Build anomaly detection layer for executive dashboards
-      G3: Develop React/D3.js skills — complete advanced visualization course
-      G4: Reduce monthly report generation time from 3 hours to 30 minutes through automation
+Orion AI Platform Launch — $4.2M | Q1-Q3 2026 | Risk: HIGH
+  Leads: Kevin O'Brien (technical) + Priya Kapoor (sponsor)
+  Team: Sophia Martinez, Raj Krishnamurthy, Wei Liu, Hannah Lee
+  Blockers: Marcus Thompson (security review — currently 5-day turnaround), Chris Lawson (architecture sign-off pending)
+  Note: Complex integration with Fixed Income, Equities, and Wealth Management simultaneously
 
-[16] Yuki Tanaka — Associate, Data Analyst
-    Reports to: Michael Zhang
-    Location: London
-    Tenure: 2 years at MS
-    Projects: Analytics Marketplace (contributor — user research & templates), Dashboard Design System (contributor with Hannah Lee), London Office Analytics Support (lead)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Yuki has an eye for design. Her dashboards are both functional and beautiful. She's the best at user research on the team."
-      - Manager (Michael): "Yuki needs to deepen her technical skills — more Python, more automation. She's too reliant on manual processes."
-      - Jennifer: "Yuki has great product instincts. With more coding skills, she'll be a complete analytics engineer."
-    2026 Goals:
-      G1: Complete Python for Data Analytics certification and apply it to 5 projects
-      G2: Lead user research for the analytics marketplace — conduct 20 stakeholder interviews
-      G3: Build 3 self-service dashboard templates for the marketplace
-      G4: Reduce manual data preparation time by 70% through scripting
+Analytics Marketplace — $1.8M | Q1-Q2 2026
+  Leads: Jennifer Walsh (design) + Hannah Lee (UX)
+  Team: Carlos Mendez, Raj Krishnamurthy
+  Dependencies: David Kim (platform must be ready), analytics templates need cross-BU requirements
 
-[17] Ryan Patel — Analyst, Junior Data Analyst
-    Reports to: Michael Zhang
-    Tenure: 1 year at MS
-    Projects: CS Operational Metrics Report (owner), Analytics Marketplace (junior contributor — testing & feedback), Dashboard QA Support (supporting Jennifer)
-    2025 Rating: Developing (3/5)
-    2025 360 Review Summary:
-      - Peers: "Ryan is enthusiastic and a fast learner. He needs to develop more attention to detail — his reports sometimes have data accuracy issues."
-      - Manager (Michael): "Ryan has potential but needs structured development. I'm pairing him with Jennifer for mentorship."
-      - Jennifer: "Ryan asks great questions and is eager. He needs to build foundational SQL and Tableau skills."
-    2026 Goals:
-      G1: Achieve zero data accuracy issues in all published reports
-      G2: Complete advanced SQL certification and Tableau Desktop Specialist certification
-      G3: Own the weekly CS operational metrics report independently
-      G4: Learn Python basics and build 1 automated report
+Cloud Migration Phase 2 — $3.1M | Q1-Q4 2026
+  Leads: David Kim + Patrick Dunn
+  Team: Anika Patel
+  Blockers: Security review from Marcus Thompson, architecture sign-off from Chris Lawson
 
-============================================================
-PROGRAM MANAGEMENT & DELIVERY TEAM (Reports to Lisa Park)
-============================================================
-
-[18] Alex Rivera — Associate Vice President, Senior Program Manager
-    Reports to: Lisa Park
-    Tenure: 5 years at MS
-    Projects: Orion AI Platform Launch (program manager), Cloud Migration Phase 2 (program oversight), Vendor Management Framework (lead)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Alex is the best PM I've worked with at MS. He keeps complex programs on track without being bureaucratic."
-      - Manager (Lisa): "Alex has strong execution skills. He needs to develop more strategic thinking — currently too focused on delivery mechanics."
-      - Stakeholders: "Alex managed the cloud migration program ($12M budget, 18-month timeline) and delivered on time and under budget."
-    2026 Goals:
-      G1: Lead the Orion platform rollout program across 5 business units
-      G2: Implement automated project health dashboards replacing manual status reports
-      G3: Develop strategic program management skills — complete executive PM course
-      G4: Establish vendor management framework for all TTIA external partnerships
-
-[19] Nadia Volkov — Associate, Program Manager
-    Reports to: Lisa Park
-    Tenure: 2 years at MS
-    Projects: AI/ML Team Sprint Management (lead), Orion Platform Rollout (supporting Alex), Capacity Planning Model (co-lead with Lisa)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Nadia's sprint retrospectives actually lead to improvements. She's great at identifying process bottlenecks."
-      - Manager (Lisa): "Nadia is growing fast. She needs more experience with large-scale programs and executive-level communication."
-      - Alex: "Nadia is my most reliable PM. She handles the AI team's sprints and keeps Priya's team on schedule."
-    2026 Goals:
-      G1: Lead the AI team's delivery for all 5 LLM application deployments
-      G2: Implement capacity planning model for AI/ML team resource allocation
-      G3: Develop executive communication skills — present at 2 steering committee meetings
-      G4: Achieve PMP certification
-
-[20] Brian Cooper — Analyst, Junior Program Coordinator
-    Reports to: Lisa Park
-    Tenure: 1 year at MS
-    Projects: TTIA Knowledge Base & Documentation Portal (lead — Lisa's G4), Orion Platform Rollout (coordination support), Meeting Operations & Communications (owner)
-    2025 Rating: Developing (3/5)
-    2025 360 Review Summary:
-      - Peers: "Brian is organized and keeps meeting notes meticulously. He needs to develop more proactive communication."
-      - Manager (Lisa): "Brian has solid foundational skills. He needs to develop confidence in stakeholder interactions and learn to escalate issues earlier."
-      - Alex: "Brian is reliable for coordination tasks. Ready to take on more PM responsibilities."
-    2026 Goals:
-      G1: Own the TTIA knowledge base and documentation portal (Lisa's G4)
-      G2: Lead coordination for 2 medium-complexity projects independently
-      G3: Complete Agile/Scrum certification
-      G4: Develop stakeholder management skills — lead 5 stakeholder meetings independently
-
-============================================================
-ADDITIONAL TEAM MEMBERS (Cross-functional / Specialized)
-============================================================
-
-[21] Marcus Thompson — Vice President, Security & Compliance Engineer
-    Reports to: Sarah Chen (dotted line to firm CISO)
-    Tenure: 7 years at MS
-    Projects: AI Security Framework (lead), Cloud Migration Phase 2 (security reviewer), Orion AI Platform Launch (security gate owner), CI/CD Security Automation (lead)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Marcus is the reason we passed every audit this year with zero findings. He's the security conscience of TTIA."
-      - Sarah Chen: "Marcus is critical to our AI deployment strategy. All model deployments must pass his security review. He needs to be more collaborative and less of a blocker."
-      - Priya: "Marcus's reviews are thorough but sometimes slow us down. We need to find a better balance between security and speed."
-    2026 Goals:
-      G1: Develop AI-specific security framework (model security, prompt injection protection, data privacy)
-      G2: Achieve zero security incidents for all TTIA production systems
-      G3: Implement automated security scanning in CI/CD pipeline — shift left
-      G4: Reduce security review turnaround from 5 days to 2 days without compromising quality
-
-[22] Emily Nakamura — Vice President, Data Governance Lead
-    Reports to: James Morrison (dotted line to Sarah Chen)
-    Tenure: 4 years at MS
-    Projects: Data Quality & Governance Program (lead), Analytics Marketplace (data governance reviewer), AI Data Governance Policies (lead), Data Catalog Expansion (lead)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Emily brought order to our data chaos. She implemented the data catalog and now we actually know what data we have."
-      - James: "Emily is essential to our data strategy. She bridges the gap between technical teams and business users."
-      - Stakeholders: "Emily's data lineage implementation helped us respond to regulatory inquiries in hours instead of weeks."
-    2026 Goals:
-      G1: Implement automated data lineage tracking across all 200+ data pipelines
-      G2: Launch data stewardship program — assign data owners for all critical datasets
-      G3: Develop AI data governance policies (training data provenance, bias detection, model lineage)
-      G4: Achieve 95% metadata coverage in the data catalog (currently 68%)
-
-[23] Daniel Okonkwo — Associate Vice President, DevOps Engineer
-    Reports to: David Kim (dotted line to James Morrison)
-    Tenure: 3 years at MS
-    Projects: Cloud Migration Phase 2 (DevOps lead), GitOps Workflow Implementation (lead), Observability Stack Upgrade (lead), Intern Program — DevOps (manager)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Daniel is a DevOps wizard. Our deployment frequency went from weekly to daily because of his automation."
-      - David Kim: "Daniel is strong technically and great at automating everything. He's ready for more leadership responsibility."
-      - James: "Daniel's observability stack (Datadog + PagerDuty) has dramatically improved our incident response time."
-    2026 Goals:
-      G1: Implement GitOps workflow for all TTIA infrastructure
-      G2: Achieve <15 minute mean-time-to-recovery for all P1 incidents
-      G3: Build cost monitoring and alerting for cloud infrastructure
-      G4: Lead the intern program for DevOps (manage 2 summer interns)
-
-[24] Fatima Al-Rashid — Associate, Business Analyst
-    Reports to: Lisa Park (dotted line to Michael Zhang)
-    Tenure: 2 years at MS
-    Projects: Analytics Marketplace (requirements lead — 5 business units), Orion Platform Rollout (business analysis), Standardized Requirements Framework (lead)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Fatima writes the best requirements documents I've seen. She truly understands business needs and translates them for engineers."
-      - Lisa: "Fatima bridges the gap between business and tech better than anyone. She should consider the analytics engineering path."
-      - Michael: "Fatima's requirements for the executive dashboard were so clear that we delivered it 2 weeks early."
-    2026 Goals:
-      G1: Lead requirements gathering for the analytics marketplace across all 5 business units
-      G2: Develop data analytics skills — complete Python and SQL advanced courses
-      G3: Create a standardized requirements template used across all TTIA projects
-      G4: Support 3 cross-functional initiatives as the primary BA
-
-[25] Raj Krishnamurthy — Associate Vice President, Full Stack Engineer
-    Reports to: Michael Zhang (dotted line to Priya Kapoor)
-    Tenure: 3 years at MS
-    Projects: Orion AI Platform (frontend lead), Analytics Marketplace (frontend architecture), TTIA Design System (co-lead with Hannah Lee), Mentoring Ryan Patel (frontend development)
-    2025 Rating: Exceptional (5/5)
-    2025 360 Review Summary:
-      - Peers: "Raj built the entire frontend for Orion in record time. His full-stack skills are rare and invaluable."
-      - Michael: "Raj is technically the strongest engineer on my team. He operates at VP-senior level. Pushing for VP promotion."
-      - Priya: "Raj is the bridge between my AI team and Michael's visualization team. His work on the Orion UI is outstanding."
-    2026 Goals:
-      G1: Architect and build the analytics marketplace frontend (React + GraphQL)
-      G2: Lead the design system initiative — create shared component library for all TTIA apps
-      G3: Improve frontend performance — achieve Lighthouse score of 95+ for all applications
-      G4: Mentor Ryan Patel on frontend development fundamentals
-
-[26] Isabella Rossi — Associate, QA & Test Automation Engineer
-    Reports to: Lisa Park
-    Tenure: 2 years at MS
-    Projects: Orion AI Platform (QA & test automation lead), AI Testing Framework (lead — bias/fairness testing), CI/CD Test Automation (contributor), Cloud Migration Phase 2 (test validation)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Isabella increased our test coverage from 40% to 82% this year. She's passionate about quality."
-      - Lisa: "Isabella is methodical and thorough. She caught a critical data leak bug before it reached production. Great instincts."
-      - Kevin: "Isabella's test suite for our ML models is innovative — she tests for bias, fairness, and edge cases."
-    2026 Goals:
-      G1: Achieve 90% automated test coverage across all TTIA applications
-      G2: Build AI-specific testing framework (model performance, bias, adversarial inputs)
-      G3: Implement continuous testing in CI/CD — all PRs must pass automated tests before merge
-      G4: Complete performance testing certification and establish load testing standards
-
-[27] Chris Lawson — Vice President, Solutions Architect
-    Reports to: Sarah Chen
-    Tenure: 6 years at MS
-    Projects: Orion AI Platform Launch (architecture reviewer), Cloud Migration Phase 2 (architecture reviewer), Enterprise Integration Architecture (lead), Architecture Review Board (chair)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Chris is the glue between TTIA and the rest of the firm. His architecture reviews ensure our systems integrate cleanly."
-      - Sarah: "Chris needs to be more decisive. He's excellent at analysis but sometimes gets stuck in 'analysis paralysis.' I need him to move faster."
-      - James: "Chris's API design standards have made cross-team integration much smoother."
-    2026 Goals:
-      G1: Design the enterprise integration architecture for Orion — APIs, event bus, and data contracts
-      G2: Lead architecture review board for all TTIA new system designs
-      G3: Evaluate and recommend multi-cloud strategy (AWS + Azure) for AI workloads
-      G4: Reduce architecture review cycle time from 2 weeks to 5 business days
-
-[28] Hannah Lee — Associate, UX Designer
-    Reports to: Michael Zhang
-    Tenure: 1.5 years at MS
-    Projects: Analytics Marketplace (UX design lead), TTIA Design System (co-lead with Raj), Orion AI Platform (UX contributor), Accessibility Compliance Initiative (lead)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Hannah transformed the look and feel of our applications. Before her, everything looked like a spreadsheet."
-      - Michael: "Hannah has great design sense but needs to learn more about data visualization best practices."
-      - Raj: "Hannah and I make a great team. Her designs are both beautiful and implementable."
-    2026 Goals:
-      G1: Design the complete UX for the analytics marketplace — user flows, wireframes, and high-fidelity prototypes
-      G2: Establish the TTIA design system in Figma — colors, components, patterns, accessibility guidelines
-      G3: Conduct usability testing for all new TTIA products — minimum 5 user tests per release
-      G4: Improve accessibility compliance — all TTIA apps must meet WCAG 2.1 AA standards
-
-[29] Patrick Dunn — Associate Vice President, Cloud Infrastructure Engineer
-    Reports to: David Kim
-    Tenure: 4 years at MS
-    Projects: Cloud Migration Phase 2 (co-lead with David Kim), Multi-Region Failover Design (lead), FinOps Practice (lead), GPU Infrastructure Evaluation (lead)
-    2025 Rating: Strong (4/5)
-    2025 360 Review Summary:
-      - Peers: "Patrick designed our disaster recovery architecture. His work ensures we can recover from any failure in under 30 minutes."
-      - David: "Patrick is solid and reliable. He's our cloud cost expert — saved $1.2M this year through right-sizing."
-      - James: "Patrick's infrastructure is bullet-proof. He thinks about edge cases that no one else considers."
-    2026 Goals:
-      G1: Design and implement multi-region failover for all critical TTIA systems
-      G2: Reduce cloud infrastructure costs by an additional $800K through reserved instances and savings plans
-      G3: Implement FinOps practice — monthly cost reports with optimization recommendations
-      G4: Evaluate GPU infrastructure options for AI workloads (on-prem vs cloud)
-
-[30] Nina Petrova — Analyst, Data Science Intern → Full-Time
-    Reports to: Priya Kapoor
-    Location: London
-    Tenure: 6 months (converted from internship)
-    Projects: Orion AI Platform (onboarding — supporting Sophia on evaluation), London AI Consulting (junior contributor), Model Evaluation Pipeline (learning, paired with Wei)
-    2025 Rating: Developing (3/5) — partial year review
-    2025 360 Review Summary:
-      - Peers: "Nina brought fresh perspectives from her PhD research. Her statistical rigor is impressive for her level."
-      - Priya: "Nina has a strong academic foundation. She needs to adapt to the pace and expectations of a production engineering team."
-      - Wei: "I'm mentoring Nina. She's quick to learn and not afraid to ask questions. Her research skills will be valuable for our AI work."
-    2026 Goals:
-      G1: Complete onboarding — understand all TTIA systems, processes, and tools by Q1 2026
-      G2: Build and deploy 1 ML model to production with full MLOps pipeline
-      G3: Support the London office with local AI consulting and stakeholder engagement
-      G4: Develop software engineering skills — learn Git, CI/CD, Docker basics
-
-============================================================
-CROSS-TEAM INITIATIVES & DEPENDENCIES (FY2026)
-============================================================
-
-Initiative: Orion AI Platform Launch
-  Lead: Kevin O'Brien (AI/ML) + Alex Rivera (Program Management)
-  Contributors: Sophia Martinez, Raj Krishnamurthy, Wei Liu, Isabella Rossi
-  Dependencies: Marcus Thompson (security review), Chris Lawson (architecture review)
-  Stakeholders: Fixed Income, Equities, Wealth Management business units
-  Timeline: Q1-Q3 2026
-  Budget: $4.2M
-  Risk: High — complex integration with 3 business units simultaneously
-
-Initiative: Analytics Marketplace
-  Lead: Jennifer Walsh (Analytics) + Hannah Lee (UX)
-  Contributors: Carlos Mendez, Yuki Tanaka, Raj Krishnamurthy, Fatima Al-Rashid
-  Dependencies: David Kim (platform), Emily Nakamura (data governance)
-  Timeline: Q1-Q2 2026
-  Budget: $1.8M
-
-Initiative: Cloud Migration Phase 2
-  Lead: David Kim (Data Engineering) + Patrick Dunn (Infrastructure)
-  Contributors: Anika Patel, Daniel Okonkwo, Omar Hassan
-  Dependencies: Marcus Thompson (security), Chris Lawson (architecture)
-  Timeline: Q1-Q4 2026
-  Budget: $3.1M
-
-Initiative: AI Center of Excellence
-  Lead: Priya Kapoor (AI/ML)
-  Contributors: Kevin O'Brien, Sophia Martinez, Wei Liu
-  Dependencies: Lisa Park (program management), Sarah Chen (executive sponsorship)
-  Timeline: Q1 2026 (launch), ongoing
-  Budget: $500K
-
-Initiative: Data Quality & Governance Program
-  Lead: Emily Nakamura (Data Governance)
-  Contributors: Anika Patel, Rachel Torres, David Kim
-  Dependencies: James Morrison (executive sponsor)
-  Timeline: Q1-Q4 2026
-  Budget: $800K
-
-============================================================
+============================
 KEY RISKS & TALENT FLAGS
-============================================================
+============================
 
-RETENTION RISK:
-  - Kevin O'Brien (HIGH) — Actively recruited by Google DeepMind and OpenAI. Comp review needed.
-  - Raj Krishnamurthy (HIGH) — Multiple offers from fintech startups. Wants equity-like incentives.
-  - Anika Patel (MEDIUM) — Satisfied but wants VP promotion. If delayed, may explore externally.
-  - Jennifer Walsh (MEDIUM) — Wants ED promotion path clarity. Needs visible executive sponsorship.
+RETENTION RISKS:
+  Kevin O'Brien — HIGH: Google DeepMind and OpenAI actively recruiting. Single point of failure on Orion ($4.2M), RAG Framework, and GenAI Training. If he leaves, Orion timeline slips 6+ months.
+  Raj Krishnamurthy — HIGH: Fintech startup offers. Owns Orion frontend AND Analytics Marketplace frontend. Losing him impacts both top initiatives simultaneously.
+  Anika Patel — MEDIUM: Wants VP promotion. If delayed past Q2, will explore externally.
+  Jennifer Walsh — MEDIUM: Wants ED promotion path. Needs executive sponsorship visibility.
 
 SUCCESSION PLANNING:
-  - Sarah Chen → James Morrison (primary) or Priya Kapoor (alternative)
-  - James Morrison → Anika Patel (primary) or David Kim (alternative)
-  - Priya Kapoor → Kevin O'Brien (primary)
-  - Michael Zhang → Jennifer Walsh (primary)
-  - Lisa Park → Alex Rivera (primary)
+  Sarah Chen → James Morrison (primary), Priya Kapoor (alternative)
+  James Morrison → Anika Patel (primary), David Kim (alternative)
+  Priya Kapoor → Kevin O'Brien (primary) ← AT RISK
+  Michael Zhang → Jennifer Walsh (primary) ← AT RISK
 
-DEVELOPMENT PRIORITIES:
-  - Omar Hassan: Needs accelerated development plan — pair with Anika
-  - Tomoko Yamada: Research-to-engineering transition support needed
-  - Ryan Patel: Foundational skills gap — structured learning path required
-  - Brian Cooper: Confidence building and stakeholder exposure needed
-  - Nina Petrova: Academic-to-industry transition — structured onboarding
-
-SKILL GAPS (Division-wide):
-  - GenAI/LLM expertise: Only 40% of engineers trained (target: 80%)
-  - Cloud cost optimization: Need FinOps practice established
-  - Executive communication: 60% of ICs below expected level for their grade
-  - Accessibility: No dedicated accessibility expertise — relying on Hannah part-time
-
-============================================================
-END OF DOCUMENT — FOR AUTHORIZED PERSONNEL ONLY
-============================================================
+CRITICAL DEPENDENCIES:
+  Kevin O'Brien is on 4 projects — single biggest point of failure in the division
+  Raj Krishnamurthy bridges AI and Analytics teams — only full-stack engineer
+  David Kim's platform is a dependency for Analytics Marketplace — any delay cascades
+  Security reviews (Marcus Thompson) are a gate for 2 of 3 major initiatives
