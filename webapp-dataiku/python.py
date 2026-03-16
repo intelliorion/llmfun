@@ -10,17 +10,26 @@ from flask import request, Response
 sessions = {}
 
 # --- LLM ---
-AVAILABLE_MODELS = {
-    'gpt-4o': 'openai:MSOpenAI:gpt-4o',
-    'gpt-5': 'openai:MSOpenAI:gpt-5'
-}
-DEFAULT_MODEL = 'gpt-4o'
-
-def get_llm(model_key=None):
+def get_project():
     client = dataiku.api_client()
-    project = client.get_default_project()
-    model_id = AVAILABLE_MODELS.get(model_key or DEFAULT_MODEL, AVAILABLE_MODELS[DEFAULT_MODEL])
-    return project.get_llm(model_id)
+    return client.get_default_project()
+
+def list_available_llms():
+    """List all LLM IDs available in this Dataiku project."""
+    project = get_project()
+    try:
+        llms = project.list_llms()
+        return [m['id'] for m in llms]
+    except Exception:
+        return []
+
+def get_llm(model_id=None):
+    project = get_project()
+    if model_id:
+        return project.get_llm(model_id)
+    # Default: pick the first available model
+    available = list_available_llms()
+    return project.get_llm(available[0] if available else 'openai:MSOpenAI:gpt-4o')
 
 llm = get_llm()
 
@@ -256,11 +265,11 @@ def get_full_context(G):
 
 
 # --- Background graph building ---
-def build_graph_async(session_id, text, model_key=None):
+def build_graph_async(session_id, text, model_id=None):
     session = sessions[session_id]
     session['status'] = 'analyzing'
     session['source_text'] = text
-    llm_inst = get_llm(model_key) if model_key else llm
+    llm_inst = get_llm(model_id) if model_id else llm
     session['llm_inst'] = llm_inst
 
     # Agent 0: Infer schema/ontology
@@ -491,6 +500,12 @@ def extract_text_from_file(file_obj, filename):
 
 
 # --- Flask Routes ---
+@app.route('/models')
+def api_models():
+    models = list_available_llms()
+    return json_response({'models': models})
+
+
 @app.route('/upload', methods=['POST'])
 def api_upload():
     if 'file' not in request.files:
@@ -521,8 +536,8 @@ def api_build():
         'errors': []
     }
 
-    model_key = data.get('model', DEFAULT_MODEL)
-    thread = threading.Thread(target=build_graph_async, args=(session_id, text, model_key))
+    model_id = data.get('model', None)
+    thread = threading.Thread(target=build_graph_async, args=(session_id, text, model_id))
     thread.daemon = True
     thread.start()
 

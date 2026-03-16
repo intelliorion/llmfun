@@ -78,22 +78,43 @@ for (var t = 0; t < toggleBtns.length; t++) {
     })(toggleBtns[t]);
 }
 
-// --- Model toggle ---
-var modelToggle = document.getElementById('model-toggle');
-var label4o = document.getElementById('label-4o');
-var label5 = document.getElementById('label-5');
+// --- Model selector (dynamic) ---
+var modelSelect = document.getElementById('model-select');
 
-modelToggle.addEventListener('change', function() {
-    if (modelToggle.checked) {
-        selectedModel = 'gpt-5';
-        label4o.classList.remove('active');
-        label5.classList.add('active');
-    } else {
-        selectedModel = 'gpt-4o';
-        label5.classList.remove('active');
-        label4o.classList.add('active');
-    }
+function loadModels() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', getBackendUrl('models'));
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            var data = JSON.parse(xhr.responseText);
+            var models = data.models || [];
+            modelSelect.innerHTML = '';
+            if (models.length === 0) {
+                modelSelect.innerHTML = '<option value="">No models available</option>';
+                return;
+            }
+            for (var i = 0; i < models.length; i++) {
+                var opt = document.createElement('option');
+                opt.value = models[i];
+                // Show a friendly label: extract model name from ID like "openai:MSOpenAI:gpt-4o"
+                var parts = models[i].split(':');
+                opt.textContent = parts[parts.length - 1];
+                modelSelect.appendChild(opt);
+            }
+            selectedModel = models[0];
+        }
+    };
+    xhr.onerror = function() {
+        modelSelect.innerHTML = '<option value="">Failed to load</option>';
+    };
+    xhr.send();
+}
+
+modelSelect.addEventListener('change', function() {
+    selectedModel = modelSelect.value;
 });
+
+loadModels();
 
 // --- File upload (multi-file) ---
 var fileUpload = document.getElementById('file-upload');
