@@ -589,6 +589,27 @@ Be concise and professional."""
     return json_response({'report': resp.text})
 
 
+MAX_HISTORY_TURNS = 10  # Keep last N Q&A pairs for context
+MAX_CONTEXT_CHARS = 6000  # Max chars for source text in context
+
+def build_qa_system_prompt(session):
+    """Build the system/context prompt once per session, with truncated source."""
+    ctx = get_full_context(session['graph'])
+    source = session['source_text']
+    if len(source) > MAX_CONTEXT_CHARS:
+        source = source[:MAX_CONTEXT_CHARS] + '\n[... truncated ...]'
+    return """You are a research assistant for the Orion platform. Answer questions using ONLY the provided data.
+If the answer is not in the data, say so. Be concise and professional.
+When referencing entities or relationships, be specific about names and types.
+If a follow-up question references something from the conversation, use context from previous exchanges.
+
+Entity & Relationship Data:
+""" + ctx + """
+
+Source Text:
+""" + source
+
+
 @app.route('/ask/<session_id>', methods=['POST'])
 def api_ask(session_id):
     session = sessions.get(session_id)
@@ -600,25 +621,24 @@ def api_ask(session_id):
     if not question:
         return json_response({'error': 'No question provided'}, 400)
 
-    ctx = get_full_context(session['graph'])
-    prompt = """You are a research assistant. Answer the question using ONLY the provided data.
-If the answer is not in the data, say so.
-
-Knowledge Graph:
-""" + ctx + """
-
-Source Text:
-""" + session['source_text'] + """
-
-Question: """ + question + """
-
-Answer concisely."""
-
     _llm = session.get('llm_inst', llm)
     completion = _llm.new_completion()
-    completion.with_message(prompt)
+
+    # System context with entity data
+    system_prompt = build_qa_system_prompt(session)
+    completion.with_message(system_prompt, role='system')
+
+    # Sliding window: include last N turns of conversation history
+    history = session.get('messages', [])
+    window = history[-(MAX_HISTORY_TURNS * 2):]  # Each turn = 2 messages (user + assistant)
+    for msg in window:
+        completion.with_message(msg['content'], role=msg['role'])
+
+    # Current question
+    completion.with_message(question, role='user')
     resp = completion.execute()
 
+    # Append to history
     session['messages'].append({'role': 'user', 'content': question})
     session['messages'].append({'role': 'assistant', 'content': resp.text})
 
