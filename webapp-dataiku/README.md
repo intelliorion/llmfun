@@ -1,212 +1,221 @@
 # Orion
 
-**Morgan Stanley TTIA — AI-Powered Entity & Relationship Intelligence**
+**Morgan Stanley CS TTIA — AI-Powered Entity & Relationship Intelligence**
 
-Orion transforms unstructured text and documents into interactive, explorable entity maps — automatically discovering people, organizations, concepts, and their connections using a 3-agent LLM pipeline built on Dataiku.
+> *"We have 30 people, 5 cross-team initiatives, hundreds of goals, reviews, and dependencies — and no way to see how it all connects. Until now."*
 
 ---
 
-## Why Use Orion
+## The Challenge
 
-Traditional entity analysis requires manual schema design, tagging, and relationship mapping — a process that can take weeks for even a small corpus. Orion eliminates this by:
+Every large technology division faces the same invisible problem: **your most critical data about people, projects, and performance lives in disconnected documents** — spreadsheets, review packets, goal trackers, org charts, email threads. Leaders make talent decisions, allocate resources, and plan succession based on incomplete pictures assembled manually from dozens of sources.
 
-- **Automating ontology design** — An AI agent reads your data and infers the right entity types and relationships, so you don't have to define a schema upfront.
-- **Handling messy, real-world data** — Paste raw text, upload PDFs, Excel spreadsheets, Word docs, emails, or CSVs. Orion preserves structure (e.g., pairing column headers with row values) and extracts meaning from unstructured prose.
-- **Resolving duplicates intelligently** — A dedicated deduplication agent identifies abbreviations, typos, and partial names, merging them into single canonical entities.
-- **Making results immediately explorable** — The interactive visualization lets you click, search, filter, and export — no additional tooling required.
+Consider a real scenario:
 
-## When to Use It
+- **Sarah Chen** runs a 30-person division with $15M in budget across 5 major initiatives
+- Her **annual talent review** spans 30 employees, 120+ goals, 90+ peer reviews, retention risks, succession plans, and cross-team dependencies
+- **One question** — *"If Kevin O'Brien leaves, what breaks?"* — requires mentally tracing connections across people, projects, skills, and reporting lines that no single document captures
+- **Traditional approach**: Weeks of manual analysis, PowerPoint slides, and spreadsheets that are outdated the moment they're created
 
-| Scenario | Example |
+This is not a data problem. It's a **connection problem**. The data exists — it's just trapped in text.
+
+---
+
+## What Orion Does
+
+Orion transforms unstructured documents into a **live, interactive knowledge graph** — automatically discovering entities (people, teams, projects, goals, reviews) and mapping every relationship between them using a multi-agent LLM pipeline built on Dataiku.
+
+**In under 2 minutes**, Orion turns a talent review packet into a fully explorable map where you can:
+
+- See which employees are single points of failure across initiatives
+- Trace how a retention risk cascades through project dependencies
+- Identify skill gaps, blocked goals, and succession vulnerabilities
+- Run **What-If simulations** — *"What happens if we lose our top ML engineer?"* — and watch AI agents model the ripple effects across the organization
+
+---
+
+## The Team Management Use Case
+
+### Why This Matters for CS TTIA
+
+Morgan Stanley's CS TTIA division has **30 employees across 5 teams and 3 locations** working on 5 major cross-functional initiatives totaling **$10.4M in budget**. The talent landscape includes:
+
+| Dimension | Scale |
 |---|---|
-| **Analyzing reports or filings** | Paste a quarterly earnings transcript to map companies, people, divisions, and their relationships |
-| **Exploring structured datasets** | Upload an employee directory (XLSX/CSV) to visualize org structure, titles, and locations |
-| **Research & due diligence** | Feed in research notes or news articles to surface connections between entities |
-| **Quick prototyping** | Test whether an entity mapping approach adds value to a use case before investing in a full pipeline |
-| **Meeting prep** | Build a map from briefing docs to quickly understand the landscape of people, orgs, and topics |
+| Employees | 30 (MD → Analyst, across New York, London, Hong Kong) |
+| Teams | 5 (Data Engineering, AI/ML, Analytics, Program Management, Cross-functional) |
+| FY2026 Initiatives | 5 ($10.4M combined budget) |
+| Individual Goals | 120+ (4-5 per employee) |
+| 360 Reviews | 90+ feedback entries (peers, managers, skip-level, stakeholders) |
+| Retention Risks | 4 flagged (2 HIGH — actively recruited by FAANG) |
+| Succession Plans | 5 critical leadership positions mapped |
+
+**No human can hold all of this in their head.** Traditional tools show you a flat org chart or a spreadsheet. Orion shows you the **living network** — who depends on whom, which projects share critical people, where the hidden risks are.
+
+### What Orion Reveals
+
+When you feed the TTIA talent review into Orion, it automatically discovers:
+
+- **People ↔ Project connections**: Kevin O'Brien is the technical lead on Orion ($4.2M) AND leads the GenAI Training Program AND the RAG Framework — he's a 3x single point of failure
+- **Cross-team dependencies**: The Analytics Marketplace ($1.8M) depends on David Kim's platform work AND Emily Nakamura's governance review — a bottleneck invisible in any org chart
+- **Cascading risks**: If Raj Krishnamurthy (HIGH retention risk) leaves, it impacts Orion's frontend, the Analytics Marketplace architecture, the TTIA Design System, AND Ryan Patel loses his mentor
+- **Goal alignment gaps**: Marcus Thompson's security reviews are a dependency for 2 of 5 initiatives — but his own goal is to reduce review time from 5 days to 2 days, creating tension between thoroughness and speed
+
+### What-If Simulation
+
+Orion's What-If engine goes beyond static analysis. Powered by multi-agent simulation inspired by swarm intelligence:
+
+1. **Immediate Impact** — What breaks right now?
+2. **Ripple Effects** — How does the impact propagate through the network?
+3. **Adaptation** — How does the organization reorganize?
+
+Ask: *"What if Kevin O'Brien accepts the Google DeepMind offer?"*
+
+Orion's AI agents roleplay as each affected entity — modeling how Priya Kapoor reassigns work, how the Orion timeline slips, who can absorb the RAG Framework ownership, and what the $4.2M budget impact looks like. You can then **interview individual agents** to drill deeper: *"Kevin, what would it take to stay?"*
 
 ---
 
 ## How It Works
 
-Orion uses a **3-agent pipeline**, each powered by an LLM via Dataiku's LLM Mesh (model is selectable from a dropdown in the header). The agents work sequentially — each agent's output feeds directly into the next:
+### Multi-Agent LLM Pipeline
+
+Orion uses a **3-agent pipeline** powered by any LLM via Dataiku's LLM Mesh:
 
 ```
-  Raw Text
+  Documents (PDF, XLSX, DOCX, PPTX, Images, Email, CSV, TXT)
+     │
+     ▼  LLM Vision OCR (for PDFs, images, presentations)
      │
      ▼
-┌──────────────────┐    Ontology (entity types    ┌──────────────────┐
-│   Agent 0         │    + relationship types)      │   Agent 1         │
-│   Schema Inference │──────────────────────────────▶│   Entity Extraction│
-│                    │                              │                    │
-│ Reads a sample of  │                              │ Receives the       │
-│ your data, infers  │                              │ ontology from      │
-│ a focused ontology │                              │ Agent 0 and uses   │
-│ (3-8 entity types, │                              │ it to extract      │
-│ 3-10 relationship  │                              │ entities and       │
-│ types)             │                              │ relationships from │
-│                    │                              │ each text chunk    │
-└──────────────────┘                              └────────┬───────────┘
-                                                           │
-                                                  All extracted entities
-                                                  + relationships
-                                                           │
-                                                           ▼
-                                                ┌──────────────────┐
-                                                │   Agent 2         │
-                                                │   Deduplication    │
-                                                │                    │
-                                                │ Receives the full  │
-                                                │ entity map from    │
-                                                │ Agent 1, scans all │
-                                                │ entity names and   │
-                                                │ merges duplicates, │
-                                                │ typos, and abbrevs │
-                                                │ into canonical     │
-                                                │ forms. Returns the │
-                                                │ cleaned final map  │
-                                                └──────────────────┘
-                                                           │
-                                                           ▼
-                                                   Final Entity Map
+┌──────────────────┐         ┌──────────────────┐         ┌──────────────────┐
+│   Agent 0         │         │   Agent 1         │         │   Agent 2         │
+│   Schema          │────────▶│   Entity          │────────▶│   Deduplication   │
+│   Inference       │ ontology│   Extraction      │ raw map │                   │
+│                   │         │                   │         │   Merges variants, │
+│ Reads data sample,│         │ Extracts entities │         │   typos, abbrevs  │
+│ infers entity &   │         │ & relationships   │         │   into canonical  │
+│ relationship types│         │ per chunk (live)   │         │   forms           │
+└──────────────────┘         └──────────────────┘         └──────────────────┘
+                                                                    │
+                                                                    ▼
+                                                          Final Knowledge Graph
+                                                          + What-If Simulation
+                                                          + Report & Q&A
 ```
 
-1. **Agent 0 — Schema Inference**: Analyzes a sample of your data and defines a focused ontology (3–8 entity types, 3–10 relationship types). This ontology is passed to Agent 1 to constrain extraction and keep results clean and consistent.
-2. **Agent 1 — Entity Extraction**: Receives the ontology from Agent 0 and processes your text in chunks, extracting entities and relationships constrained to those types. The visualization updates progressively as each chunk is processed. Once all chunks are done, the accumulated results are passed to Agent 2.
-3. **Agent 2 — Deduplication**: Receives the full entity map from Agent 1 and scans all entity names to identify duplicates (abbreviations, typos, partial names). It maps variants to canonical forms and merges the corresponding nodes and edges, producing the final cleaned output.
+1. **Agent 0 — Schema Inference**: Analyzes a sample and defines a focused ontology (3–8 entity types, 3–10 relationship types). Domain templates (e.g., Team Management) can pre-seed the schema for specialized use cases.
+2. **Agent 1 — Entity Extraction**: Processes text in chunks, extracting entities and relationships. The graph renders progressively in real-time.
+3. **Agent 2 — Deduplication**: Scans all entity names, identifies duplicates (abbreviations, typos, partial names), and merges them into canonical forms.
 
----
+### Document Intelligence
 
-## How to Use
+Orion uses **LLM Vision OCR** — a world-class, enterprise-grade document extraction engine — for PDFs, images, and presentations. Every page is rendered as a high-resolution image and processed by the multimodal LLM, capturing:
 
-### 1. Provide Your Data
+- Text, tables, charts, and diagrams
+- Embedded images and annotations
+- Layout and structural relationships
+- Handwritten notes and scanned documents
 
-You have two options:
-
-- **Paste Text**: Switch to the "Paste Text" tab and paste any text — earnings transcripts, meeting notes, research summaries, etc.
-- **Upload Files**: Switch to the "Upload File" tab and drag-and-drop or click to upload. Supported formats:
-  - `.txt`, `.md` — Plain text and Markdown
-  - `.csv`, `.xlsx` — Tabular data (headers are automatically paired with values)
-  - `.pdf` — PDF documents
-  - `.docx` — Word documents
-  - `.pptx` — PowerPoint presentations
-  - `.msg`, `.eml` — Email files (subject, sender, recipients, and body extracted)
-
-  You can upload multiple files at once or add files one by one. Each file appears in the file list and can be removed individually before building.
-
-### 2. Build
-
-Click **"Build Knowledge Graph"**. You'll see progress indicators for each stage:
-
-1. **Analyzing data** — Agent 0 infers the ontology. A schema card appears showing discovered entity types and relationship types.
-2. **Extracting entities** — Agent 1 processes chunks. The visualization renders progressively, and the stats bar updates in real-time.
-3. **Resolving duplicates** — Agent 2 merges variants.
-4. **Complete** — The final entity map is ready to explore.
-
-### 3. Explore
-
-#### Graph View (Graph Tab)
-- **Click a node** to open the detail panel showing its name, type, description, and all connections.
-- **Click an edge** to see the source, target, relationship type, and description.
-- **Search** — Type in the search bar to highlight matching entities. Non-matching nodes fade out, and the view focuses on the first match.
-- **Filter by type** — Click any legend item to hide/show entities of that type.
-- **Zoom & fit** — Use the `+`, `−`, and fit-to-screen buttons in the toolbar.
-- **Toggle edge labels** — Click "Aa" in the toolbar to show/hide relationship labels.
-- **Export** — Click the export button to download as:
-  - **PNG** — Image of the current view
-  - **JSON** — Full entity and relationship data
-  - **CSV** — Entities and relationships in tabular format
-
-#### Entities Tab
-A tabular view with two side-by-side tables:
-- **Entities** — Name, type, and description for every extracted entity
-- **Relationships** — Source, relation, target, and description for every connection
-
-#### Report Tab
-Click **"Generate Report"** to produce an AI-written summary covering key entities, relationships, and insights.
-
-#### Q&A Tab
-Ask natural-language questions about your data. After building, suggested questions are auto-generated based on the extracted entities (e.g., "What are the key relationships involving [top entity]?"). Click any suggestion or type your own question.
-
-### 4. Start Over
-
-Click **"Start Over"** to reset everything — uploaded files, visualization, stats, and all panels — and begin with a fresh dataset.
-
----
-
-## Deployment
-
-Orion runs as a **Dataiku Webapp** (Standard, Code-based). It consists of four files:
-
-| File | Purpose |
+| Format | Extraction Method |
 |---|---|
-| `python.py` | Flask backend — LLM pipeline, file parsing, session management |
-| `html.html` | UI structure |
-| `css.css` | Styling |
-| `js.js` | Frontend logic — visualization, interactions, export |
+| `.pdf` | LLM Vision OCR — every page rendered as 2x PNG |
+| `.pptx` | LLM Vision OCR + speaker notes extraction |
+| `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`, `.tiff`, `.webp` | Direct LLM Vision OCR |
+| `.csv`, `.xlsx` | Structured: headers paired with values per row |
+| `.docx` | Paragraph-by-paragraph text extraction |
+| `.msg`, `.eml` | Email parsing (subject, sender, recipients, body) |
+| `.txt`, `.md` | Plain text |
+
+### Interactive Exploration
+
+- **Graph View**: Click nodes/edges for detail panels. Search, filter by type, toggle labels, zoom/fit. Export as PNG, JSON, or CSV.
+- **Entities Tab**: Tabular view of all entities and relationships with descriptions.
+- **Report Tab**: AI-generated executive summary of key findings.
+- **Q&A Tab**: Natural language questions with auto-suggested queries based on your data.
+- **What-If Tab**: Multi-round agent simulation with entity interviews.
+
+### Performance Optimization
+
+Orion automatically adapts to large graphs:
+- **50+ nodes**: Auto-clusters entity types for cleaner visualization
+- **80+ nodes**: Performance mode — simplified rendering, straight edges, reduced physics
+- Physics engine freezes after stabilization for smooth interaction
+
+---
+
+## Quick Start
 
 ### Prerequisites
 
-- **Dataiku DSS** instance with access to the LLM Mesh
-- **LLM Connection**: At least one LLM configured in the project's LLM Mesh (e.g., `openai:MSOpenAI:gpt-4o`). All available models are automatically listed in the UI dropdown.
-- **Python packages** (available in the Dataiku code env): `networkx`, `openpyxl`, `python-pptx`, `pdfplumber`
-- **vis.js** is loaded from CDN (`unpkg.com/vis-network`)
+- **Dataiku DSS** with LLM Mesh access
+- **LLM Connection**: At least one LLM (e.g., `openai:MSOpenAI:gpt-4o`). Multimodal model recommended for Vision OCR.
+- **Python packages**: `networkx`, `openpyxl`, `python-pptx`, `PyMuPDF` (fitz)
+- **vis.js** loaded from CDN
 
 ### Setup
 
-1. In Dataiku, create a new **Webapp** (Standard type, code-based).
-2. Copy the contents of each file into the corresponding tab in the webapp editor:
-   - `python.py` → Python tab
-   - `html.html` → HTML tab
-   - `css.css` → CSS tab
-   - `js.js` → JS tab
-3. Start the webapp backend. The app is ready to use.
+1. Create a new **Webapp** in Dataiku (Standard, code-based)
+2. Copy files into the webapp editor:
 
-### Customization
-
-- **LLM model**: All models available in your Dataiku LLM Mesh are automatically listed in the header dropdown. Select your preferred model before building. No code changes needed.
-- **Color palette**: Edit `ORION_COLORS` in `python.py` to match your brand.
-- **Schema prompt**: Adjust `SCHEMA_PROMPT` to bias the ontology toward specific domains.
-- **Chunk size**: Modify `chunk_size` in `build_graph_async()` to control how text is split for extraction (default: 3000 characters).
-
----
-
-## Supported File Formats
-
-| Format | Parsing Approach |
+| File | Tab |
 |---|---|
-| `.txt`, `.md` | Read as plain text |
-| `.csv` | Record-per-row format: each row becomes a `[Record N]` block with `Header: Value` pairs |
-| `.xlsx` | Same as CSV — first sheet is read, headers paired with values per row |
-| `.pdf` | Text extraction via `pdfplumber`, page by page |
-| `.docx` | Paragraph-by-paragraph text extraction |
-| `.pptx` | Slide-by-slide, extracting text from all shapes |
-| `.msg` | Subject, sender, recipients, and body extracted |
-| `.eml` | Standard email parsing (headers + body) |
+| `python.py` | Python |
+| `html.html` | HTML |
+| `css.css` | CSS |
+| `js.js` | JS |
+
+3. Start the backend. Upload the included `demo_team_management.txt` to see Orion in action.
+
+### Demo: Team Management
+
+1. Select **"Team Management & Performance"** from the domain dropdown
+2. Upload `demo_team_management.txt` (30-employee talent review packet)
+3. Click **Build Knowledge Graph** — watch the org map emerge in real-time
+4. Explore: Click on Kevin O'Brien to see his 4 project dependencies
+5. Switch to **What-If** tab → Try: *"What if Kevin O'Brien leaves for Google DeepMind?"*
+6. Interview the agents: Click on Priya Kapoor's card to ask how she'd reorganize
 
 ---
 
 ## Architecture
 
 ```
-Browser (vis.js)          Dataiku Webapp Backend (Flask)
-┌──────────────┐         ┌──────────────────────────────┐
-│  html/css/js │◀───────▶│  python.py                   │
-│              │  REST   │                              │
-│  - vis.js    │  API    │  GET  /models                │
-│  - detail    │         │  POST /upload                │
-│    panel     │         │  POST /build                 │
-│  - search    │         │  GET  /status/<id>           │
-│  - export    │         │  POST /report/<id>           │
-│              │         │  POST /ask/<id>              │
-└──────────────┘         │                              │
-                         │  ┌──────────┐  ┌──────────┐  │
-                         │  │ NetworkX │  │ Dataiku  │  │
-                         │  │ DiGraph  │  │ LLM Mesh │  │
-                         │  └──────────┘  └──────────┘  │
-                         └──────────────────────────────┘
+Browser (vis.js)              Dataiku Webapp Backend (Flask)
+┌──────────────────┐         ┌─────────────────────────────────────┐
+│  html/css/js     │◀───────▶│  python.py                          │
+│                  │  REST   │                                     │
+│  - Knowledge     │  API    │  GET  /models                      │
+│    Graph (vis.js)│  + SSE  │  POST /upload          (SSE stream) │
+│  - Detail Panel  │         │  POST /build                        │
+│  - Search/Filter │         │  GET  /status/<id>                  │
+│  - What-If Sim   │         │  POST /report/<id>                  │
+│  - Report & Q&A  │         │  POST /ask/<id>                     │
+│  - Export        │         │  POST /whatif/<id>                   │
+│                  │         │  POST /whatif_interview/<id>         │
+│                  │         │  POST /whatif_suggestions/<id>       │
+└──────────────────┘         │                                     │
+                             │  ┌──────────┐  ┌─────────────────┐  │
+                             │  │ NetworkX │  │ Dataiku LLM Mesh│  │
+                             │  │ DiGraph  │  │ (multimodal)    │  │
+                             │  └──────────┘  └─────────────────┘  │
+                             └─────────────────────────────────────┘
 ```
 
-- **Session-based**: Each build creates a session with a unique ID. Multiple users can work concurrently.
-- **Progressive rendering**: The frontend polls `/status/<id>` every 2 seconds during build, rendering new entities and connections as they arrive.
-- **In-memory**: Data lives in a Python dictionary (`sessions`). Restarting the webapp backend clears all sessions.
+- **Session-based**: Each build creates a unique session. Multiple users work concurrently.
+- **Progressive rendering**: Frontend polls `/status/<id>` every 2s, rendering entities as they arrive.
+- **SSE streaming**: File upload progress streams in real-time with technique badges (e.g., "LLM Vision OCR").
+- **In-memory**: Sessions live in a Python dict. Restart clears all data.
+
+---
+
+## Customization
+
+- **LLM model**: Select from the header dropdown — all Dataiku LLM Mesh models listed automatically
+- **Domain templates**: Pre-built schemas for Team Management, and extensible for other domains
+- **Color palette**: Edit `ORION_COLORS` in `python.py`
+- **Schema prompt**: Adjust `SCHEMA_PROMPT` for domain-specific ontology bias
+- **Chunk size**: Modify `chunk_size` in `build_graph_async()` (default: 3000 chars)
+
+---
+
+*Built by CS TTIA. Powered by Dataiku LLM Mesh.*

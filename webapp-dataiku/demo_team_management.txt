@@ -117,7 +117,7 @@ DATA ENGINEERING TEAM (Reports to James Morrison)
 [6] Anika Patel — Vice President, Senior Data Engineer
     Reports to: James Morrison
     Tenure: 6 years at MS
-    Skills: Spark, Airflow, Python, AWS, Kafka, SQL, Data Modeling
+    Projects: Cloud Migration Phase 2 (contributor), Data Quality & Governance Program (contributor), Real-Time Streaming Initiative (lead)
     2025 Rating: Exceptional (5/5)
     2025 360 Review Summary:
       - Peers: "Anika is the go-to person for any complex data pipeline challenge. She redesigned the equity reference data feed and reduced latency by 80%."
@@ -132,11 +132,11 @@ DATA ENGINEERING TEAM (Reports to James Morrison)
 [7] David Kim — Vice President, Data Platform Engineer
     Reports to: James Morrison
     Tenure: 5 years at MS
-    Skills: Kubernetes, Docker, Terraform, CI/CD, Python, Databricks
+    Projects: Cloud Migration Phase 2 (co-lead with Patrick Dunn), Analytics Marketplace (platform dependency), Self-Service Data Platform (lead)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "David built our entire CI/CD pipeline for data workloads. He's methodical and his infrastructure never breaks."
-      - Manager (James): "David is strong technically but needs to develop more cross-team communication skills. He tends to work in isolation."
+      - Manager (James): "David is strong technically but needs to develop more cross-team communication skills. He tends to work in isolation. His Cloud Migration collab with Patrick is a good stretch."
       - Stakeholders: "David's platform improvements reduced deployment time from 4 hours to 15 minutes."
     2026 Goals:
       G1: Design and deploy self-service data platform (Databricks + Delta Lake) by Q2 2026
@@ -147,7 +147,7 @@ DATA ENGINEERING TEAM (Reports to James Morrison)
 [8] Rachel Torres — Associate, Data Engineer
     Reports to: James Morrison
     Tenure: 2 years at MS
-    Skills: Python, SQL, Airflow, dbt, Snowflake
+    Projects: Data Quality & Governance Program (contributor), Finance Data Mart (lead), shadowing Anika on Real-Time Streaming
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Rachel has grown tremendously in 2 years. She owns the entire finance data domain and handles it with maturity beyond her level."
@@ -162,7 +162,7 @@ DATA ENGINEERING TEAM (Reports to James Morrison)
 [9] Omar Hassan — Analyst, Junior Data Engineer
     Reports to: James Morrison
     Tenure: 1 year at MS (joined from campus)
-    Skills: Python, SQL, basic Spark, Git
+    Projects: Cloud Migration Phase 2 (junior contributor), Pipeline Automation (supporting Anika)
     2025 Rating: Developing (3/5)
     2025 360 Review Summary:
       - Peers: "Omar is eager to learn and asks great questions. His code quality has improved significantly since joining."
@@ -181,7 +181,7 @@ AI & MACHINE LEARNING TEAM (Reports to Priya Kapoor)
 [10] Kevin O'Brien — Vice President, Senior ML Engineer
     Reports to: Priya Kapoor
     Tenure: 4 years at MS
-    Skills: PyTorch, TensorFlow, LLMs, NLP, MLOps, Python, Kubernetes
+    Projects: Orion AI Platform (technical lead), AI Center of Excellence (contributor), GenAI Training Program (lead), RAG Framework (lead)
     2025 Rating: Exceptional (5/5)
     2025 360 Review Summary:
       - Peers: "Kevin built our LLM fine-tuning pipeline that serves 5 business units. He's one of the top ML engineers in all of MS technology."
@@ -197,7 +197,7 @@ AI & MACHINE LEARNING TEAM (Reports to Priya Kapoor)
 [11] Wei Liu — Associate Vice President, ML Engineer
     Reports to: Priya Kapoor
     Tenure: 3 years at MS
-    Skills: Python, scikit-learn, PyTorch, NLP, Computer Vision, AWS SageMaker
+    Projects: Orion AI Platform (contributor — vision/OCR module), Document Processing Pipeline (lead), AI Center of Excellence (contributor)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Wei is incredibly productive. He shipped 8 models to production this year — more than anyone else on the team."
@@ -212,7 +212,7 @@ AI & MACHINE LEARNING TEAM (Reports to Priya Kapoor)
 [12] Sophia Martinez — Associate, ML Engineer
     Reports to: Priya Kapoor
     Tenure: 2 years at MS
-    Skills: Python, NLP, Transformers, LangChain, Prompt Engineering
+    Projects: Orion AI Platform (core developer — Agent pipeline), AI Center of Excellence (contributor), Prompt Evaluation Framework (lead)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Sophia's prompt engineering skills are exceptional. She built the Agent 0 schema detection system for Orion in just 2 weeks."
@@ -228,7 +228,7 @@ AI & MACHINE LEARNING TEAM (Reports to Priya Kapoor)
     Reports to: Priya Kapoor
     Location: Hong Kong
     Tenure: 1 year at MS
-    Skills: Python, basic ML, data analysis, Jupyter, pandas
+    Projects: Orion AI Platform (junior contributor — data labeling & evaluation), AI Center of Excellence (workshop coordinator — Hong Kong), Model Evaluation Pipeline (supporting Wei)
     2025 Rating: Developing (3/5)
     2025 360 Review Summary:
       - Peers: "Tomoko is diligent and thorough in her data analysis work. She needs more ML engineering skills."
@@ -247,7 +247,7 @@ ANALYTICS & VISUALIZATION TEAM (Reports to Michael Zhang)
 [14] Jennifer Walsh — Vice President, Senior Analytics Engineer
     Reports to: Michael Zhang
     Tenure: 6 years at MS
-    Skills: Tableau, Plotly, D3.js, SQL, Python, Streamlit, React
+    Projects: Analytics Marketplace (design lead — templates & UX), Executive Dashboard Modernization (lead), Real-Time Trading Floor Dashboard (maintainer)
     2025 Rating: Exceptional (5/5)
     2025 360 Review Summary:
       - Peers: "Jennifer's executive dashboards are legendary. The CFO personally requested she redesign the firmwide P&L view."
@@ -262,7 +262,7 @@ ANALYTICS & VISUALIZATION TEAM (Reports to Michael Zhang)
 [15] Carlos Mendez — Associate Vice President, Analytics Engineer
     Reports to: Michael Zhang
     Tenure: 3 years at MS
-    Skills: Python, SQL, Plotly, Streamlit, Tableau, dbt
+    Projects: Analytics Marketplace (contributor — backend data transforms), Tableau-to-Streamlit Migration (lead), Automated Reporting Pipeline (maintainer)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Carlos is incredibly reliable. He built the automated reporting pipeline that replaced 12 manual reports."
@@ -278,7 +278,7 @@ ANALYTICS & VISUALIZATION TEAM (Reports to Michael Zhang)
     Reports to: Michael Zhang
     Location: London
     Tenure: 2 years at MS
-    Skills: SQL, Excel, Tableau, basic Python, Power BI
+    Projects: Analytics Marketplace (contributor — user research & templates), Dashboard Design System (contributor with Hannah Lee), London Office Analytics Support (lead)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Yuki has an eye for design. Her dashboards are both functional and beautiful. She's the best at user research on the team."
@@ -293,7 +293,7 @@ ANALYTICS & VISUALIZATION TEAM (Reports to Michael Zhang)
 [17] Ryan Patel — Analyst, Junior Data Analyst
     Reports to: Michael Zhang
     Tenure: 1 year at MS
-    Skills: SQL, Excel, basic Tableau, Google Sheets
+    Projects: CS Operational Metrics Report (owner), Analytics Marketplace (junior contributor — testing & feedback), Dashboard QA Support (supporting Jennifer)
     2025 Rating: Developing (3/5)
     2025 360 Review Summary:
       - Peers: "Ryan is enthusiastic and a fast learner. He needs to develop more attention to detail — his reports sometimes have data accuracy issues."
@@ -312,7 +312,7 @@ PROGRAM MANAGEMENT & DELIVERY TEAM (Reports to Lisa Park)
 [18] Alex Rivera — Associate Vice President, Senior Program Manager
     Reports to: Lisa Park
     Tenure: 5 years at MS
-    Skills: Agile, Scrum, JIRA, Confluence, Stakeholder Management, Risk Management
+    Projects: Orion AI Platform Launch (program manager), Cloud Migration Phase 2 (program oversight), Vendor Management Framework (lead)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Alex is the best PM I've worked with at MS. He keeps complex programs on track without being bureaucratic."
@@ -327,7 +327,7 @@ PROGRAM MANAGEMENT & DELIVERY TEAM (Reports to Lisa Park)
 [19] Nadia Volkov — Associate, Program Manager
     Reports to: Lisa Park
     Tenure: 2 years at MS
-    Skills: Scrum, JIRA, Confluence, Communication, Process Improvement
+    Projects: AI/ML Team Sprint Management (lead), Orion Platform Rollout (supporting Alex), Capacity Planning Model (co-lead with Lisa)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Nadia's sprint retrospectives actually lead to improvements. She's great at identifying process bottlenecks."
@@ -342,7 +342,7 @@ PROGRAM MANAGEMENT & DELIVERY TEAM (Reports to Lisa Park)
 [20] Brian Cooper — Analyst, Junior Program Coordinator
     Reports to: Lisa Park
     Tenure: 1 year at MS
-    Skills: JIRA, basic project management, communication, Excel
+    Projects: TTIA Knowledge Base & Documentation Portal (lead — Lisa's G4), Orion Platform Rollout (coordination support), Meeting Operations & Communications (owner)
     2025 Rating: Developing (3/5)
     2025 360 Review Summary:
       - Peers: "Brian is organized and keeps meeting notes meticulously. He needs to develop more proactive communication."
@@ -361,7 +361,7 @@ ADDITIONAL TEAM MEMBERS (Cross-functional / Specialized)
 [21] Marcus Thompson — Vice President, Security & Compliance Engineer
     Reports to: Sarah Chen (dotted line to firm CISO)
     Tenure: 7 years at MS
-    Skills: Security Architecture, SOC2, Data Privacy, GDPR, Encryption, IAM
+    Projects: AI Security Framework (lead), Cloud Migration Phase 2 (security reviewer), Orion AI Platform Launch (security gate owner), CI/CD Security Automation (lead)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Marcus is the reason we passed every audit this year with zero findings. He's the security conscience of TTIA."
@@ -376,7 +376,7 @@ ADDITIONAL TEAM MEMBERS (Cross-functional / Specialized)
 [22] Emily Nakamura — Vice President, Data Governance Lead
     Reports to: James Morrison (dotted line to Sarah Chen)
     Tenure: 4 years at MS
-    Skills: Data Governance, Metadata Management, Data Lineage, Collibra, Alation
+    Projects: Data Quality & Governance Program (lead), Analytics Marketplace (data governance reviewer), AI Data Governance Policies (lead), Data Catalog Expansion (lead)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Emily brought order to our data chaos. She implemented the data catalog and now we actually know what data we have."
@@ -391,7 +391,7 @@ ADDITIONAL TEAM MEMBERS (Cross-functional / Specialized)
 [23] Daniel Okonkwo — Associate Vice President, DevOps Engineer
     Reports to: David Kim (dotted line to James Morrison)
     Tenure: 3 years at MS
-    Skills: Kubernetes, Docker, Terraform, AWS, GitHub Actions, Monitoring (Datadog)
+    Projects: Cloud Migration Phase 2 (DevOps lead), GitOps Workflow Implementation (lead), Observability Stack Upgrade (lead), Intern Program — DevOps (manager)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Daniel is a DevOps wizard. Our deployment frequency went from weekly to daily because of his automation."
@@ -406,7 +406,7 @@ ADDITIONAL TEAM MEMBERS (Cross-functional / Specialized)
 [24] Fatima Al-Rashid — Associate, Business Analyst
     Reports to: Lisa Park (dotted line to Michael Zhang)
     Tenure: 2 years at MS
-    Skills: Requirements Gathering, SQL, Tableau, Stakeholder Management, JIRA
+    Projects: Analytics Marketplace (requirements lead — 5 business units), Orion Platform Rollout (business analysis), Standardized Requirements Framework (lead)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Fatima writes the best requirements documents I've seen. She truly understands business needs and translates them for engineers."
@@ -421,7 +421,7 @@ ADDITIONAL TEAM MEMBERS (Cross-functional / Specialized)
 [25] Raj Krishnamurthy — Associate Vice President, Full Stack Engineer
     Reports to: Michael Zhang (dotted line to Priya Kapoor)
     Tenure: 3 years at MS
-    Skills: React, TypeScript, Python, FastAPI, PostgreSQL, Redis, GraphQL
+    Projects: Orion AI Platform (frontend lead), Analytics Marketplace (frontend architecture), TTIA Design System (co-lead with Hannah Lee), Mentoring Ryan Patel (frontend development)
     2025 Rating: Exceptional (5/5)
     2025 360 Review Summary:
       - Peers: "Raj built the entire frontend for Orion in record time. His full-stack skills are rare and invaluable."
@@ -436,7 +436,7 @@ ADDITIONAL TEAM MEMBERS (Cross-functional / Specialized)
 [26] Isabella Rossi — Associate, QA & Test Automation Engineer
     Reports to: Lisa Park
     Tenure: 2 years at MS
-    Skills: Selenium, Cypress, Python, Test Strategy, API Testing, Performance Testing
+    Projects: Orion AI Platform (QA & test automation lead), AI Testing Framework (lead — bias/fairness testing), CI/CD Test Automation (contributor), Cloud Migration Phase 2 (test validation)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Isabella increased our test coverage from 40% to 82% this year. She's passionate about quality."
@@ -451,7 +451,7 @@ ADDITIONAL TEAM MEMBERS (Cross-functional / Specialized)
 [27] Chris Lawson — Vice President, Solutions Architect
     Reports to: Sarah Chen
     Tenure: 6 years at MS
-    Skills: System Design, AWS, Azure, Enterprise Architecture, API Design, Integration
+    Projects: Orion AI Platform Launch (architecture reviewer), Cloud Migration Phase 2 (architecture reviewer), Enterprise Integration Architecture (lead), Architecture Review Board (chair)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Chris is the glue between TTIA and the rest of the firm. His architecture reviews ensure our systems integrate cleanly."
@@ -466,7 +466,7 @@ ADDITIONAL TEAM MEMBERS (Cross-functional / Specialized)
 [28] Hannah Lee — Associate, UX Designer
     Reports to: Michael Zhang
     Tenure: 1.5 years at MS
-    Skills: Figma, User Research, Prototyping, Design Systems, Accessibility, CSS
+    Projects: Analytics Marketplace (UX design lead), TTIA Design System (co-lead with Raj), Orion AI Platform (UX contributor), Accessibility Compliance Initiative (lead)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Hannah transformed the look and feel of our applications. Before her, everything looked like a spreadsheet."
@@ -481,7 +481,7 @@ ADDITIONAL TEAM MEMBERS (Cross-functional / Specialized)
 [29] Patrick Dunn — Associate Vice President, Cloud Infrastructure Engineer
     Reports to: David Kim
     Tenure: 4 years at MS
-    Skills: AWS, Terraform, Kubernetes, Networking, Cost Optimization, DR Planning
+    Projects: Cloud Migration Phase 2 (co-lead with David Kim), Multi-Region Failover Design (lead), FinOps Practice (lead), GPU Infrastructure Evaluation (lead)
     2025 Rating: Strong (4/5)
     2025 360 Review Summary:
       - Peers: "Patrick designed our disaster recovery architecture. His work ensures we can recover from any failure in under 30 minutes."
@@ -497,7 +497,7 @@ ADDITIONAL TEAM MEMBERS (Cross-functional / Specialized)
     Reports to: Priya Kapoor
     Location: London
     Tenure: 6 months (converted from internship)
-    Skills: Python, R, Statistics, basic ML, Jupyter, pandas, visualization
+    Projects: Orion AI Platform (onboarding — supporting Sophia on evaluation), London AI Consulting (junior contributor), Model Evaluation Pipeline (learning, paired with Wei)
     2025 Rating: Developing (3/5) — partial year review
     2025 360 Review Summary:
       - Peers: "Nina brought fresh perspectives from her PhD research. Her statistical rigor is impressive for her level."
