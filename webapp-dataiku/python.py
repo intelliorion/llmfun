@@ -527,7 +527,8 @@ def api_status(session_id):
         'current_chunk': session['current_chunk'],
         'total_chunks': session['total_chunks'],
         'graph_data': session['graph_data'],
-        'errors': session.get('errors', [])
+        'errors': session.get('errors', []),
+        'schema': session.get('schema', None)
     })
 
 

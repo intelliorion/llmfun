@@ -58,6 +58,9 @@ Industry analysts from Barclays and UBS forecast that wealth management will rem
             <div class="tab" data-target="panel-qa">Q&A</div>
         </div>
 
+        <!-- Stats bar -->
+        <div class="stats-bar" id="stats-bar"></div>
+
         <!-- Graph Panel -->
         <div class="tab-panel active" id="panel-graph">
             <div id="graph-container">
@@ -67,6 +70,28 @@ Industry analysts from Barclays and UBS forecast that wealth management will rem
                 </div>
 
                 <div id="vis-graph" style="width:100%;height:100%;"></div>
+
+                <!-- Graph toolbar -->
+                <div class="graph-toolbar" id="graph-toolbar" style="display:none;">
+                    <button class="toolbar-btn" id="btn-zoom-in" title="Zoom in">+</button>
+                    <button class="toolbar-btn" id="btn-zoom-out" title="Zoom out">&minus;</button>
+                    <button class="toolbar-btn" id="btn-fit" title="Fit to screen">&#x2922;</button>
+                    <div class="toolbar-sep"></div>
+                    <button class="toolbar-btn active" id="btn-edge-labels" title="Toggle edge labels">Aa</button>
+                    <div class="toolbar-sep"></div>
+                    <div class="toolbar-search">
+                        <input type="text" id="graph-search" placeholder="Search...">
+                    </div>
+                    <div class="toolbar-sep"></div>
+                    <div class="toolbar-export-wrap">
+                        <button class="toolbar-btn" id="btn-export" title="Export">&#x21E9;</button>
+                        <div class="export-dropdown" id="export-dropdown">
+                            <div class="export-option" data-format="png">Export as PNG</div>
+                            <div class="export-option" data-format="json">Export as JSON</div>
+                            <div class="export-option" data-format="csv">Export as CSV</div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Step indicators -->
                 <div class="step-indicators" id="step-indicators" style="display:none;">
@@ -88,8 +113,20 @@ Industry analysts from Barclays and UBS forecast that wealth management will rem
                     </div>
                 </div>
 
+                <!-- Schema display -->
+                <div class="schema-display" id="schema-display" style="display:none;"></div>
+
+                <!-- Detail panel -->
+                <div class="detail-panel" id="detail-panel">
+                    <div class="detail-header">
+                        <span class="detail-title" id="detail-title"></span>
+                        <button class="detail-close" id="detail-close">&times;</button>
+                    </div>
+                    <div class="detail-body" id="detail-body"></div>
+                </div>
+
                 <!-- Legend -->
-                <div class="graph-legend">
+                <div class="graph-legend" id="graph-legend">
                     <b>Entity Types</b>
                     <div id="legend-items"></div>
                 </div>
@@ -146,6 +183,7 @@ Industry analysts from Barclays and UBS forecast that wealth management will rem
                         </div>
                     </div>
                 </div>
+                <div class="suggested-questions" id="suggested-questions"></div>
                 <div class="chat-input-area">
                     <input type="text" id="chat-input" placeholder="Ask a question...">
                     <button id="chat-send">Send</button>

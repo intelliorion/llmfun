@@ -3,6 +3,9 @@ var network = null;
 var visNodes = null;
 var visEdges = null;
 var pollingTimer = null;
+var graphDataStore = null; // Full graph data for lookups
+var edgeLabelsVisible = true;
+var hiddenTypes = {};
 
 // --- Dynamic color palette for entity types ---
 var COLOR_PALETTE = [
@@ -56,7 +59,6 @@ for (var i = 0; i < allTabs.length; i++) {
     })(allTabs[i]);
 }
 
-// --- File upload ---
 // --- Input mode toggle ---
 var toggleBtns = document.querySelectorAll('.toggle-btn');
 var inputModes = document.querySelectorAll('.input-mode');
@@ -80,7 +82,7 @@ var fileUpload = document.getElementById('file-upload');
 var fileInput = document.getElementById('file-input');
 var fileListEl = document.getElementById('file-list');
 var textarea = document.getElementById('text-input');
-var uploadedFiles = []; // {name, text, id}
+var uploadedFiles = [];
 var fileIdCounter = 0;
 
 var UPLOAD_AREA_HTML = '<div class="upload-icon">+</div><div class="upload-text">Drop files or click to upload</div><div class="file-types">.txt .md .csv .pdf .docx .pptx .xlsx .msg .eml</div>';
@@ -111,7 +113,6 @@ function renderFileList() {
             '<button class="file-item-remove" data-id="' + f.id + '">\u00d7</button>';
         fileListEl.appendChild(item);
     });
-    // Bind remove buttons
     var removeBtns = fileListEl.querySelectorAll('.file-item-remove');
     for (var i = 0; i < removeBtns.length; i++) {
         (function(btn) {
@@ -130,7 +131,6 @@ function processFiles(files) {
                 reader.onload = function(ev) { addFile(file.name, ev.target.result); };
                 reader.readAsText(file);
             } else {
-                // Show parsing state
                 fileUpload.innerHTML = '<span class="spinner"></span><div class="upload-text">Parsing ' + file.name + '...</div>';
                 var formData = new FormData();
                 formData.append('file', file);
@@ -172,41 +172,38 @@ fileInput.addEventListener('change', function(e) {
 // --- Start Over ---
 var resetBtn = document.getElementById('btn-reset');
 resetBtn.addEventListener('click', function() {
-    // Clear session
     sessionId = null;
     if (pollingTimer) { clearInterval(pollingTimer); pollingTimer = null; }
-
-    // Clear uploaded files
     uploadedFiles = [];
     uploadedText = '';
     fileIdCounter = 0;
     renderFileList();
     fileInput.value = '';
-
-    // Clear text input
     textarea.value = '';
-
-    // Clear graph and reset colors
     if (visNodes) visNodes.clear();
     if (visEdges) visEdges.clear();
     ENTITY_COLORS = {};
     colorIndex = 0;
+    graphDataStore = null;
+    hiddenTypes = {};
     document.getElementById('legend-items').innerHTML = '';
-
-    // Clear tables, report, chat
     document.getElementById('entities-table-body').innerHTML = '';
     document.getElementById('relationships-table-body').innerHTML = '';
     document.getElementById('report-content').innerHTML = '<p style="color:var(--text-tertiary);">Click "Generate Report" after building a graph.</p>';
     document.getElementById('chat-messages').innerHTML = '<div class="empty-state" id="chat-empty"><div><p style="font-size:14px;">Ask questions about your knowledge graph</p></div></div>';
-
-    // Reset UI state
+    document.getElementById('suggested-questions').innerHTML = '';
+    document.getElementById('suggested-questions').classList.remove('visible');
+    document.getElementById('stats-bar').classList.remove('visible');
+    document.getElementById('stats-bar').innerHTML = '';
+    document.getElementById('schema-display').style.display = 'none';
+    document.getElementById('graph-toolbar').style.display = 'none';
+    document.getElementById('detail-panel').classList.remove('open');
+    document.getElementById('graph-search').value = '';
     resetSteps();
     document.getElementById('building-hint').classList.remove('visible');
     buildBtn.disabled = false;
     buildBtn.textContent = 'Build Knowledge Graph';
     resetBtn.style.display = 'none';
-
-    // Switch to Graph tab
     for (var j = 0; j < allTabs.length; j++) allTabs[j].classList.remove('active');
     for (var j = 0; j < allPanels.length; j++) allPanels[j].classList.remove('active');
     allTabs[0].classList.add('active');
@@ -236,6 +233,25 @@ function setProgress(pct) {
     document.getElementById('progress-bar').style.width = pct + '%';
 }
 
+// --- Stats bar ---
+function updateStats(graphData) {
+    if (!graphData) return;
+    var bar = document.getElementById('stats-bar');
+    var nodeCount = graphData.nodes.length;
+    var edgeCount = graphData.edges.length;
+    var types = {};
+    graphData.nodes.forEach(function(n) { types[n.type] = true; });
+    var typeCount = Object.keys(types).length;
+    if (nodeCount > 0) {
+        bar.innerHTML = '<b>' + nodeCount + '</b> entities' +
+            '<span class="stat-sep">\u00b7</span>' +
+            '<b>' + edgeCount + '</b> relationships' +
+            '<span class="stat-sep">\u00b7</span>' +
+            '<b>' + typeCount + '</b> types';
+        bar.classList.add('visible');
+    }
+}
+
 // --- Build graph ---
 var buildBtn = document.getElementById('btn-build');
 
@@ -246,11 +262,15 @@ buildBtn.addEventListener('click', function() {
     buildBtn.disabled = true;
     buildBtn.textContent = 'Building...';
     resetSteps();
+    document.getElementById('schema-display').style.display = 'none';
+    document.getElementById('stats-bar').classList.remove('visible');
 
     document.getElementById('entities-table-body').innerHTML = '';
     document.getElementById('relationships-table-body').innerHTML = '';
     document.getElementById('report-content').innerHTML = '';
     document.getElementById('chat-messages').innerHTML = '';
+    document.getElementById('suggested-questions').innerHTML = '';
+    document.getElementById('suggested-questions').classList.remove('visible');
 
     waitForVis(function() {
         initGraph();
@@ -322,11 +342,282 @@ function initGraph() {
     };
 
     network = new vis.Network(container, {nodes: visNodes, edges: visEdges}, options);
+
+    // --- Node/Edge click handler for detail panel ---
+    network.on('click', function(params) {
+        var detailPanel = document.getElementById('detail-panel');
+        if (params.nodes.length > 0) {
+            showNodeDetail(params.nodes[0]);
+        } else if (params.edges.length > 0) {
+            showEdgeDetail(params.edges[0]);
+        } else {
+            detailPanel.classList.remove('open');
+        }
+    });
+}
+
+// --- Detail panel ---
+function showNodeDetail(nodeId) {
+    if (!graphDataStore) return;
+    var node = null;
+    graphDataStore.nodes.forEach(function(n) { if (n.id === nodeId) node = n; });
+    if (!node) return;
+
+    var color = getEntityColor(node.type);
+    var html = '<div class="detail-section">' +
+        '<div class="detail-section-title">Type</div>' +
+        '<span class="detail-badge" style="background:' + color + '">' + node.type + '</span>' +
+        '</div>';
+
+    html += '<div class="detail-section">' +
+        '<div class="detail-section-title">Description</div>' +
+        '<div class="detail-value">' + (node.description || 'No description') + '</div>' +
+        '</div>';
+
+    // Find all connections
+    var connections = [];
+    graphDataStore.edges.forEach(function(e) {
+        if (e.from === nodeId) {
+            connections.push({dir: 'out', rel: e.relation, target: e.to, desc: e.description});
+        }
+        if (e.to === nodeId) {
+            connections.push({dir: 'in', rel: e.relation, target: e.from, desc: e.description});
+        }
+    });
+
+    if (connections.length > 0) {
+        html += '<div class="detail-section">' +
+            '<div class="detail-section-title">Connections (' + connections.length + ')</div>';
+        connections.forEach(function(c) {
+            var arrow = c.dir === 'out' ? '\u2192' : '\u2190';
+            html += '<div class="detail-rel">' +
+                '<div class="detail-rel-label">' + arrow + ' ' + c.rel + ' ' + arrow + ' ' + c.target + '</div>' +
+                (c.desc ? '<div class="detail-rel-desc">' + c.desc + '</div>' : '') +
+                '</div>';
+        });
+        html += '</div>';
+    }
+
+    document.getElementById('detail-title').textContent = node.fullName;
+    document.getElementById('detail-body').innerHTML = html;
+    document.getElementById('detail-panel').classList.add('open');
+}
+
+function showEdgeDetail(edgeId) {
+    if (!graphDataStore) return;
+    var visEdge = visEdges.get(edgeId);
+    if (!visEdge) return;
+
+    var edge = null;
+    graphDataStore.edges.forEach(function(e) {
+        if (e.from === visEdge.from && e.to === visEdge.to) edge = e;
+    });
+    if (!edge) return;
+
+    var html = '<div class="detail-section">' +
+        '<div class="detail-section-title">Source</div>' +
+        '<div class="detail-value">' + edge.from + '</div>' +
+        '</div>';
+    html += '<div class="detail-section">' +
+        '<div class="detail-section-title">Relationship</div>' +
+        '<div class="detail-value"><b>' + edge.relation + '</b></div>' +
+        '</div>';
+    html += '<div class="detail-section">' +
+        '<div class="detail-section-title">Target</div>' +
+        '<div class="detail-value">' + edge.to + '</div>' +
+        '</div>';
+    html += '<div class="detail-section">' +
+        '<div class="detail-section-title">Description</div>' +
+        '<div class="detail-value">' + (edge.description || 'No description') + '</div>' +
+        '</div>';
+
+    document.getElementById('detail-title').textContent = edge.relation;
+    document.getElementById('detail-body').innerHTML = html;
+    document.getElementById('detail-panel').classList.add('open');
+}
+
+document.getElementById('detail-close').addEventListener('click', function() {
+    document.getElementById('detail-panel').classList.remove('open');
+});
+
+// --- Graph toolbar ---
+document.getElementById('btn-zoom-in').addEventListener('click', function() {
+    if (network) {
+        var scale = network.getScale() * 1.3;
+        network.moveTo({scale: scale});
+    }
+});
+document.getElementById('btn-zoom-out').addEventListener('click', function() {
+    if (network) {
+        var scale = network.getScale() / 1.3;
+        network.moveTo({scale: scale});
+    }
+});
+document.getElementById('btn-fit').addEventListener('click', function() {
+    if (network) network.fit({animation: true});
+});
+
+// Edge label toggle
+document.getElementById('btn-edge-labels').addEventListener('click', function() {
+    edgeLabelsVisible = !edgeLabelsVisible;
+    this.classList.toggle('active', edgeLabelsVisible);
+    if (network) {
+        network.setOptions({
+            edges: { font: { size: edgeLabelsVisible ? 9 : 0 } }
+        });
+    }
+});
+
+// --- Search & Highlight ---
+document.getElementById('graph-search').addEventListener('input', function() {
+    var query = this.value.trim().toLowerCase();
+    if (!visNodes || !graphDataStore) return;
+
+    if (!query) {
+        // Restore all nodes
+        graphDataStore.nodes.forEach(function(n) {
+            var nodeColor = getEntityColor(n.type);
+            visNodes.update({
+                id: n.id, size: 18, borderWidth: 2,
+                color: {
+                    background: nodeColor,
+                    border: 'rgba(255,255,255,0.8)',
+                    highlight: {background: nodeColor, border: '#1a1a1a'},
+                    hover: {background: nodeColor, border: '#1a1a1a'}
+                },
+                font: {color: '#1a1a1a'}
+            });
+        });
+        return;
+    }
+
+    var firstMatch = null;
+    graphDataStore.nodes.forEach(function(n) {
+        var match = n.fullName.toLowerCase().indexOf(query) !== -1 ||
+                    n.type.toLowerCase().indexOf(query) !== -1;
+        var nodeColor = getEntityColor(n.type);
+        if (match) {
+            if (!firstMatch) firstMatch = n.id;
+            visNodes.update({
+                id: n.id, size: 26, borderWidth: 4,
+                color: {
+                    background: nodeColor,
+                    border: '#1a1a1a',
+                    highlight: {background: nodeColor, border: '#1a1a1a'},
+                    hover: {background: nodeColor, border: '#1a1a1a'}
+                },
+                font: {color: '#1a1a1a'}
+            });
+        } else {
+            visNodes.update({
+                id: n.id, size: 14, borderWidth: 1,
+                color: {
+                    background: nodeColor + '40',
+                    border: 'rgba(200,200,200,0.3)',
+                    highlight: {background: nodeColor, border: '#1a1a1a'},
+                    hover: {background: nodeColor, border: '#1a1a1a'}
+                },
+                font: {color: '#ccc'}
+            });
+        }
+    });
+
+    if (firstMatch && network) {
+        network.focus(firstMatch, {scale: 1.2, animation: true});
+    }
+});
+
+// --- Export ---
+var exportBtn = document.getElementById('btn-export');
+var exportDropdown = document.getElementById('export-dropdown');
+
+exportBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    exportDropdown.classList.toggle('open');
+});
+
+document.addEventListener('click', function() {
+    exportDropdown.classList.remove('open');
+});
+
+document.querySelectorAll('.export-option').forEach(function(opt) {
+    opt.addEventListener('click', function() {
+        var format = this.getAttribute('data-format');
+        exportDropdown.classList.remove('open');
+        if (format === 'png') exportPNG();
+        else if (format === 'json') exportJSON();
+        else if (format === 'csv') exportCSV();
+    });
+});
+
+function exportPNG() {
+    if (!network) return;
+    var canvas = network.canvas.frame.canvas;
+    var link = document.createElement('a');
+    link.download = 'orion-graph.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
+
+function exportJSON() {
+    if (!graphDataStore) return;
+    var blob = new Blob([JSON.stringify(graphDataStore, null, 2)], {type: 'application/json'});
+    var link = document.createElement('a');
+    link.download = 'orion-graph.json';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+}
+
+function exportCSV() {
+    if (!graphDataStore) return;
+    var csv = 'ENTITIES\nName,Type,Description\n';
+    graphDataStore.nodes.forEach(function(n) {
+        csv += '"' + n.fullName.replace(/"/g, '""') + '","' + n.type + '","' + (n.description || '').replace(/"/g, '""') + '"\n';
+    });
+    csv += '\nRELATIONSHIPS\nSource,Relation,Target,Description\n';
+    graphDataStore.edges.forEach(function(e) {
+        csv += '"' + e.from.replace(/"/g, '""') + '","' + e.relation + '","' + e.to.replace(/"/g, '""') + '","' + (e.description || '').replace(/"/g, '""') + '"\n';
+    });
+    var blob = new Blob([csv], {type: 'text/csv'});
+    var link = document.createElement('a');
+    link.download = 'orion-graph.csv';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+}
+
+// --- Schema display ---
+function showSchema(schema) {
+    if (!schema) return;
+    var el = document.getElementById('schema-display');
+    var html = '<b>Detected Schema</b>';
+
+    if (schema.description) {
+        html += '<div style="margin-top:6px;color:var(--text-secondary);font-size:11px;">' + schema.description + '</div>';
+    }
+
+    if (schema.entity_types && schema.entity_types.length > 0) {
+        html += '<div class="schema-types">';
+        schema.entity_types.forEach(function(t) {
+            var color = getEntityColor(t);
+            html += '<span class="schema-type-badge" style="background:' + color + '">' + t + '</span>';
+        });
+        html += '</div>';
+    }
+
+    if (schema.relationship_types && schema.relationship_types.length > 0) {
+        html += '<div class="schema-rels">' + schema.relationship_types.join(' \u00b7 ') + '</div>';
+    }
+
+    el.innerHTML = html;
+    el.style.display = 'block';
 }
 
 // --- Polling ---
+var schemaShown = false;
+
 function startPolling() {
     if (pollingTimer) clearInterval(pollingTimer);
+    schemaShown = false;
     pollingTimer = setInterval(function() {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', getBackendUrl('status/' + sessionId));
@@ -344,9 +635,14 @@ function startPolling() {
             } else if (data.status === 'building') {
                 var pct = Math.round((data.current_chunk / data.total_chunks) * 100);
                 hintText.textContent = 'Extracting entities... ' + data.current_chunk + '/' + data.total_chunks;
-                setProgress(10 + pct * 0.7); // 10-80% for extraction
+                setProgress(10 + pct * 0.7);
                 setStep('step-schema', 'done');
                 setStep('step-extract', 'active');
+                // Show schema once when transitioning to building
+                if (!schemaShown && data.schema) {
+                    showSchema(data.schema);
+                    schemaShown = true;
+                }
             } else if (data.status === 'deduplicating') {
                 hintText.textContent = 'Resolving duplicate entities...';
                 setProgress(90);
@@ -356,6 +652,7 @@ function startPolling() {
             }
 
             updateGraph(data.graph_data);
+            updateStats(data.graph_data);
 
             if (data.status === 'done') {
                 clearInterval(pollingTimer);
@@ -373,11 +670,16 @@ function startPolling() {
                 visNodes.clear();
                 visEdges.clear();
                 updateGraph(data.graph_data);
+                updateStats(data.graph_data);
                 updateTables(data.graph_data);
-                // Fade out progress after a moment
+                generateSuggestedQuestions(data.graph_data);
+                // Show toolbar
+                document.getElementById('graph-toolbar').style.display = 'flex';
+                // Hide schema after a delay, step indicators take its place
                 setTimeout(function() {
                     document.getElementById('progress-container').style.display = 'none';
-                }, 2000);
+                    document.getElementById('schema-display').style.display = 'none';
+                }, 3000);
             }
         };
         xhr.send();
@@ -387,6 +689,7 @@ function startPolling() {
 // --- Update graph incrementally ---
 function updateGraph(graphData) {
     if (!graphData || !visNodes || !visEdges) return;
+    graphDataStore = graphData;
 
     var existingNodeIds = {};
     visNodes.getIds().forEach(function(id) { existingNodeIds[id] = true; });
@@ -405,7 +708,9 @@ function updateGraph(graphData) {
                     border: 'rgba(255,255,255,0.8)',
                     highlight: {background: nodeColor, border: '#1a1a1a'},
                     hover: {background: nodeColor, border: '#1a1a1a'}
-                }
+                },
+                _type: n.type,
+                hidden: !!hiddenTypes[n.type]
             });
         }
     });
@@ -430,8 +735,22 @@ function updateLegend(typeColors) {
     for (var type in typeColors) {
         var color = getEntityColor(type);
         var item = document.createElement('div');
-        item.className = 'legend-item';
+        item.className = 'legend-item' + (hiddenTypes[type] ? ' hidden' : '');
+        item.setAttribute('data-type', type);
         item.innerHTML = '<span class="legend-dot" style="background:' + color + '"></span>' + type;
+        // Click to toggle type visibility
+        (function(t) {
+            item.addEventListener('click', function() {
+                hiddenTypes[t] = !hiddenTypes[t];
+                this.classList.toggle('hidden', hiddenTypes[t]);
+                // Update node visibility
+                visNodes.get().forEach(function(n) {
+                    if (n._type === t) {
+                        visNodes.update({id: n.id, hidden: hiddenTypes[t]});
+                    }
+                });
+            });
+        })(type);
         container.appendChild(item);
     }
 }
@@ -458,6 +777,57 @@ function updateTables(graphData) {
             '<td>' + e.description + '</td>';
         tbody2.appendChild(tr);
     });
+}
+
+// --- Suggested questions ---
+function generateSuggestedQuestions(graphData) {
+    if (!graphData || graphData.nodes.length === 0) return;
+
+    var questions = [];
+    var typeCounts = {};
+    graphData.nodes.forEach(function(n) {
+        typeCounts[n.type] = (typeCounts[n.type] || 0) + 1;
+    });
+
+    // Most common type
+    var topType = Object.keys(typeCounts).sort(function(a, b) { return typeCounts[b] - typeCounts[a]; })[0];
+    if (topType) {
+        questions.push('What are the key ' + topType.toLowerCase() + 's in this data?');
+    }
+
+    // Most connected node
+    var connCount = {};
+    graphData.edges.forEach(function(e) {
+        connCount[e.from] = (connCount[e.from] || 0) + 1;
+        connCount[e.to] = (connCount[e.to] || 0) + 1;
+    });
+    var topEntity = Object.keys(connCount).sort(function(a, b) { return connCount[b] - connCount[a]; })[0];
+    if (topEntity) {
+        questions.push('Tell me about ' + topEntity);
+    }
+
+    // Relationship question
+    if (graphData.edges.length > 0) {
+        questions.push('What are the main relationships in this data?');
+    }
+
+    // Summary
+    questions.push('Summarize the key findings');
+
+    var container = document.getElementById('suggested-questions');
+    container.innerHTML = '';
+    questions.forEach(function(q) {
+        var btn = document.createElement('div');
+        btn.className = 'suggested-q';
+        btn.textContent = q;
+        btn.addEventListener('click', function() {
+            document.getElementById('chat-input').value = q;
+            sendMessage();
+            container.classList.remove('visible');
+        });
+        container.appendChild(btn);
+    });
+    container.classList.add('visible');
 }
 
 // --- Report ---
