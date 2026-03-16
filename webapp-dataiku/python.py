@@ -813,35 +813,78 @@ def extract_text_from_file(file_obj, filename, llm_inst=None, on_progress=None):
             return '[Error: python-docx not installed for DOCX support]'
 
     elif ext == 'pptx':
+        pptx_bytes = file_obj.read()
+        # Try rendering slides as images via PyMuPDF for full LLM Vision extraction
         try:
-            _progress('Parsing PowerPoint slides...', 'python-pptx')
-            from pptx import Presentation
-            prs = Presentation(io.BytesIO(file_obj.read()))
-            parts = ['[Presentation: ' + filename + ', ' + str(len(prs.slides)) + ' slides]', '']
-            for i, slide in enumerate(prs.slides):
-                slide_texts = []
-                for shape in slide.shapes:
-                    if shape.has_text_frame:
-                        for para in shape.text_frame.paragraphs:
-                            t = para.text.strip()
-                            if t:
-                                slide_texts.append(t)
-                    if shape.has_table:
-                        table = shape.table
-                        for row in table.rows:
-                            cells = [cell.text.strip() for cell in row.cells]
-                            slide_texts.append(' | '.join(cells))
-                if slide.has_notes_slide and slide.notes_slide.notes_text_frame:
-                    notes = slide.notes_slide.notes_text_frame.text.strip()
-                    if notes:
-                        slide_texts.append('[Speaker Notes] ' + notes)
-                if slide_texts:
+            import fitz
+            doc = fitz.open(stream=pptx_bytes, filetype='pptx')
+            total_slides = len(doc)
+            _progress('Opened PPTX — ' + str(total_slides) + ' slides. Using LLM Vision for full capture.', 'LLM Vision')
+            parts = ['[Presentation: ' + filename + ', ' + str(total_slides) + ' slides]', '']
+            # Also extract speaker notes via python-pptx (vision can't see these)
+            slide_notes = {}
+            try:
+                from pptx import Presentation
+                prs = Presentation(io.BytesIO(pptx_bytes))
+                for ni, slide in enumerate(prs.slides):
+                    if slide.has_notes_slide and slide.notes_slide.notes_text_frame:
+                        notes = slide.notes_slide.notes_text_frame.text.strip()
+                        if notes:
+                            slide_notes[ni] = notes
+            except Exception:
+                pass
+            for i, page in enumerate(doc):
+                _progress('Slide ' + str(i+1) + '/' + str(total_slides) + ' — rendering & sending to LLM Vision...', 'LLM Vision')
+                mat = fitz.Matrix(2.0, 2.0)
+                pix = page.get_pixmap(matrix=mat)
+                img_bytes = pix.tobytes('png')
+                try:
+                    slide_text = ocr_image_with_llm(img_bytes, mime_type='image/png', llm_inst=llm_inst)
+                    if slide_text and slide_text != '[No text detected]':
+                        parts.append('--- Slide ' + str(i+1) + ' ---')
+                        parts.append(slide_text)
+                        if i in slide_notes:
+                            parts.append('[Speaker Notes] ' + slide_notes[i])
+                        parts.append('')
+                    _progress('Slide ' + str(i+1) + '/' + str(total_slides) + ' — complete', 'LLM Vision')
+                except Exception as e:
                     parts.append('--- Slide ' + str(i+1) + ' ---')
-                    parts.extend(slide_texts)
+                    parts.append('[Vision failed: ' + str(e) + ']')
                     parts.append('')
+                    _progress('Slide ' + str(i+1) + ' — failed: ' + str(e), 'LLM Vision')
+            _progress('All ' + str(total_slides) + ' slides processed via LLM Vision', 'Done')
             return '\n'.join(parts)
-        except ImportError:
-            return '[Error: python-pptx not installed for PPTX support]'
+        except (ImportError, Exception):
+            # Fallback to text-only extraction if PyMuPDF can't render PPTX
+            try:
+                _progress('PyMuPDF unavailable for PPTX rendering — falling back to text extraction...', 'python-pptx')
+                from pptx import Presentation
+                prs = Presentation(io.BytesIO(pptx_bytes))
+                parts = ['[Presentation: ' + filename + ', ' + str(len(prs.slides)) + ' slides]', '']
+                for i, slide in enumerate(prs.slides):
+                    slide_texts = []
+                    for shape in slide.shapes:
+                        if shape.has_text_frame:
+                            for para in shape.text_frame.paragraphs:
+                                t = para.text.strip()
+                                if t:
+                                    slide_texts.append(t)
+                        if shape.has_table:
+                            table = shape.table
+                            for row in table.rows:
+                                cells = [cell.text.strip() for cell in row.cells]
+                                slide_texts.append(' | '.join(cells))
+                    if slide.has_notes_slide and slide.notes_slide.notes_text_frame:
+                        notes = slide.notes_slide.notes_text_frame.text.strip()
+                        if notes:
+                            slide_texts.append('[Speaker Notes] ' + notes)
+                    if slide_texts:
+                        parts.append('--- Slide ' + str(i+1) + ' ---')
+                        parts.extend(slide_texts)
+                        parts.append('')
+                return '\n'.join(parts)
+            except ImportError:
+                return '[Error: python-pptx not installed for PPTX support]'
 
     elif ext == 'xlsx':
         try:
