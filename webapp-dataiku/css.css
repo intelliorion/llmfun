@@ -468,6 +468,48 @@ html, body {
     50% { opacity: 1; transform: scale(1.4); }
 }
 
+/* --- Summary card --- */
+.summary-card {
+    position: absolute;
+    bottom: 64px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 14px 24px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-lg);
+    max-width: 600px;
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.summary-card.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* --- Streaming cursor --- */
+.streaming-cursor::after {
+    content: '';
+    display: inline-block;
+    width: 2px;
+    height: 16px;
+    background: var(--accent);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink-cursor 0.8s step-end infinite;
+}
+@keyframes blink-cursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
 /* --- Step indicators --- */
 .step-indicators {
     position: absolute; top: 16px; right: 20px;

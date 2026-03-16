@@ -228,7 +228,9 @@ resetBtn.addEventListener('click', function() {
     document.getElementById('legend-items').innerHTML = '';
     document.getElementById('entities-table-body').innerHTML = '';
     document.getElementById('relationships-table-body').innerHTML = '';
-    document.getElementById('report-content').innerHTML = '<p style="color:var(--text-tertiary);">Click "Generate Report" after building a graph.</p>';
+    document.getElementById('report-content').innerHTML = '<p style="color:var(--text-tertiary);">Report auto-generates when build completes.</p>';
+    document.getElementById('btn-report').textContent = 'Generate Report';
+    document.getElementById('summary-card').classList.remove('visible');
     document.getElementById('chat-messages').innerHTML = '<div class="empty-state" id="chat-empty"><div><p style="font-size:14px;">Ask questions about your data</p></div></div>';
     document.getElementById('suggested-questions').innerHTML = '';
     document.getElementById('suggested-questions').classList.remove('visible');
@@ -289,6 +291,17 @@ function updateStats(graphData) {
             '<b>' + typeCount + '</b> types';
         bar.classList.add('visible');
     }
+}
+
+// --- Summary card ---
+function showSummaryCard(text) {
+    var card = document.getElementById('summary-card');
+    card.textContent = text;
+    card.classList.add('visible');
+    // Auto-hide after 8 seconds
+    setTimeout(function() {
+        card.classList.remove('visible');
+    }, 8000);
 }
 
 // --- Build graph ---
@@ -382,15 +395,17 @@ function initGraph() {
 
     network = new vis.Network(container, {nodes: visNodes, edges: visEdges}, options);
 
-    // --- Node/Edge click handler for detail panel ---
+    // --- Node/Edge click handler for detail panel + neighborhood highlight ---
     network.on('click', function(params) {
         var detailPanel = document.getElementById('detail-panel');
         if (params.nodes.length > 0) {
             showNodeDetail(params.nodes[0]);
+            highlightNeighborhood(params.nodes[0]);
         } else if (params.edges.length > 0) {
             showEdgeDetail(params.edges[0]);
         } else {
             detailPanel.classList.remove('open');
+            resetHighlight();
         }
     });
 }
@@ -477,7 +492,101 @@ function showEdgeDetail(edgeId) {
 
 document.getElementById('detail-close').addEventListener('click', function() {
     document.getElementById('detail-panel').classList.remove('open');
+    resetHighlight();
 });
+
+// --- Neighborhood highlight ---
+function highlightNeighborhood(nodeId) {
+    if (!graphDataStore || !network) return;
+    var neighborIds = {};
+    neighborIds[nodeId] = true;
+    var connectedEdgeIds = {};
+
+    // Find all directly connected nodes
+    graphDataStore.edges.forEach(function(e) {
+        if (e.from === nodeId) { neighborIds[e.to] = true; }
+        if (e.to === nodeId) { neighborIds[e.from] = true; }
+    });
+
+    // Get connected edge vis IDs
+    try {
+        var edgeIds = network.getConnectedEdges(nodeId);
+        edgeIds.forEach(function(eid) { connectedEdgeIds[eid] = true; });
+    } catch(ex) {}
+
+    // Dim non-neighbor nodes
+    var nodeUpdates = [];
+    visNodes.forEach(function(n) {
+        if (neighborIds[n.id]) {
+            var nodeColor = getEntityColor(n._type || 'Unknown');
+            nodeUpdates.push({
+                id: n.id,
+                color: {background: nodeColor, border: nodeColor},
+                opacity: 1,
+                font: {color: '#1a1a1a'},
+                size: n.id === nodeId ? 24 : 18
+            });
+        } else {
+            nodeUpdates.push({
+                id: n.id,
+                opacity: 0.12,
+                font: {color: 'rgba(0,0,0,0.08)'},
+                size: 14
+            });
+        }
+    });
+    visNodes.update(nodeUpdates);
+
+    // Dim non-connected edges
+    var edgeUpdates = [];
+    visEdges.forEach(function(e) {
+        if (connectedEdgeIds[e.id]) {
+            edgeUpdates.push({
+                id: e.id,
+                color: {color: '#6366f1', opacity: 1},
+                width: 2.5,
+                font: {color: '#6366f1', size: edgeLabelsVisible ? 10 : 0}
+            });
+        } else {
+            edgeUpdates.push({
+                id: e.id,
+                color: {color: '#e8e8e5', opacity: 0.15},
+                width: 0.5,
+                font: {color: 'transparent', size: 0}
+            });
+        }
+    });
+    visEdges.update(edgeUpdates);
+}
+
+function resetHighlight() {
+    if (!graphDataStore || !network) return;
+    // Restore all nodes
+    var nodeUpdates = [];
+    visNodes.forEach(function(n) {
+        var nodeColor = getEntityColor(n._type || 'Unknown');
+        nodeUpdates.push({
+            id: n.id,
+            color: {background: nodeColor, border: nodeColor},
+            opacity: 1,
+            font: {color: '#1a1a1a'},
+            size: 16
+        });
+    });
+    visNodes.update(nodeUpdates);
+
+    // Restore all edges
+    var edgeUpdates = [];
+    visEdges.forEach(function(e) {
+        edgeUpdates.push({
+            id: e.id,
+            color: {color: '#d4d4d4', opacity: 1},
+            width: 1.2,
+            font: {color: '#999', size: edgeLabelsVisible ? 9 : 0}
+        });
+    });
+    visEdges.update(edgeUpdates);
+}
 
 // --- Graph toolbar ---
 document.getElementById('btn-zoom-in').addEventListener('click', function() {
@@ -684,10 +793,17 @@ function startPolling() {
                 }
             } else if (data.status === 'deduplicating') {
                 hintText.textContent = 'Resolving duplicate entities...';
-                setProgress(90);
+                setProgress(85);
                 setStep('step-schema', 'done');
                 setStep('step-extract', 'done');
                 setStep('step-dedup', 'active');
+            } else if (data.status === 'reporting') {
+                hintText.textContent = 'Generating report...';
+                setProgress(93);
+                setStep('step-schema', 'done');
+                setStep('step-extract', 'done');
+                setStep('step-dedup', 'done');
+                setStep('step-report', 'active');
             }
 
             updateGraph(data.graph_data);
@@ -704,6 +820,7 @@ function startPolling() {
                 setStep('step-schema', 'done');
                 setStep('step-extract', 'done');
                 setStep('step-dedup', 'done');
+                setStep('step-report', 'done');
                 setStep('step-done', 'done');
                 // Full refresh after dedup
                 visNodes.clear();
@@ -714,7 +831,19 @@ function startPolling() {
                 generateSuggestedQuestions(data.graph_data);
                 // Show toolbar
                 document.getElementById('graph-toolbar').style.display = 'flex';
-                // Hide schema after a delay, step indicators take its place
+
+                // Show summary card
+                if (data.summary) {
+                    showSummaryCard(data.summary);
+                }
+
+                // Auto-populate report
+                if (data.report) {
+                    document.getElementById('report-content').innerHTML = formatMarkdown(data.report);
+                    document.getElementById('btn-report').textContent = 'Regenerate Report';
+                }
+
+                // Hide schema after a delay
                 setTimeout(function() {
                     document.getElementById('progress-container').style.display = 'none';
                     document.getElementById('schema-display').style.display = 'none';
@@ -871,11 +1000,12 @@ function generateSuggestedQuestions(graphData) {
 
 // --- Report ---
 document.getElementById('btn-report').addEventListener('click', function() {
-    if (!sessionId) { alert('Build a graph first.'); return; }
+    if (!sessionId) { alert('Build first.'); return; }
 
     var btn = document.getElementById('btn-report');
     var content = document.getElementById('report-content');
     btn.disabled = true;
+    btn.textContent = 'Regenerating...';
     content.innerHTML = '<span class="spinner"></span> Generating report...';
 
     var xhr = new XMLHttpRequest();
@@ -884,10 +1014,12 @@ document.getElementById('btn-report').addEventListener('click', function() {
         var data = JSON.parse(xhr.responseText);
         content.innerHTML = formatMarkdown(data.report);
         btn.disabled = false;
+        btn.textContent = 'Regenerate Report';
     };
     xhr.onerror = function() {
         content.innerHTML = 'Error generating report.';
         btn.disabled = false;
+        btn.textContent = 'Generate Report';
     };
     xhr.send();
 });
@@ -902,7 +1034,7 @@ chatInput.addEventListener('keydown', function(e) {
 });
 
 function sendMessage() {
-    if (!sessionId) { alert('Build a graph first.'); return; }
+    if (!sessionId) { alert('Build first.'); return; }
     var question = chatInput.value.trim();
     if (!question) return;
 
@@ -910,22 +1042,57 @@ function sendMessage() {
     chatSendBtn.disabled = true;
 
     addChatMessage('user', question);
-    var loadingEl = addChatMessage('assistant', '<span class="spinner"></span> Thinking...');
+    var loadingEl = addChatMessage('assistant', '<span class="streaming-cursor"></span>');
+    var bubble = loadingEl.querySelector('.chat-bubble');
+    var fullText = '';
 
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', getBackendUrl('ask/' + sessionId));
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onload = function() {
-        var data = JSON.parse(xhr.responseText);
-        loadingEl.querySelector('.chat-bubble').innerHTML = formatMarkdown(data.answer);
+    fetch(getBackendUrl('ask_stream/' + sessionId), {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({question: question})
+    }).then(function(response) {
+        var reader = response.body.getReader();
+        var decoder = new TextDecoder();
+        var buffer = '';
+
+        function read() {
+            reader.read().then(function(result) {
+                if (result.done) {
+                    bubble.innerHTML = formatMarkdown(fullText);
+                    chatSendBtn.disabled = false;
+                    chatInput.focus();
+                    return;
+                }
+                buffer += decoder.decode(result.value, {stream: true});
+                var lines = buffer.split('\n');
+                buffer = lines.pop(); // Keep incomplete line
+                lines.forEach(function(line) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            var evt = JSON.parse(line.substring(6));
+                            if (evt.chunk) {
+                                fullText += evt.chunk;
+                                // Show raw text while streaming, format at end
+                                bubble.textContent = fullText;
+                                bubble.scrollIntoView({block: 'end'});
+                            }
+                            if (evt.done) {
+                                bubble.innerHTML = formatMarkdown(fullText);
+                                chatSendBtn.disabled = false;
+                                chatInput.focus();
+                                return;
+                            }
+                        } catch(e) {}
+                    }
+                });
+                read();
+            });
+        }
+        read();
+    }).catch(function() {
+        bubble.innerHTML = 'Error getting answer.';
         chatSendBtn.disabled = false;
-        chatInput.focus();
-    };
-    xhr.onerror = function() {
-        loadingEl.querySelector('.chat-bubble').innerHTML = 'Error getting answer.';
-        chatSendBtn.disabled = false;
-    };
-    xhr.send(JSON.stringify({question: question}));
+    });
 }
 
 function addChatMessage(role, content) {

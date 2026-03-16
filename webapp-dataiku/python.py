@@ -264,6 +264,59 @@ def get_full_context(G):
     return '\n'.join(lines)
 
 
+def generate_summary(G):
+    """Generate a one-line summary card from graph data."""
+    node_count = G.number_of_nodes()
+    edge_count = G.number_of_edges()
+    types = {}
+    for _, data in G.nodes(data=True):
+        t = data.get('type', 'Unknown')
+        types[t] = types.get(t, 0) + 1
+    # Find top entity (most connections)
+    top_entity = None
+    max_degree = 0
+    for node in G.nodes():
+        deg = G.degree(node)
+        if deg > max_degree:
+            max_degree = deg
+            top_entity = node
+    type_str = ', '.join(str(v) + ' ' + k + ('s' if v > 1 else '') for k, v in
+                         sorted(types.items(), key=lambda x: -x[1]))
+    summary = 'Discovered ' + str(node_count) + ' entities across ' + str(len(types)) + ' types (' + type_str + ') with ' + str(edge_count) + ' connections.'
+    if top_entity:
+        summary += ' Most connected: ' + top_entity + ' (' + str(max_degree) + ' connections).'
+    return summary
+
+
+def generate_report(session, llm_inst=None):
+    """Generate an analysis report from graph and source data."""
+    _llm = llm_inst or llm
+    ctx = get_full_context(session['graph'])
+    source = session['source_text']
+    if len(source) > 8000:
+        source = source[:8000] + '\n[... truncated ...]'
+    prompt = """You are an analyst generating a research report.
+Based on the following entity and relationship data, write a detailed analysis report.
+
+""" + ctx + """
+
+Original source text:
+""" + source + """
+
+Write a report with these sections:
+1. Executive Summary (2-3 sentences)
+2. Key Entities & Their Roles
+3. Key Relationships & Dynamics
+4. Outlook & Implications
+
+Be concise and professional."""
+
+    completion = _llm.new_completion()
+    completion.with_message(prompt)
+    resp = completion.execute()
+    return resp.text
+
+
 # --- Background graph building ---
 def build_graph_async(session_id, text, model_id=None):
     session = sessions[session_id]
@@ -317,6 +370,21 @@ def build_graph_async(session_id, text, model_id=None):
             session['graph_data'] = graph_to_json(G)
         except Exception as e:
             session.setdefault('errors', []).append('Dedup: ' + str(e))
+
+    # Auto-generate summary
+    try:
+        summary = generate_summary(G)
+        session['summary'] = summary
+    except Exception as e:
+        session.setdefault('errors', []).append('Summary: ' + str(e))
+
+    # Auto-generate report
+    session['status'] = 'reporting'
+    try:
+        report = generate_report(session, llm_inst)
+        session['report'] = report
+    except Exception as e:
+        session.setdefault('errors', []).append('Report: ' + str(e))
 
     session['status'] = 'done'
 
@@ -555,7 +623,9 @@ def api_status(session_id):
         'total_chunks': session['total_chunks'],
         'graph_data': session['graph_data'],
         'errors': session.get('errors', []),
-        'schema': session.get('schema', None)
+        'schema': session.get('schema', None),
+        'summary': session.get('summary', None),
+        'report': session.get('report', None)
     })
 
 
@@ -565,28 +635,15 @@ def api_report(session_id):
     if not session or not session.get('graph'):
         return json_response({'error': 'No graph built yet'}, 400)
 
-    ctx = get_full_context(session['graph'])
-    prompt = """You are an analyst generating a research report.
-Based on the following knowledge graph data, write a detailed analysis report.
+    # Return cached report if already generated
+    if session.get('report'):
+        return json_response({'report': session['report']})
 
-""" + ctx + """
-
-Original source text:
-""" + session['source_text'] + """
-
-Write a report with these sections:
-1. Executive Summary (2-3 sentences)
-2. Key Entities & Their Roles
-3. Key Relationships & Dynamics
-4. Outlook & Implications
-
-Be concise and professional."""
-
+    # Otherwise generate fresh
     _llm = session.get('llm_inst', llm)
-    completion = _llm.new_completion()
-    completion.with_message(prompt)
-    resp = completion.execute()
-    return json_response({'report': resp.text})
+    report = generate_report(session, _llm)
+    session['report'] = report
+    return json_response({'report': report})
 
 
 MAX_HISTORY_TURNS = 10  # Keep last N Q&A pairs for context
@@ -643,3 +700,47 @@ def api_ask(session_id):
     session['messages'].append({'role': 'assistant', 'content': resp.text})
 
     return json_response({'answer': resp.text})
+
+
+@app.route('/ask_stream/<session_id>', methods=['POST'])
+def api_ask_stream(session_id):
+    """Streaming Q&A endpoint — returns SSE events word-by-word."""
+    import time
+    session = sessions.get(session_id)
+    if not session or not session.get('graph'):
+        return json_response({'error': 'No graph built yet'}, 400)
+
+    data = request.get_json(force=True)
+    question = data.get('question', '').strip()
+    if not question:
+        return json_response({'error': 'No question provided'}, 400)
+
+    _llm = session.get('llm_inst', llm)
+    completion = _llm.new_completion()
+
+    system_prompt = build_qa_system_prompt(session)
+    completion.with_message(system_prompt, role='system')
+
+    history = session.get('messages', [])
+    window = history[-(MAX_HISTORY_TURNS * 2):]
+    for msg in window:
+        completion.with_message(msg['content'], role=msg['role'])
+
+    completion.with_message(question, role='user')
+    resp = completion.execute()
+    answer = resp.text
+
+    # Save to history
+    session['messages'].append({'role': 'user', 'content': question})
+    session['messages'].append({'role': 'assistant', 'content': answer})
+
+    def generate():
+        words = answer.split(' ')
+        for i, word in enumerate(words):
+            chunk = word + (' ' if i < len(words) - 1 else '')
+            yield 'data: ' + json.dumps({'chunk': chunk}) + '\n\n'
+            time.sleep(0.03)  # ~30ms per word for natural feel
+        yield 'data: ' + json.dumps({'done': True}) + '\n\n'
+
+    return Response(generate(), mimetype='text/event-stream',
+                    headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
