@@ -37,8 +37,60 @@ llm = get_llm()
 ORION_COLORS = ['#216CA6', '#1A936F', '#7B2D8E', '#C5283D', '#2E86AB',
                 '#5ba3d9', '#e07a2f', '#6C757D', '#0d7377', '#8B5CF6']
 
+# --- Domain Templates ---
+DOMAIN_TEMPLATES = {
+    'communication': {
+        'name': 'Communication Intelligence',
+        'description': 'Analyze emails, messages, and team communications to map people, topics, decisions, and information flow.',
+        'entity_types': ['Person', 'Team', 'Topic', 'Decision', 'Action Item', 'Project', 'Meeting'],
+        'relationship_types': ['SENT_TO', 'CC_TO', 'DISCUSSED', 'DECIDED', 'ASSIGNED_TO', 'BELONGS_TO', 'ESCALATED_TO', 'FOLLOWED_UP', 'MENTIONED']
+    },
+    'process': {
+        'name': 'Process Optimization',
+        'description': 'Map processes, systems, teams, and data flows to identify bottlenecks, manual handoffs, and automation opportunities.',
+        'entity_types': ['Process', 'Step', 'System', 'Team', 'Data', 'Tool', 'Bottleneck'],
+        'relationship_types': ['FEEDS_INTO', 'TRIGGERS', 'OWNED_BY', 'USES', 'PRODUCES', 'DEPENDS_ON', 'BLOCKED_BY', 'HANDOFF_TO']
+    },
+    'code': {
+        'name': 'Code Review',
+        'description': 'Analyze code, documentation, or technical specs to map modules, functions, dependencies, and features.',
+        'entity_types': ['Module', 'Function', 'Class', 'API', 'Feature', 'Dependency', 'Config'],
+        'relationship_types': ['CALLS', 'IMPORTS', 'EXTENDS', 'IMPLEMENTS', 'DEPENDS_ON', 'EXPOSES', 'CONFIGURED_BY', 'TESTED_BY']
+    },
+    'workflow': {
+        'name': 'Workflow Orchestration',
+        'description': 'Map workflow stages, triggers, approvals, and handoffs to visualize orchestration and dependencies.',
+        'entity_types': ['Stage', 'Task', 'Actor', 'Trigger', 'Condition', 'Output', 'Queue'],
+        'relationship_types': ['TRANSITIONS_TO', 'TRIGGERED_BY', 'APPROVED_BY', 'PRODUCES', 'WAITS_FOR', 'ROUTES_TO', 'ESCALATES_TO', 'PARALLEL_WITH']
+    },
+    'legal': {
+        'name': 'Legal Document',
+        'description': 'Extract parties, obligations, rights, clauses, and conditions from legal documents.',
+        'entity_types': ['Party', 'Obligation', 'Right', 'Clause', 'Term', 'Jurisdiction', 'Condition'],
+        'relationship_types': ['OBLIGATED_TO', 'HAS_RIGHT', 'GOVERNED_BY', 'CONDITIONAL_ON', 'DEFINED_IN', 'SUPERSEDES', 'EFFECTIVE_FROM', 'SUBJECT_TO']
+    },
+    'contract': {
+        'name': 'Contract & Agreement',
+        'description': 'Map parties, terms, amounts, dates, deliverables, and SLAs from contracts and agreements.',
+        'entity_types': ['Party', 'Term', 'Amount', 'Date', 'Deliverable', 'SLA', 'Penalty'],
+        'relationship_types': ['AGREED_BY', 'PAYS_TO', 'DELIVERS_TO', 'DUE_BY', 'PENALIZED_IF', 'RENEWED_ON', 'TERMINABLE_BY', 'REFERENCES']
+    },
+    'data_analysis': {
+        'name': 'Data Analysis',
+        'description': 'Map datasets, metrics, dimensions, sources, transformations, and insights from analytical content.',
+        'entity_types': ['Dataset', 'Metric', 'Dimension', 'Source', 'Insight', 'Trend', 'Segment'],
+        'relationship_types': ['MEASURED_BY', 'SOURCED_FROM', 'CORRELATES_WITH', 'SEGMENTED_BY', 'DRIVES', 'COMPARED_TO', 'DERIVED_FROM', 'INDICATES']
+    },
+    'general': {
+        'name': 'General',
+        'description': None,  # Will use auto-inference
+        'entity_types': None,
+        'relationship_types': None
+    }
+}
+
 # --- Prompts ---
-SCHEMA_PROMPT = """You are a data analyst. Read the following text and define a focused ontology for a knowledge graph.
+SCHEMA_PROMPT_GENERAL = """You are a data analyst. Read the following text and define a focused ontology for a knowledge graph.
 
 Your job:
 1. Understand what this data is about (e.g. employee directory, financial report, research paper, etc.)
@@ -49,6 +101,7 @@ Your job:
 Return a JSON object:
 {{
   "description": "Brief description of what this data is about",
+  "domain": "auto-detected domain name",
   "entity_types": ["Type1", "Type2", "Type3"],
   "relationship_types": ["REL_TYPE_1", "REL_TYPE_2"]
 }}
@@ -57,6 +110,63 @@ Rules:
 - Use clear, singular nouns for entity types (e.g. "Person" not "People")
 - Use UPPER_SNAKE_CASE for relationship types (e.g. "HAS_TITLE" not "has title")
 - Merge similar concepts (e.g. don't have both "Role" and "Title" — pick one)
+- Return ONLY valid JSON, no markdown fences, no extra text.
+
+Text (sample):
+{text}
+"""
+
+SCHEMA_PROMPT_AUTO = """You are a data analyst. Read the following text and determine which analysis domain fits best.
+
+Available domains:
+{domain_list}
+
+Your job:
+1. Read the text sample and classify it into the BEST matching domain above
+2. Use that domain's suggested entity types and relationship types as a starting point
+3. Adapt the ontology to fit the actual data — add, remove, or rename types as needed (stay within 3-8 entity types, 3-10 relationship types)
+4. If no domain fits well, create a custom ontology from scratch
+
+Return a JSON object:
+{{
+  "description": "Brief description of what this data is about",
+  "domain": "detected domain key (e.g. 'communication', 'legal', 'general')",
+  "entity_types": ["Type1", "Type2", "Type3"],
+  "relationship_types": ["REL_TYPE_1", "REL_TYPE_2"]
+}}
+
+Rules:
+- Use clear, singular nouns for entity types
+- Use UPPER_SNAKE_CASE for relationship types
+- Return ONLY valid JSON, no markdown fences, no extra text.
+
+Text (sample):
+{text}
+"""
+
+SCHEMA_PROMPT_DOMAIN = """You are a domain expert analyzing data for: {domain_name}
+
+Domain context: {domain_desc}
+Suggested entity types: {entity_types}
+Suggested relationship types: {rel_types}
+
+Read the following text and refine the ontology to fit this specific data.
+You MUST use the suggested types as your starting point, but you may:
+- Add 1-2 additional types if the data clearly needs them
+- Remove types that don't appear in the data
+- Keep the total within 3-8 entity types and 3-10 relationship types
+
+Return a JSON object:
+{{
+  "description": "Brief description of what this data is about",
+  "domain": "{domain_key}",
+  "entity_types": ["Type1", "Type2", "Type3"],
+  "relationship_types": ["REL_TYPE_1", "REL_TYPE_2"]
+}}
+
+Rules:
+- Use clear, singular nouns for entity types
+- Use UPPER_SNAKE_CASE for relationship types
 - Return ONLY valid JSON, no markdown fences, no extra text.
 
 Text (sample):
@@ -127,12 +237,38 @@ def clean_llm_json(raw):
     return text.strip()
 
 
-def infer_schema(text, llm_inst=None):
+def infer_schema(text, llm_inst=None, domain='auto'):
     """Agent 0: Analyze data and define a focused ontology."""
     _llm = llm_inst or llm
     sample = text[:2000]
+
+    if domain != 'auto' and domain in DOMAIN_TEMPLATES and DOMAIN_TEMPLATES[domain]['entity_types']:
+        # User selected a specific domain template
+        tmpl = DOMAIN_TEMPLATES[domain]
+        prompt = SCHEMA_PROMPT_DOMAIN.format(
+            domain_name=tmpl['name'],
+            domain_desc=tmpl['description'],
+            entity_types=', '.join(tmpl['entity_types']),
+            rel_types=', '.join(tmpl['relationship_types']),
+            domain_key=domain,
+            text=sample
+        )
+    elif domain == 'auto':
+        # Auto-detect: give Agent 0 the full domain list to classify
+        domain_list = ''
+        for key, tmpl in DOMAIN_TEMPLATES.items():
+            if key == 'general' or not tmpl['entity_types']:
+                continue
+            domain_list += '- ' + key + ' (' + tmpl['name'] + '): ' + tmpl['description'] + '\n'
+            domain_list += '  Entity types: ' + ', '.join(tmpl['entity_types']) + '\n'
+            domain_list += '  Relationship types: ' + ', '.join(tmpl['relationship_types']) + '\n'
+        prompt = SCHEMA_PROMPT_AUTO.format(domain_list=domain_list, text=sample)
+    else:
+        # General / fallback
+        prompt = SCHEMA_PROMPT_GENERAL.format(text=sample)
+
     completion = _llm.new_completion()
-    completion.with_message(SCHEMA_PROMPT.format(text=sample))
+    completion.with_message(prompt)
     resp = completion.execute()
     cleaned = clean_llm_json(resp.text)
     return json.loads(cleaned)
@@ -318,7 +454,7 @@ Be concise and professional."""
 
 
 # --- Background graph building ---
-def build_graph_async(session_id, text, model_id=None):
+def build_graph_async(session_id, text, model_id=None, domain='auto'):
     session = sessions[session_id]
     session['status'] = 'analyzing'
     session['source_text'] = text
@@ -327,7 +463,7 @@ def build_graph_async(session_id, text, model_id=None):
 
     # Agent 0: Infer schema/ontology
     try:
-        schema = infer_schema(text, llm_inst)
+        schema = infer_schema(text, llm_inst, domain)
         session['schema'] = schema
     except Exception as e:
         session.setdefault('errors', []).append('Schema: ' + str(e))
@@ -574,6 +710,17 @@ def api_models():
     return json_response({'models': models})
 
 
+@app.route('/domains')
+def api_domains():
+    domains = [{'key': 'auto', 'name': 'Auto-detect'}]
+    for key, tmpl in DOMAIN_TEMPLATES.items():
+        if key == 'general':
+            domains.append({'key': 'general', 'name': 'General'})
+        else:
+            domains.append({'key': key, 'name': tmpl['name']})
+    return json_response({'domains': domains})
+
+
 @app.route('/upload', methods=['POST'])
 def api_upload():
     if 'file' not in request.files:
@@ -605,7 +752,8 @@ def api_build():
     }
 
     model_id = data.get('model', None)
-    thread = threading.Thread(target=build_graph_async, args=(session_id, text, model_id))
+    domain = data.get('domain', 'auto')
+    thread = threading.Thread(target=build_graph_async, args=(session_id, text, model_id, domain))
     thread.daemon = True
     thread.start()
 

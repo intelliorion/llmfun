@@ -116,6 +116,36 @@ modelSelect.addEventListener('change', function() {
 
 loadModels();
 
+// --- Domain selector (dynamic) ---
+var domainSelect = document.getElementById('domain-select');
+var selectedDomain = 'auto';
+
+function loadDomains() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', getBackendUrl('domains'));
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            var data = JSON.parse(xhr.responseText);
+            var domains = data.domains || [];
+            domainSelect.innerHTML = '';
+            for (var i = 0; i < domains.length; i++) {
+                var opt = document.createElement('option');
+                opt.value = domains[i].key;
+                opt.textContent = domains[i].name;
+                domainSelect.appendChild(opt);
+            }
+            selectedDomain = 'auto';
+        }
+    };
+    xhr.send();
+}
+
+domainSelect.addEventListener('change', function() {
+    selectedDomain = domainSelect.value;
+});
+
+loadDomains();
+
 // --- File upload (multi-file) ---
 var fileUpload = document.getElementById('file-upload');
 var fileInput = document.getElementById('file-input');
@@ -358,7 +388,7 @@ buildBtn.addEventListener('click', function() {
             buildBtn.textContent = 'Build';
             resetSteps();
         };
-        xhr.send(JSON.stringify({text: text, model: selectedModel}));
+        xhr.send(JSON.stringify({text: text, model: selectedModel, domain: selectedDomain}));
     });
 });
 
@@ -746,6 +776,10 @@ function showSchema(schema) {
     if (!schema) return;
     var el = document.getElementById('schema-display');
     var html = '<b>Detected Schema</b>';
+
+    if (schema.domain) {
+        html += '<span class="schema-domain-badge">' + schema.domain + '</span>';
+    }
 
     if (schema.description) {
         html += '<div style="margin-top:6px;color:var(--text-secondary);font-size:11px;">' + schema.description + '</div>';

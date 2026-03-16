@@ -232,6 +232,43 @@ html, body {
 }
 .file-item-remove:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
 
+/* --- Domain selector --- */
+.domain-selector {
+    margin-top: 4px;
+}
+.domain-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+.domain-select {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 32px 10px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6b6b'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+.domain-select:hover { border-color: var(--text-tertiary); }
+.domain-select:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(0,129,242,0.15);
+}
+
 .btn-primary {
     width: 100%; padding: 12px;
     background: var(--accent); color: #fff; border: none;
@@ -413,6 +450,18 @@ html, body {
 .schema-rels {
     margin-top: 8px; font-size: 11px; color: var(--text-secondary);
     line-height: 1.5;
+}
+.schema-domain-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(99,102,241,0.1);
+    color: #6366f1;
+    text-transform: capitalize;
+    vertical-align: middle;
 }
 
 /* --- Legend --- */
