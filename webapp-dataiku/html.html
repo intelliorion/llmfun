@@ -213,6 +213,8 @@
                         <input type="text" id="graph-search" placeholder="Search...">
                     </div>
                     <div class="toolbar-sep"></div>
+                    <button class="toolbar-btn" id="btn-connect" title="Find connection between entities">&#x26D1;</button>
+                    <div class="toolbar-sep"></div>
                     <div class="toolbar-export-wrap">
                         <button class="toolbar-btn" id="btn-export" title="Export">&#x21E9;</button>
                         <div class="export-dropdown" id="export-dropdown">
@@ -260,6 +262,29 @@
                         <button class="detail-close" id="detail-close">&times;</button>
                     </div>
                     <div class="detail-body" id="detail-body"></div>
+                </div>
+
+                <!-- Find Connection Panel -->
+                <div class="connect-panel" id="connect-panel" style="display:none;">
+                    <div class="connect-header">
+                        <span class="connect-title">Find Connection</span>
+                        <button class="connect-close" id="connect-close">&times;</button>
+                    </div>
+                    <div class="connect-body">
+                        <div class="connect-field">
+                            <label>From</label>
+                            <input type="text" id="connect-source" class="connect-input" placeholder="Type entity name..." autocomplete="off">
+                            <div class="connect-suggestions" id="connect-source-suggestions"></div>
+                        </div>
+                        <div class="connect-swap" id="connect-swap" title="Swap entities">&#x21C5;</div>
+                        <div class="connect-field">
+                            <label>To</label>
+                            <input type="text" id="connect-target" class="connect-input" placeholder="Type entity name..." autocomplete="off">
+                            <div class="connect-suggestions" id="connect-target-suggestions"></div>
+                        </div>
+                        <button class="connect-btn" id="connect-find">Find Path</button>
+                    </div>
+                    <div class="connect-result" id="connect-result"></div>
                 </div>
 
                 <!-- Legend -->

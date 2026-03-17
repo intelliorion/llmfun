@@ -713,35 +713,6 @@ function highlightNeighborhood(nodeId) {
     visEdges.update(edgeUpdates);
 }
 
-function resetHighlight() {
-    if (!graphDataStore || !network) return;
-    // Restore all nodes
-    var nodeUpdates = [];
-    visNodes.forEach(function(n) {
-        var nodeColor = getEntityColor(n._type || 'Unknown');
-        nodeUpdates.push({
-            id: n.id,
-            color: {background: nodeColor, border: nodeColor},
-            opacity: 1,
-            font: {color: '#1a1a1a'},
-            size: 16
-        });
-    });
-    visNodes.update(nodeUpdates);
-
-    // Restore all edges
-    var edgeUpdates = [];
-    visEdges.forEach(function(e) {
-        edgeUpdates.push({
-            id: e.id,
-            color: {color: '#d4d4d4', opacity: 1},
-            width: 1.2,
-            font: {color: '#999', size: edgeLabelsVisible ? 9 : 0}
-        });
-    });
-    visEdges.update(edgeUpdates);
-}
-
 // --- Graph toolbar ---
 document.getElementById('btn-zoom-in').addEventListener('click', function() {
     if (network) {
@@ -1052,6 +1023,7 @@ function startPolling() {
                 document.getElementById('qa-building').classList.remove('visible');
                 document.getElementById('whatif-building').classList.remove('visible');
                 loadWhatIfSuggestions();
+                loadConnectEntities();
 
                 // Show summary card
                 if (data.summary) {
@@ -1584,6 +1556,284 @@ function openAgentInterview(entityName, reaction, scenario, cardEl) {
         if (e.key === 'Enter') { e.preventDefault(); sendInterview(); }
     });
     input.focus();
+}
+
+// --- Find Connection ---
+var connectPanel = document.getElementById('connect-panel');
+var connectSourceInput = document.getElementById('connect-source');
+var connectTargetInput = document.getElementById('connect-target');
+var connectFindBtn = document.getElementById('connect-find');
+var connectResult = document.getElementById('connect-result');
+var connectEntities = []; // Populated after build
+
+document.getElementById('btn-connect').addEventListener('click', function() {
+    var isVisible = connectPanel.style.display !== 'none';
+    connectPanel.style.display = isVisible ? 'none' : 'block';
+    if (!isVisible) {
+        loadConnectEntities();
+        connectSourceInput.focus();
+    }
+});
+document.getElementById('connect-close').addEventListener('click', function() {
+    connectPanel.style.display = 'none';
+    resetHighlight();
+});
+document.getElementById('connect-swap').addEventListener('click', function() {
+    var tmp = connectSourceInput.value;
+    connectSourceInput.value = connectTargetInput.value;
+    connectTargetInput.value = tmp;
+});
+
+function loadConnectEntities() {
+    if (!sessionId) return;
+    fetch(getBackendUrl('entities/' + sessionId))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            connectEntities = data.entities || [];
+        }).catch(function() {});
+}
+
+// Autocomplete for entity inputs
+function setupConnectAutocomplete(input, suggestionsEl) {
+    input.addEventListener('input', function() {
+        var val = input.value.toLowerCase().trim();
+        suggestionsEl.innerHTML = '';
+        if (!val || connectEntities.length === 0) {
+            suggestionsEl.style.display = 'none';
+            return;
+        }
+        var matches = connectEntities.filter(function(e) {
+            return e.name.toLowerCase().indexOf(val) !== -1;
+        }).slice(0, 6);
+        if (matches.length === 0) {
+            suggestionsEl.style.display = 'none';
+            return;
+        }
+        matches.forEach(function(e) {
+            var div = document.createElement('div');
+            div.className = 'connect-suggestion-item';
+            var color = getEntityColor(e.type);
+            div.innerHTML = '<span class="connect-sug-dot" style="background:' + color + '"></span>' + escapeHtml(e.name) + ' <span class="connect-sug-type">' + e.type + '</span>';
+            div.addEventListener('mousedown', function(ev) {
+                ev.preventDefault();
+                input.value = e.name;
+                suggestionsEl.style.display = 'none';
+            });
+            suggestionsEl.appendChild(div);
+        });
+        suggestionsEl.style.display = 'block';
+    });
+    input.addEventListener('blur', function() {
+        setTimeout(function() { suggestionsEl.style.display = 'none'; }, 150);
+    });
+    input.addEventListener('focus', function() {
+        if (input.value.trim()) input.dispatchEvent(new Event('input'));
+    });
+}
+setupConnectAutocomplete(connectSourceInput, document.getElementById('connect-source-suggestions'));
+setupConnectAutocomplete(connectTargetInput, document.getElementById('connect-target-suggestions'));
+
+connectFindBtn.addEventListener('click', findConnection);
+connectSourceInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { connectTargetInput.focus(); } });
+connectTargetInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { findConnection(); } });
+
+function findConnection() {
+    var source = connectSourceInput.value.trim();
+    var target = connectTargetInput.value.trim();
+    if (!source || !target) return;
+
+    connectFindBtn.disabled = true;
+    connectFindBtn.textContent = 'Searching...';
+    connectResult.innerHTML = '<div class="connect-loading"><span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px;"></span>Traversing graph & analyzing...</div>';
+
+    fetch(getBackendUrl('connect/' + sessionId), {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({source: source, target: target})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        connectFindBtn.disabled = false;
+        connectFindBtn.textContent = 'Find Path';
+
+        if (data.error) {
+            if (data.no_path) {
+                connectResult.innerHTML = '<div class="connect-no-path">No connection found between <b>' + escapeHtml(source) + '</b> and <b>' + escapeHtml(target) + '</b>. These entities are not connected in the graph.</div>';
+            } else {
+                connectResult.innerHTML = '<div class="connect-error">' + escapeHtml(data.error) + '</div>';
+            }
+            resetHighlight();
+            return;
+        }
+
+        // Highlight path on graph
+        highlightPath(data.path, data.edges);
+
+        // Render result
+        var html = '<div class="connect-path-viz">';
+        html += '<div class="connect-hop-count">' + data.hop_count + ' hop' + (data.hop_count !== 1 ? 's' : '') + '</div>';
+        html += '<div class="connect-path-chain">';
+        for (var i = 0; i < data.path.length; i++) {
+            var nodeColor = getEntityColor(getNodeType(data.path[i]));
+            html += '<span class="connect-path-node" style="border-color:' + nodeColor + ';color:' + nodeColor + '">' + escapeHtml(data.path[i]) + '</span>';
+            if (i < data.path.length - 1) {
+                var edgeLabel = data.edges[i] ? data.edges[i].relation : '';
+                html += '<span class="connect-path-arrow">' + edgeLabel + ' &rarr;</span>';
+            }
+        }
+        html += '</div></div>';
+
+        // Analysis
+        var analysis = data.analysis || {};
+
+        if (analysis.hops && analysis.hops.length > 0) {
+            html += '<div class="connect-hops">';
+            analysis.hops.forEach(function(hop, idx) {
+                html += '<div class="connect-hop">';
+                html += '<div class="connect-hop-num">' + (idx + 1) + '</div>';
+                html += '<div class="connect-hop-text">' + escapeHtml(hop.explanation || (hop.from + ' → ' + hop.to)) + '</div>';
+                html += '</div>';
+            });
+            html += '</div>';
+        }
+
+        if (analysis.synthesis) {
+            html += '<div class="connect-synthesis">' + formatMarkdown(analysis.synthesis) + '</div>';
+        }
+
+        if (analysis.implications && analysis.implications.length > 0) {
+            html += '<div class="connect-implications">';
+            html += '<div class="connect-implications-title">Implications</div>';
+            analysis.implications.forEach(function(imp) {
+                html += '<div class="connect-implication">' + escapeHtml(imp) + '</div>';
+            });
+            html += '</div>';
+        }
+
+        connectResult.innerHTML = html;
+    })
+    .catch(function() {
+        connectFindBtn.disabled = false;
+        connectFindBtn.textContent = 'Find Path';
+        connectResult.innerHTML = '<div class="connect-error">Connection analysis failed. Please try again.</div>';
+    });
+}
+
+function getNodeType(nodeId) {
+    if (!graphDataStore) return 'Unknown';
+    for (var i = 0; i < graphDataStore.nodes.length; i++) {
+        if (graphDataStore.nodes[i].id === nodeId) return graphDataStore.nodes[i].type;
+    }
+    return 'Unknown';
+}
+
+function highlightPath(pathNodes, pathEdges) {
+    if (!visNodes || !visEdges) return;
+
+    // Build set of path node IDs and edge keys
+    var pathNodeSet = {};
+    pathNodes.forEach(function(n) { pathNodeSet[n] = true; });
+
+    var pathEdgeKeys = {};
+    for (var i = 0; i < pathNodes.length - 1; i++) {
+        pathEdgeKeys[pathNodes[i] + '>>>' + pathNodes[i + 1]] = true;
+        pathEdgeKeys[pathNodes[i + 1] + '>>>' + pathNodes[i]] = true; // both directions
+    }
+
+    // Dim all nodes, brighten path nodes
+    var nodeUpdates = [];
+    visNodes.get().forEach(function(n) {
+        if (pathNodeSet[n.id]) {
+            var pathColor = getEntityColor(n._type);
+            nodeUpdates.push({
+                id: n.id,
+                size: 28,
+                borderWidth: 4,
+                color: {
+                    background: pathColor,
+                    border: '#1a1a1a',
+                    highlight: {background: pathColor, border: '#1a1a1a'},
+                    hover: {background: pathColor, border: '#1a1a1a'}
+                },
+                font: {size: 14, color: '#1a1a1a', bold: true},
+                shadow: {enabled: true, color: 'rgba(99,102,241,0.3)', size: 20, x: 0, y: 0}
+            });
+        } else {
+            nodeUpdates.push({
+                id: n.id,
+                size: 12,
+                borderWidth: 1,
+                opacity: 0.2,
+                font: {size: 8, color: '#ccc'}
+            });
+        }
+    });
+    visNodes.update(nodeUpdates);
+
+    // Highlight path edges, dim others
+    var edgeUpdates = [];
+    visEdges.get().forEach(function(e) {
+        var key1 = e.from + '>>>' + e.to;
+        var key2 = e.to + '>>>' + e.from;
+        if (pathEdgeKeys[key1] || pathEdgeKeys[key2]) {
+            edgeUpdates.push({
+                id: e.id,
+                color: {color: '#6366f1', highlight: '#6366f1'},
+                width: 3,
+                font: {size: 11, color: '#6366f1', background: 'rgba(255,255,255,0.95)', strokeWidth: 0},
+                shadow: {enabled: true, color: 'rgba(99,102,241,0.25)', size: 8}
+            });
+        } else {
+            edgeUpdates.push({
+                id: e.id,
+                color: {color: 'rgba(212,212,212,0.15)'},
+                width: 0.5,
+                font: {size: 0}
+            });
+        }
+    });
+    visEdges.update(edgeUpdates);
+
+    // Focus camera on path
+    if (pathNodes.length > 0) {
+        network.fit({nodes: pathNodes, animation: {duration: 600, easingFunction: 'easeInOutQuad'}});
+    }
+}
+
+function resetHighlight() {
+    if (!visNodes || !visEdges || !graphDataStore) return;
+
+    var nodeUpdates = [];
+    visNodes.get().forEach(function(n) {
+        var nodeColor = getEntityColor(n._type);
+        nodeUpdates.push({
+            id: n.id,
+            size: 18,
+            borderWidth: 2,
+            opacity: 1,
+            color: {
+                background: nodeColor,
+                border: 'rgba(255,255,255,0.8)',
+                highlight: {background: nodeColor, border: '#1a1a1a'},
+                hover: {background: nodeColor, border: '#1a1a1a'}
+            },
+            font: {size: 11, color: '#1a1a1a', bold: false},
+            shadow: {enabled: true, color: 'rgba(0,0,0,0.08)', size: 8, x: 0, y: 2}
+        });
+    });
+    visNodes.update(nodeUpdates);
+
+    var edgeUpdates = [];
+    visEdges.get().forEach(function(e) {
+        edgeUpdates.push({
+            id: e.id,
+            color: {color: '#d4d4d4', highlight: '#6366f1', hover: '#a3a3a3'},
+            width: 1.2,
+            font: {size: edgeLabelsVisible ? 9 : 0, color: '#999', background: 'rgba(248,248,247,0.95)', strokeWidth: 0},
+            shadow: {enabled: false}
+        });
+    });
+    visEdges.update(edgeUpdates);
 }
 
 function loadWhatIfSuggestions() {

@@ -1457,3 +1457,153 @@ def api_whatif_suggestions(session_id):
             suggestions.append('What if ' + c + ' starts reporting to ' + d + '?')
 
     return json_response({'suggestions': suggestions})
+
+
+CONNECT_PROMPT = """You are a relationship analyst. Given a path through a knowledge graph connecting two entities, explain the relationship in clear, natural language.
+
+Path:
+{path_description}
+
+Full context from the graph:
+{context}
+
+Instructions:
+1. Explain what each hop in the path means
+2. Synthesize the overall relationship between the first and last entity in the path
+3. Note any interesting implications of this connection (e.g. conflicts of interest, dependencies, indirect influence)
+4. Be concise — 3-5 sentences max for the synthesis
+
+Return a JSON object:
+{{
+  "hops": [
+    {{
+      "from": "EntityA",
+      "relation": "RELATION_TYPE",
+      "to": "EntityB",
+      "explanation": "What this connection means in plain language"
+    }}
+  ],
+  "synthesis": "Overall explanation of how the first and last entities are connected and what it means",
+  "implications": ["Implication 1", "Implication 2"]
+}}
+
+Return ONLY valid JSON, no markdown fences, no extra text."""
+
+
+@app.route('/connect/<session_id>', methods=['POST'])
+def api_connect(session_id):
+    """Find and explain the connection path between two entities using graph traversal."""
+    session = sessions.get(session_id)
+    if not session or not session.get('graph'):
+        return json_response({'error': 'No graph built yet'}, 400)
+
+    data = request.get_json(force=True)
+    source = data.get('source', '').strip()
+    target = data.get('target', '').strip()
+
+    if not source or not target:
+        return json_response({'error': 'Source and target entities required'}, 400)
+
+    G = session['graph']
+
+    # Check entities exist
+    if source not in G.nodes:
+        return json_response({'error': 'Entity not found: ' + source}, 404)
+    if target not in G.nodes:
+        return json_response({'error': 'Entity not found: ' + target}, 404)
+
+    # Find shortest path on undirected version (relationships are meaningful in both directions)
+    U = G.to_undirected()
+    try:
+        path_nodes = nx.shortest_path(U, source, target)
+    except nx.NetworkXNoPath:
+        return json_response({'error': 'No connection found between ' + source + ' and ' + target, 'no_path': True}, 200)
+
+    # Build path description with edge data
+    path_edges = []
+    for i in range(len(path_nodes) - 1):
+        a, b = path_nodes[i], path_nodes[i + 1]
+        # Check both directions for edge data
+        if G.has_edge(a, b):
+            edata = G.edges[a, b]
+            path_edges.append({
+                'from': a, 'to': b,
+                'relation': edata.get('relation', 'RELATED_TO'),
+                'description': edata.get('description', ''),
+                'direction': 'forward'
+            })
+        elif G.has_edge(b, a):
+            edata = G.edges[b, a]
+            path_edges.append({
+                'from': b, 'to': a,
+                'relation': edata.get('relation', 'RELATED_TO'),
+                'description': edata.get('description', ''),
+                'direction': 'reverse'
+            })
+        else:
+            path_edges.append({
+                'from': a, 'to': b,
+                'relation': 'CONNECTED',
+                'description': '',
+                'direction': 'undirected'
+            })
+
+    # Build path description for LLM
+    path_desc_lines = []
+    for i, edge in enumerate(path_edges):
+        path_desc_lines.append(
+            str(i + 1) + '. ' + edge['from'] + ' --[' + edge['relation'] + ']--> ' + edge['to'] +
+            (' (' + edge['description'] + ')' if edge['description'] else '')
+        )
+
+    # Also include node descriptions
+    for node_name in path_nodes:
+        ndata = G.nodes[node_name]
+        path_desc_lines.append('  Entity: ' + node_name + ' (type: ' + ndata.get('type', 'Unknown') + ') — ' + ndata.get('description', ''))
+
+    path_description = '\n'.join(path_desc_lines)
+
+    # Ask LLM to interpret
+    _llm = session.get('llm_inst', llm)
+    ctx = get_full_context(G)
+    if len(ctx) > MAX_CONTEXT_CHARS:
+        ctx = ctx[:MAX_CONTEXT_CHARS] + '\n[... truncated ...]'
+
+    prompt = CONNECT_PROMPT.format(path_description=path_description, context=ctx)
+    completion = _llm.new_completion()
+    completion.with_message(prompt)
+    resp = completion.execute()
+    raw = clean_llm_json(resp.text)
+
+    try:
+        analysis = json.loads(raw)
+    except Exception:
+        analysis = {
+            'hops': [],
+            'synthesis': resp.text,
+            'implications': []
+        }
+
+    return json_response({
+        'path': path_nodes,
+        'edges': path_edges,
+        'analysis': analysis,
+        'hop_count': len(path_edges)
+    })
+
+
+@app.route('/entities/<session_id>')
+def api_entities_list(session_id):
+    """Return a simple list of entity names for the Find Connection UI."""
+    session = sessions.get(session_id)
+    if not session or not session.get('graph'):
+        return json_response({'error': 'No graph built yet'}, 400)
+
+    G = session['graph']
+    entities = []
+    for node, data in G.nodes(data=True):
+        entities.append({'name': node, 'type': data.get('type', 'Unknown')})
+
+    # Sort by name
+    entities.sort(key=lambda x: x['name'])
+    return json_response({'entities': entities})
