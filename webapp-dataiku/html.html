@@ -5,11 +5,6 @@
         <span class="header-subtitle">AI-Powered. Discover the Impossibles.</span>
     </div>
     <div class="header-right">
-        <div class="model-select-wrap">
-            <select id="model-select" class="model-select">
-                <option value="">Loading models...</option>
-            </select>
-        </div>
         <span class="header-badge">CS TTIA</span>
         <span>Morgan Stanley</span>
     </div>
@@ -50,6 +45,13 @@
                 <div class="file-types">.txt .md .csv .pdf .docx .pptx .xlsx .msg .eml .png .jpg .jpeg .gif .tiff .webp</div>
                 <input type="file" id="file-input" accept=".txt,.md,.csv,.pdf,.docx,.pptx,.xlsx,.msg,.eml,.png,.jpg,.jpeg,.gif,.bmp,.tiff,.tif,.webp" multiple>
             </div>
+        </div>
+
+        <div class="domain-selector">
+            <label class="domain-label">Model</label>
+            <select id="model-select" class="model-select">
+                <option value="">Loading models...</option>
+            </select>
         </div>
 
         <div class="domain-selector">
