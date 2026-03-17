@@ -1152,6 +1152,50 @@ html, body {
 .home-cta:active { transform: scale(0.98); }
 .home-cta-arrow { font-size: 18px; transition: transform 0.2s; }
 .home-cta:hover .home-cta-arrow { transform: translateX(2px); }
+/* Comparison section */
+.home-diff-section { margin-bottom: 48px; }
+.home-diff-title {
+    font-size: 18px; font-weight: 700; color: var(--text-primary);
+    letter-spacing: -0.5px; margin-bottom: 20px;
+}
+.home-diff-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+}
+.home-diff-card {
+    padding: 20px 24px; border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+}
+.home-diff-card.old {
+    background: var(--bg-input); opacity: 0.7;
+}
+.home-diff-card.new {
+    background: var(--bg-card);
+    border-color: #6366f1;
+    box-shadow: 0 0 0 1px rgba(99,102,241,0.1), var(--shadow-md);
+}
+.home-diff-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+}
+.home-diff-card.old .home-diff-label { color: var(--text-tertiary); }
+.home-diff-card.new .home-diff-label { color: #6366f1; }
+.home-diff-item {
+    font-size: 13px; line-height: 1.5; padding: 5px 0;
+    padding-left: 20px; position: relative;
+}
+.home-diff-card.old .home-diff-item { color: var(--text-tertiary); }
+.home-diff-card.new .home-diff-item { color: var(--text-primary); }
+.home-diff-item::before {
+    position: absolute; left: 0; top: 6px;
+}
+.home-diff-card.old .home-diff-item::before {
+    content: '\2013'; color: var(--border);
+}
+.home-diff-card.new .home-diff-item::before {
+    content: '\2713'; color: #6366f1; font-weight: 700;
+}
+
 .home-use-cases {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
 }
