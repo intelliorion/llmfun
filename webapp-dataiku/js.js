@@ -46,6 +46,8 @@ function waitForVis(callback) {
 var allTabs = document.querySelectorAll('.tab');
 var allPanels = document.querySelectorAll('.tab-panel');
 
+var drawerTab = document.getElementById('drawer-tab');
+
 function switchToTab(targetId) {
     for (var j = 0; j < allTabs.length; j++) allTabs[j].classList.remove('active');
     for (var j = 0; j < allPanels.length; j++) allPanels[j].classList.remove('active');
@@ -59,6 +61,13 @@ function switchToTab(targetId) {
     document.getElementById(targetId).classList.add('active');
     if (targetId === 'panel-graph' && network) {
         setTimeout(function() { network.fit(); }, 100);
+    }
+    // Show minimized drawer tab on non-Home tabs, hide on Home
+    if (targetId === 'panel-home') {
+        drawerTab.style.display = 'none';
+        closeDrawer();
+    } else {
+        drawerTab.style.display = 'flex';
     }
 }
 
@@ -75,16 +84,29 @@ var drawer = document.getElementById('data-drawer');
 var drawerOverlay = document.getElementById('drawer-overlay');
 var drawerCloseBtn = document.getElementById('drawer-close');
 
+function isHomeTab() {
+    var activeTab = document.querySelector('.tab.active');
+    return activeTab && activeTab.getAttribute('data-target') === 'panel-home';
+}
 function openDrawer() {
     drawer.classList.add('open');
     drawerOverlay.classList.add('open');
+    if (!isHomeTab()) drawerTab.style.display = 'none';
 }
 function closeDrawer() {
     drawer.classList.remove('open');
     drawerOverlay.classList.remove('open');
+    if (!isHomeTab()) drawerTab.style.display = 'flex';
 }
 drawerCloseBtn.addEventListener('click', closeDrawer);
 drawerOverlay.addEventListener('click', closeDrawer);
+drawerTab.addEventListener('click', function() {
+    if (drawer.classList.contains('open')) {
+        closeDrawer();
+    } else {
+        openDrawer();
+    }
+});
 
 // --- Get Started ---
 document.getElementById('btn-get-started').addEventListener('click', function() {

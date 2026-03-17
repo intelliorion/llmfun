@@ -124,6 +124,40 @@ html, body {
     position: relative;
 }
 
+/* --- Drawer minimized tab --- */
+.drawer-tab {
+    position: fixed; top: 50%; left: 0;
+    transform: translateY(-50%);
+    z-index: 89;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 4px;
+    padding: 12px 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 2px 2px 12px rgba(0,0,0,0.06);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+}
+.drawer-tab:hover {
+    background: var(--bg-input);
+    box-shadow: 2px 2px 16px rgba(0,0,0,0.1);
+    padding-right: 10px;
+}
+.drawer-tab-icon {
+    font-size: 14px; color: var(--accent);
+    writing-mode: horizontal-tb;
+}
+.drawer-tab-label {
+    font-size: 11px; font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
 /* --- Drawer (replaces sidebar) --- */
 .drawer-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
