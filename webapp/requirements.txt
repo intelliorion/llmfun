@@ -1,0 +1,11 @@
+flask>=3.0
+openai>=1.30
+networkx>=3.0
+python-dotenv>=1.0
+
+# Optional file parsers (install what you need)
+pymupdf>=1.24          # PDF + PPTX rendering via LLM Vision
+python-docx>=1.1       # DOCX
+python-pptx>=0.6       # PPTX text fallback
+openpyxl>=3.1          # XLSX
+extract-msg>=0.48      # Outlook .msg files

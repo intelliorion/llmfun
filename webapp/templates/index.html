@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orion — AI Knowledge Graph</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #app { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    </style>
+</head>
+<body>
+<div id="app">
+
+<div class="header">
+    <div class="header-left">
+        <div class="header-logo">O</div>
+        <h1>Orion</h1>
+        <span class="header-subtitle">AI-Powered. Discover the Impossibles.</span>
+    </div>
+    <div class="header-right">
+        <span class="header-badge">CS TTIA</span>
+        <span>Morgan Stanley</span>
+    </div>
+</div>
+
+<div class="main">
+    <!-- Minimized drawer tab (shown on non-Home tabs) -->
+    <div class="drawer-tab" id="drawer-tab" style="display:none;">
+        <span class="drawer-tab-icon">&#x2630;</span>
+        <span class="drawer-tab-label">Data</span>
+    </div>
+
+    <!-- Data Source Drawer (hidden by default) -->
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+    <div class="drawer" id="data-drawer">
+        <div class="drawer-header">
+            <h2>Data Source</h2>
+            <button class="drawer-close" id="drawer-close">&times;</button>
+        </div>
+
+        <!-- Input mode toggle -->
+        <div class="input-toggle">
+            <button class="toggle-btn active" id="toggle-text" data-mode="text">Paste Text</button>
+            <button class="toggle-btn" id="toggle-upload" data-mode="upload">Upload File</button>
+        </div>
+
+        <!-- Text input mode -->
+        <div class="input-mode active" id="mode-text">
+            <textarea id="text-input" placeholder="Paste your text here — earnings transcripts, meeting notes, reports, talent reviews..."></textarea>
+        </div>
+
+        <!-- Upload mode -->
+        <div class="input-mode" id="mode-upload">
+            <div class="file-list" id="file-list"></div>
+            <div class="file-upload" id="file-upload">
+                <div class="upload-icon">+</div>
+                <div class="upload-text">Drop files or click to upload</div>
+                <div class="file-types">.txt .md .csv .pdf .docx .pptx .xlsx .msg .eml .png .jpg .jpeg .gif .tiff .webp</div>
+                <input type="file" id="file-input" accept=".txt,.md,.csv,.pdf,.docx,.pptx,.xlsx,.msg,.eml,.png,.jpg,.jpeg,.gif,.bmp,.tiff,.tif,.webp" multiple>
+            </div>
+        </div>
+
+        <div class="domain-selector">
+            <label class="domain-label">Model</label>
+            <select id="model-select" class="model-select">
+                <option value="">Loading models...</option>
+            </select>
+        </div>
+
+        <div class="domain-selector">
+            <label class="domain-label">Analysis Mode</label>
+            <select id="domain-select" class="domain-select">
+                <option value="auto">Auto-detect</option>
+            </select>
+        </div>
+
+        <button class="btn-primary" id="btn-build">Discover Connections &rarr;</button>
+        <button class="btn-secondary" id="btn-reset" style="display:none;">Start Over</button>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-target="panel-home">Home</div>
+            <div class="tab" data-target="panel-graph">Graph</div>
+            <div class="tab" data-target="panel-entities">Entities</div>
+            <div class="tab" data-target="panel-report">Report</div>
+            <div class="tab" data-target="panel-qa">Q&amp;A</div>
+            <div class="tab" data-target="panel-whatif">What-If</div>
+        </div>
+
+        <!-- Stats bar -->
+        <div class="stats-bar" id="stats-bar"></div>
+
+        <!-- Home Panel -->
+        <div class="tab-panel active" id="panel-home">
+            <div class="home-panel">
+                <div class="home-content">
+                    <div class="home-hero">
+                        <div class="home-hero-badge">Knowledge Graph Intelligence</div>
+                        <h2 class="home-title">See what no one else can see.<br><span class="home-highlight">The connections that matter.</span></h2>
+                        <p class="home-desc">
+                            The answers to your hardest questions aren't in any single document — they're in the connections between them. Orion uses multi-agent AI to discover every entity and relationship across your data, then builds a living knowledge graph you can explore, question, and simulate.
+                        </p>
+                    </div>
+
+                    <div class="home-features">
+                        <div class="home-feature">
+                            <div class="home-feature-icon">01</div>
+                            <div class="home-feature-text">
+                                <div class="home-feature-title">Feed it anything</div>
+                                <div class="home-feature-desc">PDF, Excel, Word, PowerPoint, images, email, CSV. Vision AI reads every page — even scanned documents, charts, and handwritten notes.</div>
+                            </div>
+                        </div>
+                        <div class="home-feature">
+                            <div class="home-feature-icon">02</div>
+                            <div class="home-feature-text">
+                                <div class="home-feature-title">AI discovers the map</div>
+                                <div class="home-feature-desc">Three AI agents work in sequence — infer the schema, extract entities and relationships, deduplicate. No manual tagging, no predefined ontology.</div>
+                            </div>
+                        </div>
+                        <div class="home-feature">
+                            <div class="home-feature-icon">03</div>
+                            <div class="home-feature-text">
+                                <div class="home-feature-title">Explore, question, simulate</div>
+                                <div class="home-feature-desc">Interactive graph with search and filtering. Ask natural language questions. Run What-If scenarios and watch AI agents model how changes cascade.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="home-cta" id="btn-get-started">
+                        Get Started
+                        <span class="home-cta-arrow">&rarr;</span>
+                    </button>
+
+                    <div class="home-diff-section">
+                        <div class="home-diff-title">This is not RAG. This is not document processing.</div>
+                        <div class="home-diff-subtitle">Traditional RAG splits your data into chunks, matches by similarity, and summarizes. It works well for simple lookups — but it fundamentally cannot reason across relationships that span multiple chunks.</div>
+
+                        <div class="home-diff-example">
+                            <div class="home-diff-example-label">Why chunking fails</div>
+                            <div class="home-diff-example-body">
+                                <div class="home-diff-example-chunks">
+                                    <div class="home-example-chunk">
+                                        <div class="home-chunk-label">Chunk 12</div>
+                                        <div class="home-chunk-text">"Johnny's daughter is Olivia. Olivia is a senior at Columbia."</div>
+                                    </div>
+                                    <div class="home-example-chunk">
+                                        <div class="home-chunk-label">Chunk 47</div>
+                                        <div class="home-chunk-text">"Olivia's brother Jason transferred to NYU last fall."</div>
+                                    </div>
+                                    <div class="home-example-chunk">
+                                        <div class="home-chunk-label">Chunk 83</div>
+                                        <div class="home-chunk-text">"Jason's mother Evelyn volunteers at the school fundraiser."</div>
+                                    </div>
+                                </div>
+                                <div class="home-diff-example-question">
+                                    <span class="home-eq-q">Q: "What is Evelyn's relationship to Johnny?"</span>
+                                    <div class="home-eq-answers">
+                                        <div class="home-eq-answer rag">
+                                            <span class="home-eq-tag rag">RAG</span>
+                                            "Based on the available information, Evelyn is Jason's mother and volunteers at the school fundraiser. I don't have direct information about her relationship to Johnny."
+                                        </div>
+                                        <div class="home-eq-answer orion">
+                                            <span class="home-eq-tag orion">Orion</span>
+                                            Johnny &rarr; father of &rarr; Olivia &rarr; sister of &rarr; Jason &rarr; son of &rarr; Evelyn. <strong>Evelyn is Johnny's wife.</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="home-diff-grid">
+                            <div class="home-diff-card old">
+                                <div class="home-diff-label">Traditional RAG / LLM</div>
+                                <div class="home-diff-item">Chunks text by character count or overlap</div>
+                                <div class="home-diff-item">Matches by embedding similarity</div>
+                                <div class="home-diff-item">Summarizes retrieved chunks</div>
+                                <div class="home-diff-item">Loses cross-chunk relationships</div>
+                                <div class="home-diff-item">No persistent structure — answers vanish</div>
+                                <div class="home-diff-item">Can't simulate or reason about impact</div>
+                            </div>
+                            <div class="home-diff-card new">
+                                <div class="home-diff-label">Orion — Knowledge Graph</div>
+                                <div class="home-diff-item">Extracts entities and typed relationships</div>
+                                <div class="home-diff-item">Traverses the graph to find connections</div>
+                                <div class="home-diff-item">Answers by reasoning over structure</div>
+                                <div class="home-diff-item">Multi-hop relationships preserved</div>
+                                <div class="home-diff-item">Persistent, visual, explorable map</div>
+                                <div class="home-diff-item">What-If simulation with agent reasoning</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="home-use-cases">
+                        <div class="home-use-case">
+                            <div class="home-uc-label">Talent Review</div>
+                            <div class="home-uc-desc">Map people, goals, reviews, retention risks, and succession plans across an entire division</div>
+                        </div>
+                        <div class="home-use-case">
+                            <div class="home-uc-label">Research &amp; Due Diligence</div>
+                            <div class="home-uc-desc">Surface connections between companies, people, and events from reports and filings</div>
+                        </div>
+                        <div class="home-use-case">
+                            <div class="home-uc-label">Operational Intelligence</div>
+                            <div class="home-uc-desc">Visualize dependencies, bottlenecks, and single points of failure across projects and teams</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Graph Panel -->
+        <div class="tab-panel" id="panel-graph">
+            <div id="graph-container">
+                <div class="progress-container" id="progress-container" style="display:none;">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+
+                <div id="vis-graph" style="width:100%;height:100%;"></div>
+
+                <!-- Graph toolbar -->
+                <div class="graph-toolbar" id="graph-toolbar" style="display:none;">
+                    <button class="toolbar-btn" id="btn-zoom-in" title="Zoom in">+</button>
+                    <button class="toolbar-btn" id="btn-zoom-out" title="Zoom out">&minus;</button>
+                    <button class="toolbar-btn" id="btn-fit" title="Fit to screen">&#x2922;</button>
+                    <div class="toolbar-sep"></div>
+                    <button class="toolbar-btn active" id="btn-edge-labels" title="Toggle edge labels">Aa</button>
+                    <div class="toolbar-sep"></div>
+                    <div class="toolbar-search">
+                        <input type="text" id="graph-search" placeholder="Search...">
+                    </div>
+                    <div class="toolbar-sep"></div>
+                    <button class="toolbar-btn" id="btn-connect" title="Find connection between entities">&#x26D1;</button>
+                    <div class="toolbar-sep"></div>
+                    <div class="toolbar-export-wrap">
+                        <button class="toolbar-btn" id="btn-export" title="Export">&#x21E9;</button>
+                        <div class="export-dropdown" id="export-dropdown">
+                            <div class="export-option" data-format="png">Export as PNG</div>
+                            <div class="export-option" data-format="json">Export as JSON</div>
+                            <div class="export-option" data-format="csv">Export as CSV</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step indicators -->
+                <div class="step-indicators" id="step-indicators" style="display:none;">
+                    <div class="step-indicator" id="step-schema"><span class="step-dot"></span><span>Analyzing data</span></div>
+                    <div class="step-indicator" id="step-extract"><span class="step-dot"></span><span>Extracting entities</span></div>
+                    <div class="step-indicator" id="step-dedup"><span class="step-dot"></span><span>Resolving duplicates</span></div>
+                    <div class="step-indicator" id="step-report"><span class="step-dot"></span><span>Generating report</span></div>
+                    <div class="step-indicator" id="step-done"><span class="step-dot"></span><span>Complete</span></div>
+                </div>
+
+                <!-- Detected mode card -->
+                <div class="detected-mode" id="detected-mode" style="display:none;"></div>
+
+                <!-- Schema display -->
+                <div class="schema-display" id="schema-display" style="display:none;"></div>
+
+                <!-- Detail panel -->
+                <div class="detail-panel" id="detail-panel">
+                    <div class="detail-header">
+                        <span class="detail-title" id="detail-title"></span>
+                        <button class="detail-close" id="detail-close">&times;</button>
+                    </div>
+                    <div class="detail-body" id="detail-body"></div>
+                </div>
+
+                <!-- Find Connection Panel -->
+                <div class="connect-panel" id="connect-panel" style="display:none;">
+                    <div class="connect-header">
+                        <span class="connect-title">Find Connection</span>
+                        <button class="connect-close" id="connect-close">&times;</button>
+                    </div>
+                    <div class="connect-body">
+                        <div class="connect-field">
+                            <label>From</label>
+                            <input type="text" id="connect-source" class="connect-input" placeholder="Type entity name..." autocomplete="off">
+                            <div class="connect-suggestions" id="connect-source-suggestions"></div>
+                        </div>
+                        <div class="connect-swap" id="connect-swap" title="Swap entities">&#x21C5;</div>
+                        <div class="connect-field">
+                            <label>To</label>
+                            <input type="text" id="connect-target" class="connect-input" placeholder="Type entity name..." autocomplete="off">
+                            <div class="connect-suggestions" id="connect-target-suggestions"></div>
+                        </div>
+                        <button class="connect-btn" id="connect-find">Find Path</button>
+                    </div>
+                    <div class="connect-result" id="connect-result"></div>
+                </div>
+
+                <!-- Legend -->
+                <div class="graph-legend" id="graph-legend">
+                    <b>Entity Types</b>
+                    <div id="legend-items"></div>
+                </div>
+
+                <!-- Summary card -->
+                <div class="summary-card" id="summary-card"></div>
+
+                <!-- Building hint -->
+                <div class="building-hint" id="building-hint">
+                    <div class="breathing-dot"></div>
+                    <span id="hint-text">Building graph...</span>
+                    <button class="btn-stop" id="btn-stop">Stop</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Entities Panel -->
+        <div class="tab-panel" id="panel-entities">
+            <div class="panel-building" id="entities-building">
+                <div class="breathing-dot"></div>
+                <span>Entities are being extracted — they'll appear here as they're discovered...</span>
+            </div>
+            <div class="entities-panel">
+                <div class="table-section">
+                    <h3>Entities</h3>
+                    <table>
+                        <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+                        <tbody id="entities-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="table-section">
+                    <h3>Relationships</h3>
+                    <table>
+                        <thead><tr><th>Source</th><th>Relation</th><th>Target</th><th>Description</th></tr></thead>
+                        <tbody id="relationships-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Panel -->
+        <div class="tab-panel" id="panel-report">
+            <div class="panel-building" id="report-building">
+                <div class="breathing-dot"></div>
+                <span>Report will auto-generate once the build is complete...</span>
+            </div>
+            <div class="report-panel">
+                <button class="btn-generate" id="btn-report">Generate Report</button>
+                <div class="report-content" id="report-content">
+                    <p style="color:var(--text-tertiary);">Report auto-generates when build completes.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- What-If Panel -->
+        <div class="tab-panel" id="panel-whatif">
+            <div class="panel-building" id="whatif-building">
+                <div class="breathing-dot"></div>
+                <span>What-If analysis will be available once the build is complete...</span>
+            </div>
+            <div class="whatif-panel">
+                <div class="whatif-header">
+                    <div class="whatif-title">What-If Simulation</div>
+                    <div class="whatif-subtitle">Propose a change — watch agents react across multiple rounds, then interview them individually</div>
+                </div>
+                <div class="whatif-suggestions" id="whatif-suggestions"></div>
+                <div class="whatif-input-area">
+                    <input type="text" id="whatif-input" placeholder="e.g. What if we remove [entity]? What if [team A] merges with [team B]?">
+                    <button id="whatif-send">Simulate</button>
+                </div>
+                <div class="whatif-results" id="whatif-results">
+                    <div class="empty-state" id="whatif-empty">
+                        <p style="font-size:14px;">Describe a change scenario to see its impact</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Q&A Panel -->
+        <div class="tab-panel" id="panel-qa">
+            <div class="panel-building" id="qa-building">
+                <div class="breathing-dot"></div>
+                <span>Q&amp;A will be available once the build is complete...</span>
+            </div>
+            <div class="chat-panel">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="empty-state" id="chat-empty">
+                        <div>
+                            <p style="font-size:14px;">Ask questions about your data</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="suggested-questions" id="suggested-questions"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Ask a question...">
+                    <button id="chat-send">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div><!-- #app -->
+
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
