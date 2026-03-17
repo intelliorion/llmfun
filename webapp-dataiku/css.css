@@ -1156,8 +1156,66 @@ html, body {
 .home-diff-section { margin-bottom: 48px; }
 .home-diff-title {
     font-size: 18px; font-weight: 700; color: var(--text-primary);
-    letter-spacing: -0.5px; margin-bottom: 20px;
+    letter-spacing: -0.5px; margin-bottom: 8px;
 }
+.home-diff-subtitle {
+    font-size: 14px; color: var(--text-secondary); line-height: 1.6;
+    margin-bottom: 24px; max-width: 600px;
+}
+
+/* Chunking failure example */
+.home-diff-example {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 20px 24px; margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+}
+.home-diff-example-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; color: var(--text-tertiary); margin-bottom: 14px;
+}
+.home-diff-example-chunks {
+    display: flex; gap: 10px; margin-bottom: 16px;
+}
+.home-example-chunk {
+    flex: 1; padding: 10px 12px; background: var(--bg-input);
+    border-radius: 8px; border-left: 3px solid var(--border);
+}
+.home-chunk-label {
+    font-size: 10px; font-weight: 700; color: var(--text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
+}
+.home-chunk-text {
+    font-size: 12px; color: var(--text-secondary); line-height: 1.5;
+    font-style: italic;
+}
+.home-diff-example-question {
+    border-top: 1px solid var(--border); padding-top: 14px;
+}
+.home-eq-q {
+    display: block; font-size: 13px; font-weight: 600; color: var(--text-primary);
+    margin-bottom: 10px;
+}
+.home-eq-answers { display: flex; flex-direction: column; gap: 8px; }
+.home-eq-answer {
+    font-size: 12px; line-height: 1.5; padding: 10px 14px;
+    border-radius: 8px;
+}
+.home-eq-answer.rag {
+    background: rgba(239,68,68,0.04); color: var(--text-secondary);
+    border: 1px solid rgba(239,68,68,0.12);
+}
+.home-eq-answer.orion {
+    background: rgba(99,102,241,0.04); color: var(--text-primary);
+    border: 1px solid rgba(99,102,241,0.15);
+}
+.home-eq-tag {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 6px; margin-right: 6px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+    vertical-align: middle;
+}
+.home-eq-tag.rag { background: rgba(239,68,68,0.1); color: #ef4444; }
+.home-eq-tag.orion { background: rgba(99,102,241,0.1); color: #6366f1; }
 .home-diff-grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
 }

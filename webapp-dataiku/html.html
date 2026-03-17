@@ -115,22 +115,59 @@
 
                     <!-- How is this different -->
                     <div class="home-diff-section">
-                        <div class="home-diff-title">This is not document processing.</div>
+                        <div class="home-diff-title">This is not RAG. This is not document processing.</div>
+                        <div class="home-diff-subtitle">Traditional RAG splits your data into chunks, matches by similarity, and summarizes. It works well for simple lookups — but it fundamentally cannot reason across relationships that span multiple chunks.</div>
+
+                        <div class="home-diff-example">
+                            <div class="home-diff-example-label">Why chunking fails</div>
+                            <div class="home-diff-example-body">
+                                <div class="home-diff-example-chunks">
+                                    <div class="home-example-chunk">
+                                        <div class="home-chunk-label">Chunk 12</div>
+                                        <div class="home-chunk-text">"Johnny's daughter is Olivia. Olivia is a senior at Columbia."</div>
+                                    </div>
+                                    <div class="home-example-chunk">
+                                        <div class="home-chunk-label">Chunk 47</div>
+                                        <div class="home-chunk-text">"Olivia's brother Jason transferred to NYU last fall."</div>
+                                    </div>
+                                    <div class="home-example-chunk">
+                                        <div class="home-chunk-label">Chunk 83</div>
+                                        <div class="home-chunk-text">"Jason's mother Evelyn volunteers at the school fundraiser."</div>
+                                    </div>
+                                </div>
+                                <div class="home-diff-example-question">
+                                    <span class="home-eq-q">Q: "What is Evelyn's relationship to Johnny?"</span>
+                                    <div class="home-eq-answers">
+                                        <div class="home-eq-answer rag">
+                                            <span class="home-eq-tag rag">RAG</span>
+                                            "Based on the available information, Evelyn is Jason's mother and volunteers at the school fundraiser. I don't have direct information about her relationship to Johnny."
+                                        </div>
+                                        <div class="home-eq-answer orion">
+                                            <span class="home-eq-tag orion">Orion</span>
+                                            Johnny &rarr; father of &rarr; Olivia &rarr; sister of &rarr; Jason &rarr; son of &rarr; Evelyn. <strong>Evelyn is Johnny's wife.</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="home-diff-grid">
                             <div class="home-diff-card old">
-                                <div class="home-diff-label">Traditional LLM Approach</div>
-                                <div class="home-diff-item">Ask a question, get a summary</div>
-                                <div class="home-diff-item">One document at a time</div>
-                                <div class="home-diff-item">Answers disappear after the chat</div>
-                                <div class="home-diff-item">No understanding of structure</div>
-                                <div class="home-diff-item">Can't simulate or explore</div>
+                                <div class="home-diff-label">Traditional RAG / LLM</div>
+                                <div class="home-diff-item">Chunks text by character count or overlap</div>
+                                <div class="home-diff-item">Matches by embedding similarity</div>
+                                <div class="home-diff-item">Summarizes retrieved chunks</div>
+                                <div class="home-diff-item">Loses cross-chunk relationships</div>
+                                <div class="home-diff-item">No persistent structure — answers vanish</div>
+                                <div class="home-diff-item">Can't simulate or reason about impact</div>
                             </div>
                             <div class="home-diff-card new">
-                                <div class="home-diff-label">Orion</div>
-                                <div class="home-diff-item">Builds a permanent knowledge structure</div>
-                                <div class="home-diff-item">Connects across all your data</div>
-                                <div class="home-diff-item">Interactive graph you can explore visually</div>
-                                <div class="home-diff-item">Understands entities, types, and relationships</div>
+                                <div class="home-diff-label">Orion — Knowledge Graph</div>
+                                <div class="home-diff-item">Extracts entities and typed relationships</div>
+                                <div class="home-diff-item">Traverses the graph to find connections</div>
+                                <div class="home-diff-item">Answers by reasoning over structure</div>
+                                <div class="home-diff-item">Multi-hop relationships preserved</div>
+                                <div class="home-diff-item">Persistent, visual, explorable map</div>
                                 <div class="home-diff-item">What-If simulation with agent reasoning</div>
                             </div>
                         </div>
