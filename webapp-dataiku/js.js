@@ -46,19 +46,50 @@ function waitForVis(callback) {
 var allTabs = document.querySelectorAll('.tab');
 var allPanels = document.querySelectorAll('.tab-panel');
 
+function switchToTab(targetId) {
+    for (var j = 0; j < allTabs.length; j++) allTabs[j].classList.remove('active');
+    for (var j = 0; j < allPanels.length; j++) allPanels[j].classList.remove('active');
+    // Find and activate the matching tab
+    for (var j = 0; j < allTabs.length; j++) {
+        if (allTabs[j].getAttribute('data-target') === targetId) {
+            allTabs[j].classList.add('active');
+            break;
+        }
+    }
+    document.getElementById(targetId).classList.add('active');
+    if (targetId === 'panel-graph' && network) {
+        setTimeout(function() { network.fit(); }, 100);
+    }
+}
+
 for (var i = 0; i < allTabs.length; i++) {
     (function(tab) {
         tab.addEventListener('click', function() {
-            for (var j = 0; j < allTabs.length; j++) allTabs[j].classList.remove('active');
-            for (var j = 0; j < allPanels.length; j++) allPanels[j].classList.remove('active');
-            tab.classList.add('active');
-            document.getElementById(tab.getAttribute('data-target')).classList.add('active');
-            if (tab.getAttribute('data-target') === 'panel-graph' && network) {
-                setTimeout(function() { network.fit(); }, 100);
-            }
+            switchToTab(tab.getAttribute('data-target'));
         });
     })(allTabs[i]);
 }
+
+// --- Drawer ---
+var drawer = document.getElementById('data-drawer');
+var drawerOverlay = document.getElementById('drawer-overlay');
+var drawerCloseBtn = document.getElementById('drawer-close');
+
+function openDrawer() {
+    drawer.classList.add('open');
+    drawerOverlay.classList.add('open');
+}
+function closeDrawer() {
+    drawer.classList.remove('open');
+    drawerOverlay.classList.remove('open');
+}
+drawerCloseBtn.addEventListener('click', closeDrawer);
+drawerOverlay.addEventListener('click', closeDrawer);
+
+// --- Get Started ---
+document.getElementById('btn-get-started').addEventListener('click', function() {
+    openDrawer();
+});
 
 // --- Input mode toggle ---
 var toggleBtns = document.querySelectorAll('.toggle-btn');
@@ -315,12 +346,9 @@ resetBtn.addEventListener('click', function() {
     resetSteps();
     document.getElementById('building-hint').classList.remove('visible');
     buildBtn.disabled = false;
-    buildBtn.textContent = 'Build';
+    buildBtn.textContent = 'Build Knowledge Graph';
     resetBtn.style.display = 'none';
-    for (var j = 0; j < allTabs.length; j++) allTabs[j].classList.remove('active');
-    for (var j = 0; j < allPanels.length; j++) allPanels[j].classList.remove('active');
-    allTabs[0].classList.add('active');
-    allPanels[0].classList.add('active');
+    switchToTab('panel-home');
 });
 
 // --- Step indicator helpers ---
@@ -412,6 +440,10 @@ var buildBtn = document.getElementById('btn-build');
 buildBtn.addEventListener('click', function() {
     var text = currentMode === 'upload' ? uploadedText.trim() : textarea.value.trim();
     if (!text) { alert('Please provide some text first.'); return; }
+
+    // Close drawer and switch to Graph tab
+    closeDrawer();
+    switchToTab('panel-graph');
 
     buildBtn.disabled = true;
     buildBtn.textContent = 'Building...';

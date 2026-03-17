@@ -16,10 +16,12 @@
 </div>
 
 <div class="main">
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
+    <!-- Data Source Drawer (hidden by default) -->
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+    <div class="drawer" id="data-drawer">
+        <div class="drawer-header">
             <h2>Data Source</h2>
+            <button class="drawer-close" id="drawer-close">&times;</button>
         </div>
 
         <!-- Input mode toggle -->
@@ -30,13 +32,7 @@
 
         <!-- Text input mode -->
         <div class="input-mode active" id="mode-text">
-            <textarea id="text-input" placeholder="Paste your text here...">Morgan Stanley's wealth management division reported strong Q4 2025 results, driven by increased client assets and higher fee-based revenues. CEO Ted Pick highlighted the firm's strategic focus on integrating technology across its advisory platform. The division saw net new assets of $120 billion for the year.
-
-Meanwhile, the institutional securities group faced headwinds from lower trading volumes in fixed income markets. CFO Sharon Yeshaya noted that the firm is investing heavily in AI-driven risk analytics to improve trading desk performance.
-
-Competitor Goldman Sachs also reported mixed results, with its asset management division outperforming while investment banking revenues declined. JPMorgan Chase continued to lead in overall revenue, benefiting from its diversified business model.
-
-Industry analysts from Barclays and UBS forecast that wealth management will remain the key growth driver for large banks in 2026, as interest rate cuts are expected to boost asset valuations and client activity.</textarea>
+            <textarea id="text-input" placeholder="Paste your text here — earnings transcripts, meeting notes, reports, talent reviews..."></textarea>
         </div>
 
         <!-- Upload mode -->
@@ -57,7 +53,7 @@ Industry analysts from Barclays and UBS forecast that wealth management will rem
             </select>
         </div>
 
-        <button class="btn-primary" id="btn-build">Build</button>
+        <button class="btn-primary" id="btn-build">Build Knowledge Graph</button>
         <button class="btn-secondary" id="btn-reset" style="display:none;">Start Over</button>
     </div>
 
@@ -65,7 +61,8 @@ Industry analysts from Barclays and UBS forecast that wealth management will rem
     <div class="content">
         <!-- Tabs -->
         <div class="tabs">
-            <div class="tab active" data-target="panel-graph">Graph</div>
+            <div class="tab active" data-target="panel-home">Home</div>
+            <div class="tab" data-target="panel-graph">Graph</div>
             <div class="tab" data-target="panel-entities">Entities</div>
             <div class="tab" data-target="panel-report">Report</div>
             <div class="tab" data-target="panel-qa">Q&A</div>
@@ -75,8 +72,67 @@ Industry analysts from Barclays and UBS forecast that wealth management will rem
         <!-- Stats bar -->
         <div class="stats-bar" id="stats-bar"></div>
 
+        <!-- Home Panel -->
+        <div class="tab-panel active" id="panel-home">
+            <div class="home-panel">
+                <div class="home-content">
+                    <div class="home-hero">
+                        <div class="home-hero-badge">Knowledge Graph Intelligence</div>
+                        <h2 class="home-title">Turn any document into a<br><span class="home-highlight">living, explorable map</span></h2>
+                        <p class="home-desc">
+                            Your most critical information is trapped in disconnected documents — reports, reviews, spreadsheets, emails. Orion reads them, discovers every entity and relationship, and builds an interactive knowledge graph you can explore, question, and simulate.
+                        </p>
+                    </div>
+
+                    <div class="home-features">
+                        <div class="home-feature">
+                            <div class="home-feature-icon">01</div>
+                            <div class="home-feature-text">
+                                <div class="home-feature-title">Upload anything</div>
+                                <div class="home-feature-desc">PDF, Excel, Word, PowerPoint, images, email, CSV, plain text. Vision AI reads every page — even scanned documents and charts.</div>
+                            </div>
+                        </div>
+                        <div class="home-feature">
+                            <div class="home-feature-icon">02</div>
+                            <div class="home-feature-text">
+                                <div class="home-feature-title">AI builds the map</div>
+                                <div class="home-feature-desc">Three AI agents work in sequence — infer the schema, extract entities and relationships, then deduplicate and clean. No manual tagging.</div>
+                            </div>
+                        </div>
+                        <div class="home-feature">
+                            <div class="home-feature-icon">03</div>
+                            <div class="home-feature-text">
+                                <div class="home-feature-title">Explore and simulate</div>
+                                <div class="home-feature-desc">Search, filter, drill into connections. Ask questions in natural language. Run What-If simulations to see how changes ripple through the network.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="home-cta" id="btn-get-started">
+                        Get Started
+                        <span class="home-cta-arrow">&rarr;</span>
+                    </button>
+
+                    <div class="home-use-cases">
+                        <div class="home-use-case">
+                            <div class="home-uc-label">Talent Review</div>
+                            <div class="home-uc-desc">Map people, goals, reviews, retention risks, and succession plans across an entire division</div>
+                        </div>
+                        <div class="home-use-case">
+                            <div class="home-uc-label">Research & Due Diligence</div>
+                            <div class="home-uc-desc">Surface connections between companies, people, and events from reports and filings</div>
+                        </div>
+                        <div class="home-use-case">
+                            <div class="home-uc-label">Operational Intelligence</div>
+                            <div class="home-uc-desc">Visualize dependencies, bottlenecks, and single points of failure across projects and teams</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Graph Panel -->
-        <div class="tab-panel active" id="panel-graph">
+        <div class="tab-panel" id="panel-graph">
             <div id="graph-container">
                 <!-- Progress bar -->
                 <div class="progress-container" id="progress-container" style="display:none;">
