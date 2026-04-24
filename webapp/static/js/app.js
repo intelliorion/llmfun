@@ -146,7 +146,7 @@ function loadModels() {
             for (var i = 0; i < models.length; i++) {
                 var opt = document.createElement('option');
                 opt.value = models[i];
-                // Show a friendly label: extract model name from ID like "openai:MSOpenAI:gpt-4o"
+                // Show a friendly label: extract model name from ID like "openai:gpt-4o"
                 var parts = models[i].split(':');
                 opt.textContent = parts[parts.length - 1];
                 modelSelect.appendChild(opt);
@@ -1321,7 +1321,7 @@ function addChatMessage(role, content) {
     return div;
 }
 
-// --- What-If Simulation (MiroFish-inspired) ---
+// --- What-If Simulation (multi-agent swarm) ---
 var whatifInput = document.getElementById('whatif-input');
 var whatifSendBtn = document.getElementById('whatif-send');
 var currentWhatifScenario = '';

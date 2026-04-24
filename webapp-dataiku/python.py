@@ -29,7 +29,7 @@ def get_llm(model_id=None):
         return project.get_llm(model_id)
     # Default: pick the first available model
     available = list_available_llms()
-    return project.get_llm(available[0] if available else 'openai:MSOpenAI:gpt-4o')
+    return project.get_llm(available[0] if available else 'openai:gpt-4o')
 
 llm = get_llm()
 
@@ -247,7 +247,7 @@ Return a JSON object mapping each variant name to its canonical (best/fullest) f
 Rules:
 - Only include names that need to be merged. Skip names that are already unique.
 - Choose the most complete, properly spelled version as the canonical name.
-- Examples: "J.P. Morgan" and "JPMorgan Chase" -> use "JPMorgan Chase". "Ted P." and "Ted Pick" -> use "Ted Pick".
+- Examples: "IBM Corp." and "IBM" -> use "IBM". "Sue M." and "Sue Martinez" -> use "Sue Martinez".
 - If unsure, do NOT merge. Only merge when clearly the same entity.
 - Return ONLY valid JSON, no markdown fences, no extra text.
 """
@@ -1365,7 +1365,7 @@ def api_whatif(session_id):
 
 @app.route('/whatif_interview/<session_id>', methods=['POST'])
 def api_whatif_interview(session_id):
-    """Interview a specific entity about a what-if scenario — MiroFish-style agent chat."""
+    """Interview a specific entity about a what-if scenario — multi-agent roleplay chat."""
     session = sessions.get(session_id)
     if not session or not session.get('graph'):
         return json_response({'error': 'No graph built yet'}, 400)

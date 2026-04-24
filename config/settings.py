@@ -1,6 +1,7 @@
 """
-MiroFish MS POC - Configuration
-Dataiku-compatible settings for Morgan Stanley environment.
+Orion — Configuration
+
+Tunables for the knowledge graph pipeline. Safe to edit without code changes.
 """
 
 # LLM Settings (Dataiku LLM Mesh)

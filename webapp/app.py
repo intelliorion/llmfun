@@ -329,7 +329,7 @@ Return a JSON object mapping each variant name to its canonical (best/fullest) f
 Rules:
 - Only include names that need to be merged. Skip names that are already unique.
 - Choose the most complete, properly spelled version as the canonical name.
-- Examples: "J.P. Morgan" and "JPMorgan Chase" -> use "JPMorgan Chase". "Ted P." and "Ted Pick" -> use "Ted Pick".
+- Examples: "IBM Corp." and "IBM" -> use "IBM". "Sue M." and "Sue Martinez" -> use "Sue Martinez".
 - If unsure, do NOT merge. Only merge when clearly the same entity.
 - Return ONLY valid JSON, no markdown fences, no extra text.
 """
