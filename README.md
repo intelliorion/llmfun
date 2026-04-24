@@ -29,8 +29,8 @@ One natural-language question — *"If our lead engineer leaves, what breaks?"* 
 ## Quick start (standalone Flask)
 
 ```bash
-git clone https://github.com/intelliorion/orion.git
-cd orion/webapp
+git clone https://github.com/intelliorion/orion_kg.git
+cd orion_kg/webapp
 
 python3 -m venv .venv
 source .venv/bin/activate
