@@ -128,4 +128,6 @@ Pull requests welcome. For significant changes, please open an issue first to di
 
 ## License
 
-[MIT](LICENSE) — free for personal and commercial use.
+[PolyForm Noncommercial 1.0.0](LICENSE) — free for **personal, educational, research, and non-commercial** use. Any commercial use (including internal use inside a for-profit organization's revenue-generating work, offering Orion as a service, or bundling it into a commercial product) requires a separate license.
+
+For a commercial license, contact **johnny.hao@intelliorion.com**.
