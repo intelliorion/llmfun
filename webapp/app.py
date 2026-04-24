@@ -1,6 +1,6 @@
 """
 Orion — Local standalone Flask server.
-Replaces Dataiku's LLM SDK with OpenAI-compatible API (works with OpenAI, Azure, etc.)
+Uses the OpenAI-compatible API (works with OpenAI, Azure OpenAI, etc.).
 
 Usage:
     export OPENAI_API_KEY=sk-...
@@ -115,7 +115,7 @@ def llm_complete_vision(system_prompt, text_prompt, image_b64, mime_type, model_
     return resp.choices[0].message.content
 
 
-# --- Orion / MS Color Palette ---
+# --- Orion Color Palette ---
 ORION_COLORS = ['#216CA6', '#1A936F', '#7B2D8E', '#C5283D', '#2E86AB',
                 '#5ba3d9', '#e07a2f', '#6C757D', '#0d7377', '#8B5CF6']
 
@@ -177,7 +177,7 @@ DOMAIN_TEMPLATES = {
     }
 }
 
-# --- Prompts (identical to Dataiku version) ---
+# --- Prompts ---
 ENTITY_VS_ATTRIBUTE_GUIDANCE = """
 CRITICAL — Entity vs. Attribute distinction:
 - An ENTITY is something that has its own identity and participates in relationships (e.g. Person, Organization, Project, System)

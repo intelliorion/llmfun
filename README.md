@@ -4,10 +4,7 @@
 
 Orion reads documents, emails, reviews, reports, or any free-form text and automatically discovers the entities (people, teams, projects, systems, decisions) and relationships hidden inside. It then lets you explore, question, and simulate the resulting graph.
 
-Ships in two flavours:
-
-- **`webapp/`** — a standalone Flask server you can run locally with just an OpenAI API key
-- **`webapp-dataiku/`** — the same app as a Dataiku Standard Webapp (uses Dataiku's LLM Mesh)
+A standalone Flask webapp you can run locally with just an OpenAI (or Azure OpenAI) API key.
 
 ## Why Orion
 
@@ -59,14 +56,10 @@ AZURE_OPENAI_API_VERSION=2024-12-01-preview
 
 Orion auto-detects Azure when both `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_API_KEY` are present.
 
-## Quick start (Dataiku)
-
-See [`webapp-dataiku/README.md`](webapp-dataiku/README.md) for the full Dataiku deployment guide.
-
 ## Architecture
 
 ```
-Browser (vis.js)                 Flask / Dataiku backend
+Browser (vis.js)                 Flask backend
 +-----------------+              +------------------------------------+
 |  Graph view     |              |  Session manager                   |
 |  Entities tab   |   REST       |  Extraction pipeline               |
@@ -74,7 +67,7 @@ Browser (vis.js)                 Flask / Dataiku backend
 |  Q&A tab        |<------------>|    Agent 1 — entity extraction     |
 |  What-If tab    |              |    Agent 2 — deduplication         |
 |  Find-conn tab  |              |  NetworkX DiGraph in memory        |
-+-----------------+              |  OpenAI / Azure OpenAI / LLM Mesh  |
++-----------------+              |  OpenAI / Azure OpenAI              |
                                  +------------------------------------+
 ```
 
@@ -87,21 +80,15 @@ Browser (vis.js)                 Flask / Dataiku backend
 ```
 orion/
 ├── README.md               ← you are here
-├── LICENSE                 ← MIT
+├── LICENSE                 ← PolyForm Noncommercial 1.0.0
 ├── examples/               ← sample inputs you can paste or upload
 │   └── portfolio_review.txt
-├── webapp/                 ← standalone Flask version
+├── webapp/                 ← Flask webapp
 │   ├── app.py              ← Flask routes + extraction pipeline
 │   ├── requirements.txt
 │   ├── static/             ← vis.js frontend (html/css/js)
 │   └── templates/
-├── webapp-dataiku/         ← Dataiku Standard Webapp version
-│   ├── python.py
-│   ├── html.html
-│   ├── css.css
-│   ├── js.js
-│   └── README.md           ← Dataiku-specific guide
-├── config/                 ← shared tunables
+├── config/                 ← tunable constants
 └── lib/                    ← shared extraction primitives
 ```
 
@@ -122,7 +109,6 @@ Tunable constants live in `config/settings.py` and at the top of each webapp's P
 
 Pull requests welcome. For significant changes, please open an issue first to discuss scope.
 
-- Keep the two variants (Flask + Dataiku) functionally parity
 - Don't commit secrets — `.env` is git-ignored by default
 - Prefer small, focused commits with descriptive messages
 

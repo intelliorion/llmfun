@@ -4,8 +4,8 @@ Orion — Configuration
 Tunables for the knowledge graph pipeline. Safe to edit without code changes.
 """
 
-# LLM Settings (Dataiku LLM Mesh)
-LLM_ID = "openai:gpt-4o"  # Update to match your Dataiku LLM connection ID
+# LLM Settings
+LLM_ID = "openai:gpt-4o"  # Override via ORION_DEFAULT_MODEL env var
 
 # Graph Settings
 MAX_ENTITY_TYPES = 10
